@@ -50,7 +50,6 @@ import com.annimon.stream.Collectors;
 import com.annimon.stream.IntStream;
 import com.annimon.stream.Stream;
 import com.github.lzyzsd.circleprogress.DonutProgress;
-import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -65,13 +64,16 @@ import org.totschnig.myexpenses.activity.ManageTags;
 import org.totschnig.myexpenses.activity.MyExpenses;
 import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
 import org.totschnig.myexpenses.adapter.TransactionAdapter;
+import org.totschnig.myexpenses.databinding.ExpensesListBinding;
+import org.totschnig.myexpenses.databinding.HeaderBinding;
+import org.totschnig.myexpenses.databinding.HeaderWithBudgetBinding;
 import org.totschnig.myexpenses.dialog.AmountFilterDialog;
 import org.totschnig.myexpenses.dialog.ConfirmationDialogFragment;
 import org.totschnig.myexpenses.dialog.DateFilterDialog;
 import org.totschnig.myexpenses.dialog.ProgressDialogFragment;
-import org.totschnig.myexpenses.dialog.TransactionDetailFragment;
 import org.totschnig.myexpenses.dialog.select.SelectCrStatusDialogFragment;
 import org.totschnig.myexpenses.dialog.select.SelectMethodDialogFragment;
+import org.totschnig.myexpenses.dialog.select.SelectMultipleAccountDialogFragment;
 import org.totschnig.myexpenses.dialog.select.SelectSingleAccountDialogFragment;
 import org.totschnig.myexpenses.dialog.select.SelectSingleMethodDialogFragment;
 import org.totschnig.myexpenses.dialog.select.SelectTransferAccountDialogFragment;
@@ -102,6 +104,7 @@ import org.totschnig.myexpenses.provider.filter.PayeeCriteria;
 import org.totschnig.myexpenses.provider.filter.TagCriteria;
 import org.totschnig.myexpenses.provider.filter.WhereFilter;
 import org.totschnig.myexpenses.task.TaskExecutionFragment;
+import org.totschnig.myexpenses.ui.ExpansionHandle;
 import org.totschnig.myexpenses.util.AppDirHelper;
 import org.totschnig.myexpenses.util.CurrencyFormatter;
 import org.totschnig.myexpenses.util.MenuUtilsKt;
@@ -127,21 +130,17 @@ import javax.inject.Inject;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.LongSparseArray;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import androidx.viewbinding.ViewBinding;
 import eltos.simpledialogfragment.SimpleDialog;
 import eltos.simpledialogfragment.input.SimpleInputDialog;
 import icepick.Icepick;
 import icepick.State;
-import se.emilsjolander.stickylistheaders.ExpandableStickyListHeadersListView;
 import se.emilsjolander.stickylistheaders.SectionIndexingStickyListHeadersAdapter;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView.OnHeaderClickListener;
@@ -153,16 +152,16 @@ import static org.totschnig.myexpenses.activity.ConstantsKt.EDIT_REQUEST;
 import static org.totschnig.myexpenses.activity.ConstantsKt.FILTER_CATEGORY_REQUEST;
 import static org.totschnig.myexpenses.activity.ConstantsKt.FILTER_PAYEE_REQUEST;
 import static org.totschnig.myexpenses.activity.ConstantsKt.FILTER_TAGS_REQUEST;
-import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_ACCOUNT_RQEUST;
-import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_CATEGORY_RQEUST;
-import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_METHOD_RQEUST;
-import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_PAYEE_RQEUST;
-import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_TAG_RQEUST;
+import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_ACCOUNT_REQUEST;
+import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_CATEGORY_REQUEST;
+import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_METHOD_REQUEST;
+import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_PAYEE_REQUEST;
+import static org.totschnig.myexpenses.activity.ConstantsKt.MAP_TAG_REQUEST;
 import static org.totschnig.myexpenses.activity.ProtectedFragmentActivity.PROGRESS_TAG;
 import static org.totschnig.myexpenses.adapter.CategoryTreeBaseAdapter.NULL_ITEM_ID;
 import static org.totschnig.myexpenses.dialog.ConfirmationDialogFragment.KEY_TITLE;
 import static org.totschnig.myexpenses.dialog.ConfirmationDialogFragment.KEY_TITLE_STRING;
-import static org.totschnig.myexpenses.fragment.TagListKt.KEY_TAGLIST;
+import static org.totschnig.myexpenses.fragment.TagListKt.KEY_TAG_LIST;
 import static org.totschnig.myexpenses.preference.PrefKey.NEW_SPLIT_TEMPLATE_ENABLED;
 import static org.totschnig.myexpenses.preference.PrefKey.OCR;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.HAS_TRANSFERS;
@@ -239,15 +238,8 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   private Cursor mTransactionsCursor;
   private Parcelable listState;
 
-  @BindView(R.id.list)
-  ExpandableStickyListHeadersListView mListView;
-  @BindView(R.id.empty)
-  View emptyView;
-  @BindView(R.id.filter)
-  ChipGroup filterView;
-  @BindView(R.id.filterCard)
-  ViewGroup filterCard;
   private LoaderManager mManager;
+  protected ExpensesListBinding binding;
 
   /**
    * maps header to an array that holds an array of following sums:
@@ -259,7 +251,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
    * [5] interimBalance
    * [6] mappedCategories
    */
-  private LongSparseArray<Long[]> headerData = new LongSparseArray<>();
+  private final LongSparseArray<Long[]> headerData = new LongSparseArray<>();
   private String[] sections;
   private int[] sectionIds;
   /**
@@ -280,6 +272,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   private Account mAccount;
   private Money budget = null;
   protected TransactionListViewModel viewModel;
+  @Nullable
   private ContentObserver budgetsObserver;
 
   @Inject
@@ -342,12 +335,14 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         }
       }
     });
-    MyApplication.getInstance().getAppComponent().inject(this);
+    ((MyApplication) requireActivity().getApplication()).getAppComponent().inject(this);
     firstLoadCompleted = (savedInstanceState != null);
-    budgetsObserver = new BudgetObserver();
-    getContext().getContentResolver().registerContentObserver(
-        TransactionProvider.BUDGETS_URI,
-        true, budgetsObserver);
+    if (ContribFeature.BUDGET.isAvailable(prefHandler)) {
+      budgetsObserver = new BudgetObserver();
+      requireContext().getContentResolver().registerContentObserver(
+          TransactionProvider.BUDGETS_URI,
+          true, budgetsObserver);
+    }
   }
 
   @Override
@@ -378,7 +373,9 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
 
   private void setGrouping() {
     mAdapter.refreshDateFormat();
-    mListView.setCollapsedHeaderIds(PreferenceUtilsKt.getLongList(prefHandler, collapsedHeaderIdsPrefKey()));
+    if (mAccount.getGrouping() != Grouping.NONE) {
+      binding.list.setCollapsedHeaderIds(PreferenceUtilsKt.getLongList(prefHandler, collapsedHeaderIdsPrefKey()));
+    }
     restartGroupingLoader();
   }
 
@@ -390,14 +387,13 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     mManager = LoaderManager.getInstance(this);
     filterPersistence = new FilterPersistence(prefHandler, prefNameForCriteria(), savedInstanceState, true, true);
-    View v = inflater.inflate(R.layout.expenses_list, container, false);
-    ButterKnife.bind(this, v);
+    binding = ExpensesListBinding.inflate(inflater, container, false);
     if (mAdapter == null) {
       mAdapter = new MyGroupedAdapter(getActivity(), R.layout.expense_row, null, 0);
     }
     configureListView();
-    registerForContextualActionBar(mListView.getWrappedList());
-    return v;
+    registerForContextualActionBar(binding.list.getWrappedList());
+    return binding.getRoot();
   }
 
   @Override
@@ -406,19 +402,12 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   }
 
   private void configureListView() {
-    mListView.setOnHeaderClickListener(this);
-    mListView.setDrawingListUnderStickyHeader(false);
+    binding.list.setOnHeaderClickListener(this);
+    binding.list.setDrawingListUnderStickyHeader(false);
 
-    mListView.setEmptyView(emptyView);
-    mListView.setOnItemClickListener((a, v1, position, id) -> {
-      FragmentManager fm = getActivity().getSupportFragmentManager();
-      DialogFragment f = (DialogFragment) fm.findFragmentByTag(TransactionDetailFragment.class.getName());
-      if (f == null) {
-        FragmentTransaction ft = fm.beginTransaction();
-        TransactionDetailFragment.newInstance(id).show(ft, TransactionDetailFragment.class.getName());
-      }
-    });
-    mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+    binding.list.setEmptyView(binding.empty);
+    binding.list.setOnItemClickListener((a, v1, position, id) -> showDetails(id));
+    binding.list.setOnScrollListener(new AbsListView.OnScrollListener() {
       private int currentState = 0;
 
       @Override
@@ -440,9 +429,11 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         }
       }
     });
-    mListView.addFooterView(LayoutInflater.from(getActivity()).inflate(R.layout.group_divider, mListView.getWrappedList(), false), null, false);
-    mListView.setAdapter(mAdapter);
+    binding.list.addFooterView(LayoutInflater.from(getActivity()).inflate(R.layout.group_divider, binding.list.getWrappedList(), false), null, false);
+    binding.list.setAdapter(mAdapter);
   }
+
+  protected abstract void showDetails(long id);
 
   protected void refresh(boolean invalidateMenu) {
     if (mAccount != null) { //if we are refreshed from onActivityResult, it might happen, that mAccount is not yet set (report 5c1754c8f8b88c29631ef140)
@@ -456,9 +447,10 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
 
   @Override
   public void onDestroyView() {
-    if (mListView != null) {
-      listState = mListView.getWrappedList().onSaveInstanceState();
+    if (binding.list != null) {
+      listState = binding.list.getWrappedList().onSaveInstanceState();
     }
+    binding = null;
     super.onDestroyView();
   }
 
@@ -467,7 +459,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
                                          SparseBooleanArray positions, Long[] itemIds) {
     MyExpenses ctx = (MyExpenses) getActivity();
     if (ctx == null) return false;
-    FragmentManager fm = getFragmentManager();
+    FragmentManager fm = getParentFragmentManager();
     switch (command) {
       case R.id.DELETE_COMMAND: {
         boolean hasReconciled = false, hasNotVoid = false;
@@ -538,7 +530,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
           Intent i = new Intent(getActivity(), ManageCategories.class);
           i.setAction(ACTION_SELECT_MAPPING);
-          startActivityForResult(i, MAP_CATEGORY_RQEUST);
+          startActivityForResult(i, MAP_CATEGORY_REQUEST);
         });
         return true;
       }
@@ -547,7 +539,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
           Intent i = new Intent(getActivity(), ManageTags.class);
           i.setAction(ACTION_SELECT_MAPPING);
-          startActivityForResult(i, MAP_TAG_RQEUST);
+          startActivityForResult(i, MAP_TAG_REQUEST);
         });
         return true;
       }
@@ -556,7 +548,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
           Intent i = new Intent(getActivity(), ManageParties.class);
           i.setAction(ACTION_SELECT_MAPPING);
-          startActivityForResult(i, MAP_PAYEE_RQEUST);
+          startActivityForResult(i, MAP_PAYEE_REQUEST);
         });
         return true;
       }
@@ -579,7 +571,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
           else if (hasIncome && !hasExpense) type = 1;
           final SelectSingleMethodDialogFragment dialogFragment = SelectSingleMethodDialogFragment.newInstance(
               R.string.menu_remap, R.string.remap_empty_list, accountTypes.toArray(new String[0]), type);
-          dialogFragment.setTargetFragment(this, MAP_METHOD_RQEUST);
+          dialogFragment.setTargetFragment(this, MAP_METHOD_REQUEST);
           dialogFragment.show(getActivity().getSupportFragmentManager(), "REMAP_METHOD");
         });
         return true;
@@ -594,9 +586,9 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
           for (int i = 0; i < positions.size(); i++) {
             if (positions.valueAt(i)) {
               mTransactionsCursor.moveToPosition(positions.keyAt(i));
-              long transferaccount = DbUtils.getLongOr0L(mTransactionsCursor, KEY_TRANSFER_ACCOUNT);
-              if (transferaccount != 0) {
-                excludedIds.add(transferaccount);
+              long transferAccount = DbUtils.getLongOr0L(mTransactionsCursor, KEY_TRANSFER_ACCOUNT);
+              if (transferAccount != 0) {
+                excludedIds.add(transferAccount);
               }
               if (SPLIT_CATID.equals(DbUtils.getLongOrNull(mTransactionsCursor, KEY_CATID))) {
                 splitIds.add(DbUtils.getLongOr0L(mTransactionsCursor, KEY_ROWID));
@@ -607,7 +599,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
             excludedIds.addAll(result);
             final SelectSingleAccountDialogFragment dialogFragment = SelectSingleAccountDialogFragment.newInstance(
                 R.string.menu_remap, R.string.remap_empty_list, excludedIds);
-            dialogFragment.setTargetFragment(this, MAP_ACCOUNT_RQEUST);
+            dialogFragment.setTargetFragment(this, MAP_ACCOUNT_REQUEST);
             dialogFragment.show(getActivity().getSupportFragmentManager(), "REMAP_ACCOUNT");
           });
         });
@@ -775,18 +767,21 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         mAdapter.swapCursor(c);
         if (count > 0) {
           if (firstLoadCompleted) {
-            mListView.post(() -> {
-              if (listState != null) {
-                mListView.getWrappedList().onRestoreInstanceState(listState);
-                listState = null;
-              }
+            binding.list.post(() -> {
+              if (listState != null)
+                if (binding != null) {
+                  binding.list.getWrappedList().onRestoreInstanceState(listState);
+                }
+              listState = null;
             });
           } else {
             firstLoadCompleted = true;
             if (prefHandler.getBoolean(PrefKey.SCROLL_TO_CURRENT_DATE, false)) {
               final int currentPosition = findCurrentPosition(c);
-              mListView.post(() -> {
-                mListView.setSelection(currentPosition);
+              binding.list.post(() -> {
+                if (binding != null) {
+                  binding.list.setSelection(currentPosition);
+                }
               });
             }
           }
@@ -824,7 +819,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
             previousBalance = interimBalance;
           } while (c.moveToNext());
         }
-        //if the transactionscursor has been loaded before the grouping cursor, we need to refresh
+        //if the transactionsCursor has been loaded before the grouping cursor, we need to refresh
         //in order to have accurate grouping values
         if (mTransactionsCursor != null)
           mAdapter.notifyDataSetChanged();
@@ -915,7 +910,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   }
 
   private class MyGroupedAdapter extends TransactionAdapter implements SectionIndexingStickyListHeadersAdapter {
-    private LayoutInflater inflater;
+    private final LayoutInflater inflater;
 
     private MyGroupedAdapter(Context context, int layout, Cursor c, int flags) {
       super(context, layout, c, flags, currencyFormatter, prefHandler, currencyContext);
@@ -924,13 +919,13 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-      if (!mListView.isHeaderCollapsed(headerId(cursor)))
+      if (!binding.list.isHeaderCollapsed(headerId(cursor)))
         super.bindView(view, context, cursor);
     }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-      if (mListView.isHeaderCollapsed(headerId(cursor))) {
+      if (binding.list.isHeaderCollapsed(headerId(cursor))) {
         return new View(context);
       } else {
         return super.newView(context, cursor, parent);
@@ -943,7 +938,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
 
     @Override
     public int getItemViewType(int position) {
-      return mListView.isHeaderCollapsed(getHeaderId(position)) ? 0 : 1;
+      return binding.list.isHeaderCollapsed(getHeaderId(position)) ? 0 : 1;
     }
 
     @Override
@@ -954,26 +949,49 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     @Override
     public View getHeaderView(int position, View convertView, ViewGroup parent) {
       HeaderViewHolder holder = null;
+      final long headerId = getHeaderId(position);
       final boolean withBudget = BaseTransactionList.this.getFilter().isEmpty() &&
           budget != null;
 
       if (convertView != null) {
         holder = (HeaderViewHolder) convertView.getTag();
-        boolean holderHasBudget = holder.budgetProgress != null;
+        boolean holderHasBudget = holder.budgetProgress() != null;
         if (withBudget != holderHasBudget) holder = null;
       }
       if (holder == null) {
-        final int headerLayout = withBudget ? R.layout.header_with_budget : R.layout.header;
-        convertView = inflater.inflate(headerLayout, parent, false);
-        holder = new HeaderViewHolder(convertView);
+        ViewBinding binding = withBudget ? HeaderWithBudgetBinding.inflate(inflater, parent, false) : HeaderBinding.inflate(inflater, parent, false);
+        convertView = binding.getRoot();
+        holder = new HeaderViewHolder(binding);
         convertView.setTag(holder);
+      }
+      holder.sumLine().setVisibility(prefHandler.getBoolean(PrefKey.GROUP_HEADER, true) ? View.VISIBLE : View.GONE);
+      HeaderViewHolder finalHolder = holder;
+      holder.interimBalance().setOnClickListener(v -> finalHolder.sumLine().setVisibility(finalHolder.sumLine().getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
+      if (mAccount.getGrouping() != Grouping.NONE) {
+        holder.headerIndicator().setVisibility(View.VISIBLE);
+        holder.headerIndicator().setExpanded(!binding.list.isHeaderCollapsed(headerId));
+        holder.headerIndicator().setOnClickListener(v -> finalHolder.headerIndicator().rotate(
+            !binding.list.isHeaderCollapsed(headerId), expanded -> {
+              if (expanded) {
+                binding.list.expand(headerId);
+                mAdapter.notifyDataSetChanged();
+                persistCollapsedHeaderIds();
+                finalHolder.dividerBottom().setVisibility(View.VISIBLE);
+              } else {
+                binding.list.collapse(headerId);
+                persistCollapsedHeaderIds();
+                finalHolder.dividerBottom().setVisibility(View.GONE);
+              }
+            }));
+      } else {
+        holder.headerIndicator().setVisibility(View.GONE);
       }
 
       Cursor c = getCursor();
       if (c != null) {
         c.moveToPosition(position);
-        fillSums(holder, getHeaderId(position));
-        holder.text.setText(mAccount.getGrouping().getDisplayTitle(getActivity(), c.getInt(getColumnIndexForYear()), getSecond(c),
+        fillSums(holder, headerId);
+        holder.text().setText(mAccount.getGrouping().getDisplayTitle(getActivity(), c.getInt(getColumnIndexForYear()), getSecond(c),
             DateInfo.fromCursor(c), userLocaleProvider.getUserPreferredLocale()));
       }
       return convertView;
@@ -983,25 +1001,25 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     private void fillSums(HeaderViewHolder holder, long headerId) {
       Long[] data = headerData != null ? headerData.get(headerId) : null;
       if (data != null) {
-        holder.sumIncome.setText("+ " + currencyFormatter.convAmount(data[0], mAccount.getCurrencyUnit()));
-        final Long expensesSum = data[1];
-        holder.sumExpense.setText(currencyFormatter.convAmount(expensesSum, mAccount.getCurrencyUnit()));
-        holder.sumTransfer.setText(Transfer.BI_ARROW + " " + currencyFormatter.convAmount(
+        holder.sumIncome().setText("⊕ " + currencyFormatter.convAmount(data[0], mAccount.getCurrencyUnit()));
+        final Long expensesSum = -data[1];
+        holder.sumExpense().setText("⊖ " + currencyFormatter.convAmount(expensesSum, mAccount.getCurrencyUnit()));
+        holder.sumTransfer().setText(Transfer.BI_ARROW + " " + currencyFormatter.convAmount(
             data[2], mAccount.getCurrencyUnit()));
         String formattedDelta = String.format("%s %s", Long.signum(data[4]) > -1 ? "+" : "-",
             currencyFormatter.convAmount(Math.abs(data[4]), mAccount.getCurrencyUnit()));
         currencyFormatter.convAmount(Math.abs(data[4]), mAccount.getCurrencyUnit());
-        holder.interimBalance.setText(
+        holder.interimBalance().setText(
             BaseTransactionList.this.getFilter().isEmpty() && !mAccount.isHomeAggregate() ? String.format("%s %s = %s",
                 currencyFormatter.convAmount(data[3], mAccount.getCurrencyUnit()), formattedDelta,
                 currencyFormatter.convAmount(data[5], mAccount.getCurrencyUnit())) :
                 formattedDelta);
-        if (holder.budgetProgress != null && budget != null) {
+        if (holder.budgetProgress() != null && budget != null) {
           long budgetAmountMinor = budget.getAmountMinor();
-          int progress = budgetAmountMinor == 0 ? 100 : Math.round(-expensesSum * 100F / budgetAmountMinor);
-          UiUtils.configureProgress(holder.budgetProgress, progress);
-          holder.budgetProgress.setFinishedStrokeColor(mAccount.color);
-          holder.budgetProgress.setUnfinishedStrokeColor(getComplementColor(mAccount.color));
+          int progress = budgetAmountMinor == 0 ? 100 : Math.round(expensesSum * 100F / budgetAmountMinor);
+          UiUtils.configureProgress(holder.budgetProgress(), progress);
+          holder.budgetProgress().setFinishedStrokeColor(mAccount.color);
+          holder.budgetProgress().setUnfinishedStrokeColor(getComplementColor(mAccount.color));
         }
       }
     }
@@ -1153,46 +1171,58 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     }
   }
 
-  class HeaderViewHolder {
-    @BindView(R.id.interim_balance)
-    TextView interimBalance;
-    @BindView(R.id.text)
-    TextView text;
-    @BindView(R.id.sum_income)
-    TextView sumIncome;
-    @BindView(R.id.sum_expense)
-    TextView sumExpense;
-    @BindView(R.id.sum_transfer)
-    TextView sumTransfer;
-    @Nullable
-    @BindView(R.id.budgetProgress)
-    DonutProgress budgetProgress;
-    @BindView(R.id.divider_bottom)
-    View dividerBottom;
+  static class HeaderViewHolder {
+    private final ViewBinding viewBinding;
 
-    HeaderViewHolder(View convertView) {
-      ButterKnife.bind(this, convertView);
+    TextView interimBalance() {
+      return viewBinding instanceof HeaderBinding ? ((HeaderBinding) viewBinding).headerLine.interimBalance : ((HeaderWithBudgetBinding) viewBinding).interimBalance;
+    }
+
+    TextView text() {
+      return viewBinding instanceof HeaderBinding ? ((HeaderBinding) viewBinding).headerLine.text : ((HeaderWithBudgetBinding) viewBinding).text;
+    }
+
+    ViewGroup sumLine() {
+      return viewBinding instanceof HeaderBinding ? ((HeaderBinding) viewBinding).sumLine : ((HeaderWithBudgetBinding) viewBinding).sumLine;
+    }
+
+    TextView sumIncome() {
+      return viewBinding instanceof HeaderBinding ? ((HeaderBinding) viewBinding).sumIncome : ((HeaderWithBudgetBinding) viewBinding).sumIncome;
+    }
+
+    TextView sumExpense() {
+      return viewBinding instanceof HeaderBinding ? ((HeaderBinding) viewBinding).sumExpense : ((HeaderWithBudgetBinding) viewBinding).sumExpense;
+    }
+
+    TextView sumTransfer() {
+      return viewBinding instanceof HeaderBinding ? ((HeaderBinding) viewBinding).sumTransfer : ((HeaderWithBudgetBinding) viewBinding).sumTransfer;
+    }
+
+    @Nullable
+    DonutProgress budgetProgress() {
+      return viewBinding instanceof HeaderBinding ? null : ((HeaderWithBudgetBinding) viewBinding).budgetProgress;
+    }
+
+    View dividerBottom() {
+      return viewBinding instanceof HeaderBinding ? ((HeaderBinding) viewBinding).dividerBottom : ((HeaderWithBudgetBinding) viewBinding).dividerBottom;
+    }
+
+    ExpansionHandle headerIndicator() {
+      return viewBinding instanceof HeaderBinding ? ((HeaderBinding) viewBinding).expansionHandle.getRoot() : ((HeaderWithBudgetBinding) viewBinding).expansionHandle.getRoot();
+    }
+
+    HeaderViewHolder(ViewBinding viewBinding) {
+      this.viewBinding = viewBinding;
     }
   }
 
   @Override
   public void onHeaderClick(StickyListHeadersListView l, View header,
                             int itemPosition, long headerId, boolean currentlySticky) {
-    final HeaderViewHolder viewHolder = (HeaderViewHolder) header.getTag();
-    if (mListView.isHeaderCollapsed(headerId)) {
-      mListView.expand(headerId);
-      mAdapter.notifyDataSetChanged();
-      persistCollapsedHeaderIds();
-      viewHolder.dividerBottom.setVisibility(View.VISIBLE);
-    } else {
-      mListView.collapse(headerId);
-      persistCollapsedHeaderIds();
-      viewHolder.dividerBottom.setVisibility(View.GONE);
-    }
   }
 
   private void persistCollapsedHeaderIds() {
-    PreferenceUtilsKt.putLongList(prefHandler, collapsedHeaderIdsPrefKey(),  mListView.getCollapsedHeaderIds());
+    PreferenceUtilsKt.putLongList(prefHandler, collapsedHeaderIdsPrefKey(), binding.list.getCollapsedHeaderIds());
   }
 
   private String collapsedHeaderIdsPrefKey() {
@@ -1218,6 +1248,8 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     final boolean hasSplit = isSplitAtPosition(info.position);
     configureMenuInternal(menu, hasSplit, isVoidAtPosition(info.position), !hasSplit, isTransferAtPosition(info.position), 1);
   }
+
+  protected abstract void configureMenuInternal(Menu menu, boolean hasSplit, boolean voidAtPosition, boolean hasNotSplit, boolean transferAtPosition, int count);
 
   @Override
   protected void configureMenu11(Menu menu, int count, AbsListView lv) {
@@ -1280,30 +1312,16 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         } catch (IllegalArgumentException ex) {
           status = CrStatus.UNRECONCILED;
         }
-        if (status.equals(CrStatus.VOID)) {
-          return true;
-        }
+        return status.equals(CrStatus.VOID);
       }
     }
     return false;
   }
 
-  private void configureMenuInternal(Menu menu, boolean hasSplit, boolean hasVoid, boolean hasNotSplit, boolean hasTransfer, int count) {
-    menu.findItem(R.id.CREATE_TEMPLATE_COMMAND).setVisible(count == 1);
-    menu.findItem(R.id.SPLIT_TRANSACTION_COMMAND).setVisible(!hasSplit && !hasVoid);
-    menu.findItem(R.id.UNGROUP_SPLIT_COMMAND).setVisible(!hasNotSplit && !hasVoid);
-    menu.findItem(R.id.UNDELETE_COMMAND).setVisible(hasVoid);
-    menu.findItem(R.id.EDIT_COMMAND).setVisible(count == 1 && !hasVoid);
-    menu.findItem(R.id.REMAP_ACCOUNT_COMMAND).setVisible(((MyExpenses) getActivity()).getAccountCount() > 1);
-    menu.findItem(R.id.REMAP_PAYEE_COMMAND).setVisible(!hasTransfer);
-    menu.findItem(R.id.REMAP_CATEGORY_COMMAND).setVisible(!hasTransfer && !hasSplit);
-    menu.findItem(R.id.REMAP_METHOD_COMMAND).setVisible(!hasTransfer);
-  }
-
   @SuppressLint("NewApi")
   public void onDrawerOpened() {
     if (mActionMode != null) {
-      mCheckedListItems = mListView.getWrappedList().getCheckedItemPositions().clone();
+      mCheckedListItems = binding.list.getWrappedList().getCheckedItemPositions().clone();
       mActionMode.finish();
     }
   }
@@ -1312,7 +1330,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     if (mCheckedListItems != null) {
       for (int i = 0; i < mCheckedListItems.size(); i++) {
         if (mCheckedListItems.valueAt(i)) {
-          mListView.getWrappedList().setItemChecked(mCheckedListItems.keyAt(i), true);
+          binding.list.getWrappedList().setItemChecked(mCheckedListItems.keyAt(i), true);
         }
       }
     }
@@ -1331,8 +1349,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   /**
    * Removes a given filter
    *
-   * @param id
-   * @return true if the filter was set and succesfully removed, false otherwise
+   * @return true if the filter was set and successfully removed, false otherwise
    */
   private boolean removeFilter(int id) {
     boolean isFiltered = filterPersistence.removeFilter(id);
@@ -1367,11 +1384,11 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     }
     MenuItem searchMenu = menu.findItem(R.id.SEARCH_COMMAND);
     if (searchMenu != null) {
-      filterCard.setVisibility(getFilter().isEmpty() ? View.GONE : View.VISIBLE);
+      binding.filterCard.setVisibility(getFilter().isEmpty() ? View.GONE : View.VISIBLE);
       searchMenu.setChecked(!getFilter().isEmpty());
       MenuUtilsKt.checkMenuIcon(searchMenu);
       if (!getFilter().isEmpty()) {
-        addChipsBulk(filterView, Stream.of(getFilter().getCriteria()).map(criterion -> criterion.prettyPrint(getContext())).collect(Collectors.toList()), null);
+        addChipsBulk(binding.filter, Stream.of(getFilter().getCriteria()).map(criterion -> criterion.prettyPrint(getContext())).collect(Collectors.toList()), null);
       }
       SubMenu filterMenu = searchMenu.getSubMenu();
       for (int i = 0; i < filterMenu.size(); i++) {
@@ -1382,7 +1399,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
             enabled = mappedCategories;
             break;
           case R.id.FILTER_STATUS_COMMAND:
-            enabled = !mAccount.getType().equals(AccountType.CASH);
+            enabled = mAccount.isAggregate() || !mAccount.getType().equals(AccountType.CASH);
             break;
           case R.id.FILTER_PAYEE_COMMAND:
             enabled = mappedPayees;
@@ -1395,6 +1412,9 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
             break;
           case R.id.FILTER_TAG_COMMAND:
             enabled = hasTags;
+            break;
+          case R.id.FILTER_ACCOUNT_COMMAND:
+            enabled = mAccount.isAggregate();
             break;
         }
         Criteria c = getFilter().get(filterItem.getItemId());
@@ -1445,7 +1465,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   }
 
   @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
+  public boolean onOptionsItemSelected(@NonNull MenuItem item) {
     if (mAccount == null || getActivity() == null) {
       return false;
     }
@@ -1512,6 +1532,12 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
               .show(getActivity().getSupportFragmentManager(), "TRANSFER_FILTER");
         }
         return true;
+      case R.id.FILTER_ACCOUNT_COMMAND:
+        if (!removeFilter(command)) {
+          SelectMultipleAccountDialogFragment.newInstance(mAccount.getCurrencyUnit().getCode())
+              .show(getActivity().getSupportFragmentManager(), "ACCOUNT_FILTER");
+        }
+        return true;
       case R.id.PRINT_COMMAND:
         MyExpenses ctx = (MyExpenses) getActivity();
         Result appDirStatus = AppDirHelper.checkAppDir(ctx);
@@ -1569,38 +1595,38 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         addCategoryFilter(label, catIds);
       }
     } else if (requestCode == FILTER_TAGS_REQUEST) {
-      final ArrayList<Tag> tagList = intent.getParcelableArrayListExtra(KEY_TAGLIST);
+      final ArrayList<Tag> tagList = intent.getParcelableArrayListExtra(KEY_TAG_LIST);
       if (tagList != null && !tagList.isEmpty()) {
         long[] tagIds = Stream.of(tagList).mapToLong(Tag::getId).toArray();
         String label = Stream.of(tagList).map(Tag::getLabel).collect(Collectors.joining(", "));
         addFilterCriteria(new TagCriteria(label, tagIds));
       }
-    } else if (requestCode == MAP_CATEGORY_RQEUST || requestCode == MAP_PAYEE_RQEUST
-        || requestCode == MAP_METHOD_RQEUST || requestCode == MAP_ACCOUNT_RQEUST) {
+    } else if (requestCode == MAP_CATEGORY_REQUEST || requestCode == MAP_PAYEE_REQUEST
+        || requestCode == MAP_METHOD_REQUEST || requestCode == MAP_ACCOUNT_REQUEST) {
       Bundle b = new Bundle();
       int columnStringResId, confirmationStringResId;
       String column;
       String intentKey = KEY_ROWID;
       switch (requestCode) {
-        case MAP_CATEGORY_RQEUST: {
+        case MAP_CATEGORY_REQUEST: {
           column = intentKey = KEY_CATID;
           columnStringResId = R.string.category;
           confirmationStringResId = R.string.remap_category;
           break;
         }
-        case MAP_PAYEE_RQEUST: {
+        case MAP_PAYEE_REQUEST: {
           column = intentKey = KEY_PAYEEID;
           columnStringResId = R.string.payer_or_payee;
           confirmationStringResId = R.string.remap_payee;
           break;
         }
-        case MAP_METHOD_RQEUST: {
+        case MAP_METHOD_REQUEST: {
           column = KEY_METHODID;
           columnStringResId = R.string.method;
           confirmationStringResId = R.string.remap_method;
           break;
         }
-        case MAP_ACCOUNT_RQEUST: {
+        case MAP_ACCOUNT_REQUEST: {
           column = KEY_ACCOUNTID;
           columnStringResId = R.string.account;
           confirmationStringResId = R.string.remap_account;
@@ -1619,12 +1645,8 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
       b.putInt(ConfirmationDialogFragment.KEY_CHECKBOX_LABEL, R.string.menu_clone_transaction);
       b.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE, R.id.REMAP_COMMAND);
       ConfirmationDialogFragment.newInstance(b).show(getParentFragmentManager(), REMAP_DIALOG);
-    } else if (requestCode == MAP_TAG_RQEUST) {
-      handleTagResult(intent);
     }
   }
-
-  protected abstract void handleTagResult(Intent intent);
 
   @Override
   public boolean onResult(@NonNull String dialogTag, int which, @NonNull Bundle extras) {
@@ -1658,7 +1680,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   }
 
   public void remap(@NonNull Bundle extras, boolean shouldClone) {
-    final long[] checkedItemIds = mListView.getCheckedItemIds();
+    final long[] checkedItemIds = binding.list.getCheckedItemIds();
     if (shouldClone) {
       final ProgressDialogFragment progressDialog = ProgressDialogFragment.newInstance(
           getString(R.string.progress_dialog_saving), null, ProgressDialog.STYLE_HORIZONTAL, false);

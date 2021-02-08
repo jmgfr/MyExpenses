@@ -13,9 +13,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import icepick.Icepick
 import icepick.State
 import org.threeten.bp.format.DateTimeFormatter
@@ -25,7 +23,7 @@ import org.totschnig.myexpenses.activity.ManageTemplates
 import org.totschnig.myexpenses.activity.ProtectedFragmentActivity
 import org.totschnig.myexpenses.databinding.PlanInstanceBinding
 import org.totschnig.myexpenses.databinding.PlannerFragmentBinding
-import org.totschnig.myexpenses.dialog.CommitSafeDialogFragment
+import org.totschnig.myexpenses.dialog.BaseDialogFragment
 import org.totschnig.myexpenses.model.Money
 import org.totschnig.myexpenses.provider.TransactionProvider
 import org.totschnig.myexpenses.task.TaskExecutionFragment
@@ -35,6 +33,7 @@ import org.totschnig.myexpenses.util.getDateTimeFormatter
 import org.totschnig.myexpenses.viewmodel.PlannerViewModel
 import org.totschnig.myexpenses.viewmodel.data.EventObserver
 import org.totschnig.myexpenses.viewmodel.data.PlanInstance
+import org.totschnig.myexpenses.viewmodel.data.PlanInstanceSet
 import org.totschnig.myexpenses.viewmodel.data.PlanInstanceState
 import org.totschnig.myexpenses.viewmodel.data.PlanInstanceUpdate
 import timber.log.Timber
@@ -59,7 +58,7 @@ fun configureMenuInternalPlanInstances(menu: Menu, count: Int, withOpen: Boolean
     menu.findItem(R.id.EDIT_PLAN_INSTANCE_COMMAND).isVisible = count == 1 && withApplied
 }
 
-class PlannerFragment : CommitSafeDialogFragment() {
+class PlannerFragment : BaseDialogFragment() {
 
     private var _binding: PlannerFragmentBinding? = null
 
@@ -74,7 +73,7 @@ class PlannerFragment : CommitSafeDialogFragment() {
 
     @State
     @JvmField
-    var selectedInstances: HashSet<PlanInstance> = HashSet()
+    var selectedInstances: PlanInstanceSet = PlanInstanceSet()
 
     private lateinit var backgroundColor: ColorStateList
 

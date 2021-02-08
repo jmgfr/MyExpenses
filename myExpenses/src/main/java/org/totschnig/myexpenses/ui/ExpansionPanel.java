@@ -1,7 +1,5 @@
 package org.totschnig.myexpenses.ui;
 
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -14,25 +12,13 @@ import org.totschnig.myexpenses.ui.animation.ExpandAnimation;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 public class ExpansionPanel extends LinearLayout {
-
-  private static final int ROTATION_EXPANDED = 0;
-  private static final int ROTATION_COLLAPSED = 180;
-
-  public interface Listener {
-    void onExpansionStateChanged(boolean expanded);
-  }
   private int contentVisibility;
   private boolean isMeasured;
-  @BindView(R.id.headerIndicator)
-  View headerIndicator;
-  @BindView(R.id.expansionContent)
+  ExpansionHandle headerIndicator;
   View expansionContent;
   @Nullable
-  @BindView(R.id.expansionTrigger)
   View expansionTrigger;
 
   public void setListener(@Nullable Listener listener) {
@@ -62,7 +48,9 @@ public class ExpansionPanel extends LinearLayout {
   @Override
   protected void onFinishInflate() {
     super.onFinishInflate();
-    ButterKnife.bind(this);
+    expansionTrigger = findViewById(R.id.expansionTrigger);
+    expansionContent = findViewById(R.id.expansionContent);
+    headerIndicator = findViewById(R.id.headerIndicator);
     updateIndicator();
     if (hasNoDefaultTransition()) {
       expansionContent.getViewTreeObserver().addOnGlobalLayoutListener(
@@ -86,32 +74,7 @@ public class ExpansionPanel extends LinearLayout {
     View trigger = expansionTrigger != null ? expansionTrigger : headerIndicator;
     trigger.setOnClickListener(v -> {
       final boolean visible = expansionContent.getVisibility() == VISIBLE;
-      Animator animator = ObjectAnimator.ofFloat(headerIndicator, View.ROTATION, visible ? ROTATION_COLLAPSED : ROTATION_EXPANDED);
-      animator.addListener(new Animator.AnimatorListener() {
-        @Override
-        public void onAnimationStart(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationEnd(Animator animation) {
-          updateIndicatorContentDescritpion();
-          if (listener != null) {
-            listener.onExpansionStateChanged(!visible);
-          }
-        }
-
-        @Override
-        public void onAnimationCancel(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationRepeat(Animator animation) {
-
-        }
-      });
-      animator.start();
+      headerIndicator.rotate(visible, listener);
       //if android:animateLayoutChanges is true we go with the default animation,
       //which works well, unless we are in a list view
       if (hasNoDefaultTransition()) {
@@ -128,14 +91,7 @@ public class ExpansionPanel extends LinearLayout {
   }
 
   private void updateIndicator() {
-    headerIndicator.setRotation(expansionContent.getVisibility() == VISIBLE ? ROTATION_EXPANDED : ROTATION_COLLAPSED);
-    updateIndicatorContentDescritpion();
-  }
-
-  private void updateIndicatorContentDescritpion() {
-    headerIndicator.setContentDescription(
-        getResources().getString(headerIndicator.getRotation() == ROTATION_EXPANDED ?
-            R.string.content_description_collapse : R.string.content_description_expand));
+    headerIndicator.setExpanded(expansionContent.getVisibility() == VISIBLE);
   }
 
   public void setContentVisibility(int visibility) {

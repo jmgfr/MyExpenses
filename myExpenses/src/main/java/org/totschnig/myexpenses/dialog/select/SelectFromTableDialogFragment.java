@@ -35,7 +35,7 @@ import com.squareup.sqlbrite3.BriteContentResolver;
 
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
-import org.totschnig.myexpenses.dialog.CommitSafeDialogFragment;
+import org.totschnig.myexpenses.dialog.BaseDialogFragment;
 import org.totschnig.myexpenses.util.SparseBooleanArrayParcelable;
 
 import javax.inject.Inject;
@@ -51,7 +51,7 @@ import static android.widget.AbsListView.CHOICE_MODE_NONE;
 import static android.widget.AdapterView.INVALID_ROW_ID;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ROWID;
 
-public abstract class SelectFromTableDialogFragment extends CommitSafeDialogFragment implements OnClickListener {
+public abstract class SelectFromTableDialogFragment extends BaseDialogFragment implements OnClickListener {
 
   private static final String KEY_CHECKED_POSITIONS = "checked_positions";
   public static final String KEY_DIALOG_TITLE = "dialog_tile";
@@ -69,11 +69,13 @@ public abstract class SelectFromTableDialogFragment extends CommitSafeDialogFrag
   }
 
   protected int getDialogTitle() {
-    return getArguments().getInt(KEY_DIALOG_TITLE);
+    return 0;
   }
 
+  @NonNull
   abstract Uri getUri();
 
+  @NonNull
   abstract String getColumn();
 
   @Nullable

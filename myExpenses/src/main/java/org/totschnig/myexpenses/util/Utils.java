@@ -106,9 +106,8 @@ public class Utils {
   }
 
   @Nullable
-  public static String getCountryFromTelephonyManager() {
-    TelephonyManager telephonyManager = (TelephonyManager) MyApplication.getInstance()
-        .getSystemService(Context.TELEPHONY_SERVICE);
+  public static String getCountryFromTelephonyManager(Context context) {
+    TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
     if (telephonyManager != null) {
       try {
         String userCountry = telephonyManager.getNetworkCountryIso();
@@ -124,10 +123,11 @@ public class Utils {
 
   public static CurrencyUnit getHomeCurrency() {
     //TODO provide home currency in a cleaner way
-    AppComponent appComponent = MyApplication.getInstance().getAppComponent();
+    final MyApplication context = MyApplication.getInstance();
+    AppComponent appComponent = context.getAppComponent();
     String home = appComponent.prefHandler().getString(PrefKey.HOME_CURRENCY, null);
     final CurrencyContext currencyContext = appComponent.currencyContext();
-    return currencyContext.get(home != null ? home : getLocalCurrency().getCurrencyCode());
+    return currencyContext.get(home != null ? home : getLocalCurrency(context).getCurrencyCode());
   }
 
   public static double adjustExchangeRate(double raw, CurrencyUnit currencyUnit) {
@@ -135,9 +135,9 @@ public class Utils {
     return raw * Math.pow(10, minorUnitDelta);
   }
 
-  private static Currency getLocalCurrency() {
+  private static Currency getLocalCurrency(Context context) {
     Currency result = null;
-    String userCountry = getCountryFromTelephonyManager();
+    String userCountry = getCountryFromTelephonyManager(context);
     if (!TextUtils.isEmpty(userCountry)) {
       try {
         result = Currency.getInstance(new Locale("", userCountry));
@@ -152,8 +152,13 @@ public class Utils {
 
   public static List<Map<String, String>> getProjectDependencies(Context context) {
     List<Map<String, String>> result = new ArrayList<>();
-    XmlPullParser xpp = context.getResources().getXml(R.xml.project_dependencies);
-    int eventType = 0;
+    addProjectDependencies(result, context.getResources().getXml(R.xml.project_dependencies));
+    addProjectDependencies(result, context.getResources().getXml(R.xml.additional_dependencies));
+    return result;
+  }
+
+  private static void addProjectDependencies(List<Map<String, String>> result, XmlPullParser xpp) {
+    int eventType;
     try {
       eventType = xpp.getEventType();
       Map<String, String> project = null;
@@ -175,15 +180,6 @@ public class Utils {
       }
     } catch (Exception e) {
       Timber.e(e);
-    }
-    return result;
-  }
-
-  public enum Feature {
-    ;
-
-    public boolean isEnabled() {
-      return true;
     }
   }
 

@@ -546,7 +546,6 @@
     <string name="exchange_rate">Kurs wymiany</string>
     <string name="date_format_hour">Godzina</string>
     <string name="date_format_minute">Minuta</string>
-    <string name="copied_to_clipboard">Skopiowano do schowka</string>
     <string name="menu_sort">Sortuj według</string>
     <string name="pref_sort_order_last_used">Ostatnio używane</string>
     <string name="pref_sort_order_custom">Spersonalizowany </string>
@@ -780,4 +779,4 @@
     <string name="pref_category_title_features">Funkcje</string>
     <string name="button_download">Pobierz</string>
     <string name="menu_save_and_new_content_description">Zapisuje dane, zostawia formularz włączony dla tworzenia nowej transakcji z tymi samymi danymi.</string>
-</resources>
+    </resources>

@@ -555,7 +555,6 @@
     <string name="exchange_rate">Wechselkurs</string>
     <string name="date_format_hour">Stunde</string>
     <string name="date_format_minute">Minute</string>
-    <string name="copied_to_clipboard">In Zwischenablage kopiert</string>
     <string name="menu_sort">Sortieren nach</string>
     <string name="pref_sort_order_last_used">Zuletzt verwendet</string>
     <string name="pref_sort_order_custom">Benutzerdefiniert</string>
@@ -860,6 +859,7 @@
     <string name="budget_filter_all_methods">Alle Zahlungsweisen</string>
     <string name="budget_filter_all_states">Alle Status</string>
     <string name="budget_filter_all_tags">Alle Schlagwörter</string>
+    <string name="budget_filter_all_accounts">Alle Konten</string>
     <string name="budget_form_label_filter">Filter</string>
     <string name="dialog_title_warning_delete_budget">Budget löschen?</string>
     <string name="warning_delete_budget">Budget \"%1$s\" wird gelöscht.</string>
@@ -954,7 +954,25 @@
     <string name="pref_clone_with_current_date_title">Datum der geklonten Buchungen</string>
     <string name="default_action">Standardaktion</string>
     <string name="template_default_action_without_amount_hint">Vorlage ohne Betrag sollte mit der Standardaktion \'Bearbeiten\' gespeichert werden.</string>
+    <string name="plan_automatic_without_amount_hint">Plan ohne Betrag sollte nicht mit automatischer Ausführung gespeichert werden</string>
     <string name="content_description_edit_plan">Plan in Kalender-App bearbeiten</string>
     <string name="reset_equivalent_amounts_success">Gleichwertige Beträge wurden zurückgesetzt</string>
     <string name="menu_save_and_new_content_description">Abspeichern, und das Formular für das Erfassen einer neuen  Buchung mit denselben Daten offen lassen</string>
+    <!-- Title of a preference where user can select between Ml Kit and Tesseract as Engine for Optical character recognition -->
+    <string name="pref_ocr_engine_title">Engine für Texterkennung</string>
+    <!-- Title of a preference where user can select language for text recognition with Tesseract -->
+    <string name="pref_tesseract_language_title">Sprache für Tesseract</string>
+    <!-- %s is replaced with language -->
+    <string name="tesseract_download_confirmation">Möchten Sie Texterkennungsdaten für %s herunterladen?</string>
+    <!-- %s is replaced with language -->
+    <string name="download_completed">Der Download (%s) ist abgeschlossen.</string>
+    <!-- %s is replaced with information on the engine or application used for running text recognition -->
+    <string name="ocr_recognition_info">Texterkennung wird mit %sausgeführt</string>
+    <string name="ocr_download_info">Die Texterkennungsfunktion wird von einer externen Anwendung bereitgestellt.</string>
+    <!-- %s is replaced with the title of the preference for setting a passphrase for backups (pref_security_export_passphrase_title) -->
+    <string name="warning_unencrypted_backup">Während Ihre Daten vor unbefugtem Zugriff auf diesem Gerät geschützt sind, werden Sicherungskopien ohne Verschlüsselung erstellt, es sei denn, Sie konfigurieren %s.</string>
+    <!-- Title of a preference switch that allows to configure display of group header. If switched on sums for income/expense/transfer are shown -->
+    <string name="pref_group_header_show_details_summary">Detailsummen in der Gruppenkopfzeile anzeigen</string>
+    <!-- Title of a menu item and a dialogue that allow to adjust the current balance. User can enter the new balance, and transaction form is opened with the amount prefiled to the difference between old and new balance  -->
+    <string name="new_balance">Neuer Saldo</string>
 </resources>

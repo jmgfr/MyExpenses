@@ -498,7 +498,6 @@
     <string name="exchange_rate">Rata de schimb</string>
     <string name="date_format_hour">Ora</string>
     <string name="date_format_minute">Minutul</string>
-    <string name="copied_to_clipboard">Copiat în clipboard</string>
     <string name="menu_sort">Setează dupa</string>
     <string name="pref_sort_order_last_used">Ultima utilizate</string>
     <string name="pref_sort_order_custom">Custom</string>
@@ -529,4 +528,4 @@
     <!-- Title of a section on the Settings screen where each entry corresponds to a subsection dedicated to one feature (functionality)  -->
     <string name="pref_category_title_features">Funcţionalităţi</string>
     <string name="menu_save_and_new_content_description">Salvaţi datele, lăsaţi formularul deschis pentru a crea o nouă tranzacţie cu aceleaşi date.</string>
-</resources>
+    </resources>

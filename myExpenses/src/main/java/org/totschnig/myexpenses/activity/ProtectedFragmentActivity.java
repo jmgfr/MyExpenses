@@ -37,19 +37,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import com.annimon.stream.Optional;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.dialog.ConfirmationDialogFragment;
 import org.totschnig.myexpenses.dialog.DialogUtils;
 import org.totschnig.myexpenses.dialog.HelpDialogFragment;
-import org.totschnig.myexpenses.dialog.MessageDialogFragment;
-import org.totschnig.myexpenses.dialog.MessageDialogFragment.MessageDialogListener;
 import org.totschnig.myexpenses.dialog.ProgressDialogFragment;
 import org.totschnig.myexpenses.feature.FeatureManager;
 import org.totschnig.myexpenses.fragment.DbWriteFragment;
@@ -59,14 +55,12 @@ import org.totschnig.myexpenses.model.ContribFeature;
 import org.totschnig.myexpenses.model.CurrencyContext;
 import org.totschnig.myexpenses.model.Model;
 import org.totschnig.myexpenses.model.Transaction;
-import org.totschnig.myexpenses.preference.PrefHandler;
 import org.totschnig.myexpenses.preference.PrefKey;
 import org.totschnig.myexpenses.provider.TransactionProvider;
 import org.totschnig.myexpenses.service.DailyScheduler;
 import org.totschnig.myexpenses.task.RestoreTask;
 import org.totschnig.myexpenses.task.TaskExecutionFragment;
 import org.totschnig.myexpenses.ui.AmountInput;
-import org.totschnig.myexpenses.ui.SnackbarAction;
 import org.totschnig.myexpenses.util.ColorUtils;
 import org.totschnig.myexpenses.util.CurrencyFormatter;
 import org.totschnig.myexpenses.util.DistributionHelper;
@@ -80,7 +74,6 @@ import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
 import org.totschnig.myexpenses.util.licence.LicenceHandler;
 import org.totschnig.myexpenses.util.licence.LicenceStatus;
 import org.totschnig.myexpenses.util.locale.UserLocaleProvider;
-import org.totschnig.myexpenses.util.tracking.Tracker;
 import org.totschnig.myexpenses.widget.AbstractWidgetKt;
 
 import java.io.Serializable;
@@ -89,15 +82,12 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import androidx.annotation.CallSuper;
-import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.util.Pair;
@@ -129,8 +119,8 @@ import static org.totschnig.myexpenses.util.DistributionHelper.getMarketSelfUri;
 import static org.totschnig.myexpenses.util.DistributionHelper.getVersionInfo;
 import static org.totschnig.myexpenses.util.TextUtils.concatResStrings;
 
-public abstract class ProtectedFragmentActivity extends AppCompatActivity
-    implements MessageDialogListener, OnSharedPreferenceChangeListener,
+public abstract class ProtectedFragmentActivity extends BaseActivity
+    implements OnSharedPreferenceChangeListener,
     ConfirmationDialogFragment.ConfirmationDialogListener,
     TaskExecutionFragment.TaskCallbacks, DbWriteFragment.TaskCallbacks,
     ProgressDialogFragment.ProgressDialogListener, AmountInput.Host {
@@ -147,12 +137,8 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
   private Optional<Boolean> confirmCredentialResult = Optional.empty();
   private Enum<?> helpVariant = null;
   protected ColorStateList textColorSecondary;
+  @Nullable
   protected FloatingActionButton floatingActionButton;
-
-  private Snackbar snackbar;
-
-  @Inject
-  protected Tracker tracker;
 
   @Inject
   protected CrashHandler crashHandler;
@@ -172,9 +158,6 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
   @Inject
   protected FeatureManager featureManager;
 
-  @Inject
-  protected PrefHandler prefHandler;
-
   private Pair<Integer, Integer> focusAfterRestoreInstanceState;
 
   public ColorStateList getTextColorSecondary() {
@@ -192,7 +175,6 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
     MyApplication.getInstance().getSettings().registerOnSharedPreferenceChangeListener(this);
     TypedArray themeArray = getTheme().obtainStyledAttributes(new int[]{android.R.attr.textColorSecondary});
     textColorSecondary = themeArray.getColorStateList(0);
-    tracker.init(this);
   }
 
   protected void onSaveInstanceState(@NonNull Bundle outState) {
@@ -203,7 +185,6 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
   @Override
   protected void attachBaseContext(Context newBase) {
     super.attachBaseContext(newBase);
-    injectDependencies();
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
       final MyApplication application = MyApplication.getInstance();
       final int customFontScale = application.getAppComponent().prefHandler().getInt(UI_FONTSIZE, 0);
@@ -247,6 +228,7 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
     return Settings.System.getFloat(contentResolver, Settings.System.FONT_SCALE, 1.0f) * (1 + customFontScale / 10F);
   }
 
+  @Override
   protected void injectDependencies() {
     ((MyApplication) getApplicationContext()).getAppComponent().inject(this);
   }
@@ -391,12 +373,10 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
   }
 
   @Override
-  @CallSuper
   public boolean dispatchCommand(int command, @Nullable Object tag) {
-    Bundle bundle = new Bundle();
-    String fullResourceName = getResources().getResourceName(command);
-    bundle.putString(Tracker.EVENT_PARAM_ITEM_ID, fullResourceName.substring(fullResourceName.indexOf('/') + 1));
-    logEvent(Tracker.EVENT_DISPATCH_COMMAND, bundle);
+    if (super.dispatchCommand(command, tag)) {
+      return true;
+    }
     Intent i;
     switch (command) {
       case R.id.RATE_COMMAND:
@@ -455,9 +435,7 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
         showContribDialog(null, null);
         return true;
       case R.id.WEB_COMMAND:
-        i = new Intent(Intent.ACTION_VIEW);
-        i.setData(Uri.parse(getString(R.string.website)));
-        startActivity(i);
+        startActionView(getString(R.string.website));
         return true;
       case R.id.HELP_COMMAND:
         doHelp((String) tag);
@@ -648,11 +626,13 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
    * @param extra
    * @param progressMessage if 0 no progress dialog will be shown
    */
+  @Deprecated
   public <T> void startTaskExecution(int taskId, T[] objectIds, Serializable extra,
                                      int progressMessage) {
     startTaskExecution(taskId, objectIds, extra, progressMessage, false);
   }
 
+  @Deprecated
   public <T> void startTaskExecution(int taskId, T[] objectIds, Serializable extra,
                                      int progressMessage, boolean withButton) {
     FragmentManager m = getSupportFragmentManager();
@@ -784,8 +764,8 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
     if (!isFinishing()) {
       Intent i = new Intent(this, MyExpenses.class);
       i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+      finishAffinity();
       startActivity(i);
-      finish();
     }
   }
 
@@ -799,6 +779,9 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
 
   @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    if (floatingActionButton != null) {
+      floatingActionButton.setEnabled(true);
+    }
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     boolean granted = PermissionHelper.allGranted(grantResults);
     storePermissionRequested(requestCode);
@@ -855,13 +838,17 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
   }
 
   public void requestPermission(PermissionGroup permissionGroup) {
+    if (floatingActionButton != null) {
+      floatingActionButton.setEnabled(false);
+    }
     ActivityCompat.requestPermissions(this, permissionGroup.androidPermissions,
         permissionGroup.requestCode);
   }
 
   @Override
   public void onPositive(Bundle args) {
-    dispatchCommand(args.getInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE), null);
+    dispatchCommand(args.getInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE),
+        args.getSerializable(ConfirmationDialogFragment.KEY_TAG_POSITIVE));
   }
 
   protected void doRestore(Bundle args) {
@@ -886,14 +873,6 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
 
   }
 
-  public void setTrackingEnabled(boolean enabled) {
-    tracker.setEnabled(enabled);
-  }
-
-  public void logEvent(String event, Bundle params) {
-    tracker.logEvent(event, params);
-  }
-
   @VisibleForTesting
   public Fragment getCurrentFragment() {
     return null;
@@ -911,81 +890,8 @@ public abstract class ProtectedFragmentActivity extends AppCompatActivity
     if (actionBar != null) actionBar.show();
   }
 
-  public void showDismissableSnackbar(int message) {
-    showDismissableSnackbar(getText(message));
-  }
-
-  public void showDismissableSnackbar(CharSequence message) {
-    showSnackbar(message, Snackbar.LENGTH_INDEFINITE,
-        new SnackbarAction(R.string.snackbar_dismiss, v -> snackbar.dismiss()));
-  }
-  
-  public void showSnackbar(int message) {
-    showSnackbar(message, Snackbar.LENGTH_LONG);
-  }
-
-  public void showSnackbar(int message, int duration) {
-    showSnackbar(getText(message), duration);
-  }
-
-  public void showSnackbar(@NonNull CharSequence message) {
-    showSnackbar(message, Snackbar.LENGTH_LONG, null);
-  }
-
-  public void showSnackbar(@NonNull CharSequence message, int duration) {
-    showSnackbar(message, duration, null);
-  }
-
-  public void showSnackbar(@NonNull CharSequence message, int duration, SnackbarAction snackbarAction) {
-    showSnackbar(message, duration, snackbarAction, null);
-  }
-
-  public void showSnackbar(@NonNull CharSequence message, int duration, SnackbarAction snackbarAction,
-                           Snackbar.Callback callback) {
-    View container = findViewById(getSnackbarContainerId());
-    if (container == null) {
-      CrashHandler.report(String.format("Class %s is unable to display snackbar", getClass()));
-      Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    } else {
-      showSnackbar(message, duration, snackbarAction, callback, container);
-    }
-  }
-
-  protected void showSnackbar(@NonNull CharSequence message, int duration, SnackbarAction snackbarAction,
-                              Snackbar.Callback callback, @NonNull View container) {
-    snackbar = Snackbar.make(container, message, duration);
-    UiUtils.increaseSnackbarMaxLines(snackbar);
-    if (snackbarAction != null) {
-      snackbar.setAction(snackbarAction.resId, snackbarAction.listener);
-    }
-    if (callback != null) {
-      snackbar.addCallback(callback);
-    }
-    snackbar.show();
-  }
-
-  public void dismissSnackbar() {
-    if (snackbar != null) {
-      snackbar.dismiss();
-    }
-  }
-
-  @IdRes
-  protected int getSnackbarContainerId() {
-    return R.id.fragment_container;
-  }
-
   public void showMessage(int resId) {
     showMessage(getString(resId));
-  }
-
-  public void showMessage(CharSequence message) {
-    MessageDialogFragment.newInstance(
-        null,
-        message,
-        MessageDialogFragment.Button.okButton(),
-        null, null)
-        .show(getSupportFragmentManager(), "MESSAGE");
   }
 
   public void checkGdprConsent(boolean forceShow) {

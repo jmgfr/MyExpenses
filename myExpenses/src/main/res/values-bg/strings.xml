@@ -223,6 +223,7 @@
     <string name="no_exportable_expenses">Няма транзакции, които да не са експортирани.</string>
     <string name="no_filemanager_installed">Няма инсталиран файлов менажер</string>
     <string name="no_calendar_app_installed">Не е намерено приложение за редактиране на събития от календара.</string>
+    <string name="image_capture_not_installed">Не е намерено приложение за снимане.</string>
     <string name="no_mapped_transactions">За този период няма транзакции, свързани с категорията.</string>
     <string name="no_methods">Няма начини на плащане.</string>
     <string name="no_parties">Няма страни.</string>
@@ -554,7 +555,6 @@
     <string name="exchange_rate">Обменен курс</string>
     <string name="date_format_hour">Час</string>
     <string name="date_format_minute">Минути</string>
-    <string name="copied_to_clipboard">Копирано в клипборда</string>
     <string name="menu_sort">Подреди по</string>
     <string name="pref_sort_order_last_used">Последно използван</string>
     <string name="pref_sort_order_custom">Ръчно</string>
@@ -859,6 +859,7 @@
     <string name="budget_filter_all_methods">Всички методи</string>
     <string name="budget_filter_all_states">Всички държави</string>
     <string name="budget_filter_all_tags">Всички маркери</string>
+    <string name="budget_filter_all_accounts">Всички сметки</string>
     <string name="budget_form_label_filter">Филтър</string>
     <string name="dialog_title_warning_delete_budget">Да се изтрие ли бюджетът?</string>
     <string name="warning_delete_budget">Бюджетът „%1$s“ ще бъде изтрит.</string>
@@ -953,5 +954,25 @@
     <string name="pref_clone_with_current_date_title">Дата на клонирани транзакции</string>
     <string name="default_action">Действие по подразбиране</string>
     <string name="template_default_action_without_amount_hint">Шаблон без сума трябва да бъде запазен с действие по подразбиране „Редактиране“</string>
+    <string name="plan_automatic_without_amount_hint">План без сума не трябва да се записва при автоматично изпълнение на плана</string>
+    <string name="content_description_edit_plan">Редактиране на план в приложението календар</string>
+    <string name="reset_equivalent_amounts_success">Еквивалентните суми са нулирани</string>
     <string name="menu_save_and_new_content_description">Запазва данните, но оставя отворена бланката - за създаване на нова транзакция със същите данни.</string>
+    <!-- Title of a preference where user can select between Ml Kit and Tesseract as Engine for Optical character recognition -->
+    <string name="pref_ocr_engine_title">Софтуер за разпознаване на текст</string>
+    <!-- Title of a preference where user can select language for text recognition with Tesseract -->
+    <string name="pref_tesseract_language_title">Език за Tesseract</string>
+    <!-- %s is replaced with language -->
+    <string name="tesseract_download_confirmation">Искате ли да изтеглите данни за разпознаване на текст за %s език?</string>
+    <!-- %s is replaced with language -->
+    <string name="download_completed">Изтеглянето на данните за %s завърши.</string>
+    <!-- %s is replaced with information on the engine or application used for running text recognition -->
+    <string name="ocr_recognition_info">Разпознаваме текст с %s ...</string>
+    <string name="ocr_download_info">Възможността за разпознаване на текст се осигурява от външно приложение.</string>
+    <!-- %s is replaced with the title of the preference for setting a passphrase for backups (pref_security_export_passphrase_title) -->
+    <string name="warning_unencrypted_backup">Въпреки че данните ви са защитени от неоторизиран достъп на това устройство, архивите се създават без криптиране, освен ако не зададете %s.</string>
+    <!-- Title of a preference switch that allows to configure display of group header. If switched on sums for income/expense/transfer are shown -->
+    <string name="pref_group_header_show_details_summary">Показвай подробни суми в заглавието на групата</string>
+    <!-- Title of a menu item and a dialogue that allow to adjust the current balance. User can enter the new balance, and transaction form is opened with the amount prefiled to the difference between old and new balance  -->
+    <string name="new_balance">Ново салдо</string>
 </resources>

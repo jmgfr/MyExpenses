@@ -32,7 +32,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.Nullable
@@ -65,7 +64,7 @@ import org.totschnig.myexpenses.dialog.ConfirmationDialogFragment
 import org.totschnig.myexpenses.dialog.ConfirmationDialogFragment.ConfirmationDialogListener
 import org.totschnig.myexpenses.feature.OcrResultFlat
 import org.totschnig.myexpenses.fragment.KEY_DELETED_IDS
-import org.totschnig.myexpenses.fragment.KEY_TAGLIST
+import org.totschnig.myexpenses.fragment.KEY_TAG_LIST
 import org.totschnig.myexpenses.fragment.PlanMonthFragment
 import org.totschnig.myexpenses.fragment.SplitPartList
 import org.totschnig.myexpenses.fragment.TemplatesList
@@ -81,6 +80,7 @@ import org.totschnig.myexpenses.preference.PrefKey
 import org.totschnig.myexpenses.preference.disableAutoFill
 import org.totschnig.myexpenses.preference.enableAutoFill
 import org.totschnig.myexpenses.provider.DatabaseConstants
+import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_AMOUNT
 import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_DATE
 import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_INSTANCEID
 import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PICTURE_URI
@@ -117,6 +117,7 @@ import org.totschnig.myexpenses.viewmodel.data.Tag
 import org.totschnig.myexpenses.widget.EXTRA_START_FROM_WIDGET
 import timber.log.Timber
 import java.io.Serializable
+import java.math.BigDecimal
 import java.util.*
 import javax.inject.Inject
 import org.totschnig.myexpenses.viewmodel.data.Template as DataTemplate
@@ -175,6 +176,11 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
     @JvmField
     @State
     var shouldShowCreateTemplate = false
+
+    @JvmField
+    @State
+    var areDatesLinked = false
+
     private var mIsResumed = false
     private var accountsLoaded = false
     private var shouldRecordAttachPictureFeature = false
@@ -233,7 +239,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
 
     override fun onEnterAnimationComplete() {
         super.onEnterAnimationComplete()
-        floatingActionButton.show()
+        floatingActionButton?.show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -256,7 +262,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             delegate.bind(null, isCalendarPermissionPermanentlyDeclined, mNewInstance, savedInstanceState, null, withAutoFill)
             setTitle()
             refreshPlanData()
-            floatingActionButton.show()
+            floatingActionButton?.show()
         } else {
             val extras = intent.extras
             var mRowId = Utils.getFromExtra(extras, KEY_ROWID, 0L)
@@ -275,7 +281,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             } else {
                 task = TRANSACTION
             }
-            mNewInstance = mRowId == 0L
+            mNewInstance = mRowId == 0L || task == TRANSACTION_FROM_TEMPLATE
             //were we called from a notification
             val notificationId = intent.getIntExtra(MyApplication.KEY_NOTIFICATION_ID, 0)
             if (notificationId > 0) {
@@ -359,7 +365,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             }
             if (mNewInstance) {
                 if (operationType != TYPE_TRANSFER) {
-                    discoveryHelper.discover(this, amountInput.typeButton, 1,
+                    discoveryHelper.discover(this, amountInput.typeButton(), 1,
                             DiscoveryHelper.Feature.expense_income_switch)
                 }
             }
@@ -491,6 +497,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             delegate.setPicture(it)
         }
         amountInput.type = intent.getBooleanExtra(KEY_INCOME, false)
+        (intent.getSerializableExtra(KEY_AMOUNT) as? BigDecimal)?.let { amountInput.setAmount(it) }
     }
 
     private fun populate(transaction: Transaction) {
@@ -564,22 +571,24 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         setDirty()
         if (view is DateButton) {
             val date = view.date
-            if (areDatesLinked()) {
-                val other = if (view.getId() == R.id.Date2Button) dateEditBinding.DateButton else dateEditBinding.Date2Button
-                other.setDate(date)
+            if (areDatesLinked) {
+                when(view.id) {
+                    R.id.Date2Button -> dateEditBinding.DateButton
+                    R.id.DateButton -> dateEditBinding.Date2Button
+                    else -> null
+                }?.setDate(date)
             }
         }
     }
 
     fun toggleDateLink(view: View) {
-        val isLinked = !areDatesLinked()
-        (view as ImageView).setImageResource(if (isLinked) R.drawable.ic_hchain else R.drawable.ic_hchain_broken)
-        view.setTag(isLinked.toString())
-        view.setContentDescription(getString(if (isLinked) R.string.content_description_dates_are_linked else R.string.content_description_dates_are_not_linked))
+        areDatesLinked = !areDatesLinked
+        updateDateLink()
     }
 
-    private fun areDatesLinked(): Boolean {
-        return java.lang.Boolean.parseBoolean(dateEditBinding.DateLink.tag as String)
+    private fun updateDateLink() {
+        dateEditBinding.DateLink.setImageResource(if (areDatesLinked) R.drawable.ic_hchain else R.drawable.ic_hchain_broken)
+        dateEditBinding.DateLink.contentDescription = getString(if (areDatesLinked) R.string.content_description_dates_are_linked else R.string.content_description_dates_are_not_linked)
     }
 
     override fun setupListeners() {
@@ -719,9 +728,11 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
                 return true
             }
             R.id.CREATE_TEMPLATE_COMMAND -> {
-                createTemplate = !createTemplate
-                delegate.setCreateTemplate(createTemplate, isCalendarPermissionPermanentlyDeclined)
-                invalidateOptionsMenu()
+                if (::delegate.isInitialized) {
+                    createTemplate = !createTemplate
+                    delegate.setCreateTemplate(createTemplate, isCalendarPermissionPermanentlyDeclined)
+                    invalidateOptionsMenu()
+                }
             }
             R.id.SAVE_AND_NEW_COMMAND -> {
                 createNew = !createNew
@@ -731,18 +742,24 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
                 return true
             }
             R.id.INVERT_TRANSFER_COMMAND -> {
-                (delegate as? TransferDelegate)?.invert()
-                return true
+                if (::delegate.isInitialized) {
+                    (delegate as? TransferDelegate)?.invert()
+                    return true
+                }
             }
             R.id.ORIGINAL_AMOUNT_COMMAND -> {
-                delegate.toggleOriginalAmount()
-                invalidateOptionsMenu()
-                return true
+                if (::delegate.isInitialized) {
+                    delegate.toggleOriginalAmount()
+                    invalidateOptionsMenu()
+                    return true
+                }
             }
             R.id.EQUIVALENT_AMOUNT_COMMAND -> {
-                delegate.toggleEquivalentAmount(currentAccount)
-                invalidateOptionsMenu()
-                return true
+                if (::delegate.isInitialized) {
+                    delegate.toggleEquivalentAmount(currentAccount)
+                    invalidateOptionsMenu()
+                    return true
+                }
             }
         }
         return false
@@ -780,10 +797,19 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
     override fun onCreateDialog(id: Int): Dialog? {
         hideKeyboard()
         return try {
-            (findViewById<View>(id) as ButtonWithDialog).onCreateDialog()
+            (findViewById<View>(id) as ButtonWithDialog).onCreateDialog(prefHandler)
         } catch (e: ClassCastException) {
             Timber.e(e)
             null
+        }
+    }
+
+    override fun onPrepareDialog(id: Int, dialog: Dialog) {
+        super.onPrepareDialog(id, dialog)
+        try {
+            (findViewById<View>(id) as ButtonWithDialog).onPrepareDialog(dialog)
+        } catch (e: ClassCastException) {
+            Timber.e(e)
         }
     }
 
@@ -826,8 +852,8 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
                 val result = CropImage.getActivityResult(intent)
                 if (resultCode == RESULT_OK) {
                     setPicture(result.uri)
-                } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                    showSnackbar(result.error.message ?: "ERROR")
+                } else {
+                    processImageCaptureError(resultCode, result)
                 }
             }
             PLAN_REQUEST -> finish()
@@ -836,7 +862,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             }
             SELECT_TAGS_REQUEST -> intent?.also {
                 if (resultCode == RESULT_OK) {
-                    (intent.getParcelableArrayListExtra<Tag>(KEY_TAGLIST))?.let {
+                    (intent.getParcelableArrayListExtra<Tag>(KEY_TAG_LIST))?.let {
                         viewModel.updateTags(it)
                         setDirty()
                     }
@@ -882,7 +908,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
     private fun refreshPlanData() {
         delegate.planId?.let { planId ->
             viewModel.plan(planId).observe(this, { plan ->
-                plan?.let { delegate.updatePlanButton(it) }
+                plan?.let { delegate.configurePlan(it) }
             })
         }
     }
@@ -1014,7 +1040,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
                         autoFillAccountFromPreference == "aggregate" && autoFillAccountFromExtra
                 if (overridePreferences || prefHandler.getBoolean(PrefKey.AUTO_FILL_AMOUNT, false)) {
                     dataToLoad.add(DatabaseConstants.KEY_CURRENCY)
-                    dataToLoad.add(DatabaseConstants.KEY_AMOUNT)
+                    dataToLoad.add(KEY_AMOUNT)
                 }
                 if (overridePreferences || prefHandler.getBoolean(PrefKey.AUTO_FILL_CATEGORY, false)) {
                     dataToLoad.add(DatabaseConstants.KEY_CATID)
@@ -1063,7 +1089,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
                 }
                 return
             } catch (e: ActivityNotFoundException) {
-                Timber.w("Component: %s", intent.resolveActivity(getPackageManager()))
+                Timber.w("Component: %s", intent.resolveActivity(packageManager))
                 CrashHandler.report(e)
             }
         }
@@ -1184,12 +1210,13 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             (delegate as? TransferDelegate)?.configureTransferDirection()
         }
         updateFab()
+        updateDateLink()
     }
 
     private fun updateFab() {
-        with(floatingActionButton) {
-            setImageResource(if (createNew) R.drawable.ic_action_save_new else R.drawable.ic_menu_done)
-            contentDescription = getString(if (createNew) R.string.menu_save_and_new_content_description else R.string.menu_save_help_text)
+        floatingActionButton?.let {
+            it.setImageResource(if (createNew) R.drawable.ic_action_save_new else R.drawable.ic_menu_done)
+            it.contentDescription = getString(if (createNew) R.string.menu_save_and_new_content_description else R.string.menu_save_help_text)
         }
     }
 
@@ -1265,7 +1292,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
 
     fun startTagSelection(@Suppress("UNUSED_PARAMETER") view: View) {
         val i = Intent(this, ManageTags::class.java).apply {
-            putParcelableArrayListExtra(KEY_TAGLIST, viewModel.getTags().value?.let { ArrayList(it) })
+            putParcelableArrayListExtra(KEY_TAG_LIST, viewModel.getTags().value?.let { ArrayList(it) })
         }
         startActivityForResult(i, SELECT_TAGS_REQUEST)
     }

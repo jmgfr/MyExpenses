@@ -15,6 +15,20 @@
   along with My Expenses.  If not, see <http://www.gnu.org/licenses/>.
  -->
 <resources>
+    <string-array name="whats_new_323">
+        <item>כפתור תאריך מאפשר ניווט מהיר ליום הקודם ולמחרת.</item>
+    </string-array>
+    <string-array name="whats_new_322">
+        <item>ניתן להסתיר את סכומי ההוצאות, ההכנסות וההעברות בכותרות הקבוצה.</item>
+        <item>חשב את ההפרש בין היתרה הנוכחית לערך חדש.</item>
+        <item>ניתן להגדיר סינון ותקציבים עבור קבוצת משנה של חשבונות.</item>
+    </string-array>
+    <string-array name="whats_new_321">
+        <item>זיהוי טקסט פועל כעת עם יותר שפות.</item>
+    </string-array>
+    <string-array name="whats_new_320">
+        <item>ניתן לחתוך תמונות.</item>
+    </string-array>
     <string-array name="whats_new_318">
         <item>ניתן להגדיר פעולת קליק ברירת מחדל לכל תבנית.</item>
     </string-array>

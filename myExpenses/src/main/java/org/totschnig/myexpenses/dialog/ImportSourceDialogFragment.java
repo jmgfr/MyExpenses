@@ -20,9 +20,9 @@ import org.totschnig.myexpenses.util.PermissionHelper;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
-import static org.totschnig.myexpenses.activity.ConstantsKt.IMPORT_FILENAME_REQUESTCODE;
+import static org.totschnig.myexpenses.activity.ConstantsKt.IMPORT_FILENAME_REQUEST_CODE;
 
-public abstract class ImportSourceDialogFragment extends CommitSafeDialogFragment
+public abstract class ImportSourceDialogFragment extends BaseDialogFragment
     implements OnClickListener, DialogInterface.OnClickListener, ImportFileResultHandler.FileNameHostFragment {
 
   protected EditText mFilename;
@@ -84,7 +84,7 @@ public abstract class ImportSourceDialogFragment extends CommitSafeDialogFragmen
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    if (requestCode == IMPORT_FILENAME_REQUESTCODE) {
+    if (requestCode == IMPORT_FILENAME_REQUEST_CODE) {
       if (resultCode == Activity.RESULT_OK && data != null) {
         try {
           mUri = ImportFileResultHandler.handleFilenameRequestResult(this, data);

@@ -1,7 +1,5 @@
 package org.totschnig.myexpenses.activity;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.ContextMenu;
@@ -18,6 +16,7 @@ import com.annimon.stream.Stream;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.totschnig.myexpenses.R;
+import org.totschnig.myexpenses.databinding.RoadmapBinding;
 import org.totschnig.myexpenses.model.ContribFeature;
 import org.totschnig.myexpenses.preference.PrefKey;
 import org.totschnig.myexpenses.retrofit.Issue;
@@ -39,10 +38,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import eltos.simpledialogfragment.SimpleDialog;
 import eltos.simpledialogfragment.form.Input;
 import eltos.simpledialogfragment.form.SimpleFormDialog;
@@ -57,8 +53,7 @@ public class RoadmapVoteActivity extends ProtectedFragmentActivity implements
   private static final String DIALOG_TAG_SUBMIT_VOTE = "ROADMAP_VOTE";
   private static final String KEY_POSITION = "position";
   private static final String KEY_EMAIL = "EMAIL";
-  @BindView(R.id.my_recycler_view)
-  ContextAwareRecyclerView recyclerView;
+  private RoadmapBinding binding;
   private List<Issue> dataSet;
   private List<Issue> dataSetFiltered;
   private MenuItem voteMenuItem;
@@ -72,14 +67,12 @@ public class RoadmapVoteActivity extends ProtectedFragmentActivity implements
 
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.roadmap);
-    ButterKnife.bind(this);
-    LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-    recyclerView.setLayoutManager(layoutManager);
-    recyclerView.addItemDecoration(new DividerItemDecoration(this, layoutManager.getOrientation()));
+    binding = RoadmapBinding.inflate(getLayoutInflater());
+    setContentView(binding.getRoot());
+    binding.myRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
     roadmapAdapter = new RoadmapAdapter();
-    recyclerView.setAdapter(roadmapAdapter);
-    registerForContextMenu(recyclerView);
+    binding.myRecyclerView.setAdapter(roadmapAdapter);
+    registerForContextMenu(binding.myRecyclerView);
     setupToolbar(true);
     getSupportActionBar().setTitle(R.string.roadmap_vote);
 
@@ -212,9 +205,7 @@ public class RoadmapVoteActivity extends ProtectedFragmentActivity implements
     }
     switch (command) {
       case R.id.ROADMAP_RESULT_COMMAND: {
-        Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setData(Uri.parse(ROADMAP_URL + "issues.html"));
-        startActivity(i);
+        startActionView(ROADMAP_URL + "issues.html");
         return true;
       }
       case R.id.SYNC_COMMAND: {
@@ -281,9 +272,7 @@ public class RoadmapVoteActivity extends ProtectedFragmentActivity implements
     ContextAwareRecyclerView.RecyclerContextMenuInfo info = (ContextAwareRecyclerView.RecyclerContextMenuInfo) item.getMenuInfo();
     switch (item.getItemId()) {
       case R.id.ROADMAP_DETAILS_COMMAND: {
-        Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setData(Uri.parse("https://github.com/mtotschnig/MyExpenses/issues/" + info.id));
-        startActivity(i);
+        startActionView("https://github.com/mtotschnig/MyExpenses/issues/" + info.id);
         return true;
       }
       case R.id.ROADMAP_ISSUE_VOTE_COMMAND: {

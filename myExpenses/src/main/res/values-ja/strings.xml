@@ -544,7 +544,6 @@
     <string name="exchange_rate">為替レート</string>
     <string name="date_format_hour">時間</string>
     <string name="date_format_minute">分</string>
-    <string name="copied_to_clipboard">クリップボードにコピーしました</string>
     <string name="menu_sort">ソート順</string>
     <string name="pref_sort_order_last_used">最後に使用した</string>
     <string name="pref_sort_order_custom">カスタム</string>
@@ -903,4 +902,4 @@
     <string name="pref_category_title_features">特長</string>
     <string name="button_download">ダウンロード</string>
     <string name="menu_save_and_new_content_description">データを保存し、同じデータで新しい取引を作成するためにフォームを開いたままにします。</string>
-</resources>
+    </resources>
