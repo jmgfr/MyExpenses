@@ -44,14 +44,14 @@ android {
         versionCode project.versionCode
         versionName project.versionName
         multiDexEnabled true
+        multiDexKeepProguard file('multidex-config.pro')
 
-        buildConfigField "String", "BUILD_DATE", "\"" + getDate() + "\""
         buildConfigField "String", "DISTRIBUTION", "\"GITHUB\""
         buildConfigField "String[]", "CATEGORY_ICONS", "{" + categoryIcons() + "}"
         testInstrumentationRunner "org.totschnig.myexpenses.MyTestRunner"
 
         vectorDrawables.useSupportLibrary = true
-        resConfigs "en", "ar", "bg", "ca", "cs", "da", "de", "el", "es", "eu", "fr", "hr", "hu", "it", "iw", "ja", "km", "kn", "ko", "ms", "pl", "pt", "ro", "ru", "si", "ta", "tr", "uk", "vi", "pt_PT", "zh_CN", "zh_TW"
+        resConfigs "en", "ar", "bg", "ca", "cs", "da", "de", "el", "es", "eu", "fr", "hr", "hu", "it", "iw", "ja", "km", "kn", "ko", "ms", "pl", "pt", "ro", "ru", "si", "ta", "tr", "uk", "vi", "pt_PT", "zh_CN", "zh_TW", "zh_HK"
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -86,12 +86,14 @@ android {
             //signingConfig signingConfigs.release
             manifestPlaceholders = [appName: "@string/app_name", debug: "false"]
             applicationIdSuffix ""
-            ndk.debugSymbolLevel = 'FULL'
+            //ndk.debugSymbolLevel = 'FULL'
+            buildConfigField "String", "BUILD_DATE", "\"" + getDate() + "\""
         }
         debug {
             applicationIdSuffix ".debug"
             manifestPlaceholders = [appName: "My Expenses Debug", debug: "true"]
             buildConfigField "int", "TEST_SCENARIO", getPropertyIfDefined('testScenario', "1")
+            buildConfigField "String", "BUILD_DATE", "\"now\""
         }
     }
 
@@ -136,17 +138,7 @@ android {
         jumboMode = true
     }
     packagingOptions {
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/dependencies.txt'
-        exclude 'META-INF/LGPL2.1'
-        exclude 'META-INF/proguard/androidx-annotations.pro'
-        exclude 'META-INF/gradle/incremental.annotation.processors'
+        exclude 'META-INF/*'
     }
 
     variantFilter { variant ->
@@ -171,7 +163,7 @@ android {
     //It does not seem possible to define dynamicFeatures dependent on variant
     //If you want to build intern variant, you need to include mlkit and/or tesseract module
     //dynamicFeatures = [':ocr', ':mlkit', ':tesseract']
-    dynamicFeatures = [':ocr']
+    dynamicFeatures = [':ocr', ':webui']
 }
 
 configurations {
@@ -213,13 +205,12 @@ dependencies {
     implementation "ch.acra:acra-dialog:$acraVersion"
     //at the moment, we need to stick with the last version that supports java 6
     //noinspection GradleDependency
-    implementation 'org.apache.commons:commons-lang3:3.5'
-    implementation 'org.apache.commons:commons-csv:1.5'
+    implementation "org.apache.commons:commons-lang3:$commonsLang"
+    implementation 'org.apache.commons:commons-csv:1.8'
     implementation "com.squareup.picasso:picasso:$picassoVersion"
-    implementation 'com.github.mtotschnig:MPAndroidChart:8ebaf08edd'
-    //implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0-alpha'
+    implementation 'com.github.mtotschnig:MPAndroidChart:6fcf34d9d4'
     implementation 'com.github.mtotschnig:Caldroid:d217ebc306'
-    implementation 'com.github.eltos:simpledialogfragments:v3.3'
+    implementation 'com.github.eltos:simpledialogfragments:v3.3.2'
     implementation 'com.annimon:stream:1.2.1'
     implementation 'com.getkeepsafe.taptargetview:taptargetview:1.13.0'
 
@@ -275,7 +266,7 @@ dependencies {
 
     androidTestImplementation 'tools.fastlane:screengrab:2.0.0'
     androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation "androidx.test.ext:junit:$androidxTextExtJunit"
     androidTestImplementation "androidx.test:runner:$androidSupportTestVersion"
     androidTestUtil "androidx.test:orchestrator:$androidSupportTestVersion"
     androidTestImplementation "androidx.test:rules:$androidSupportTestVersion"
@@ -293,11 +284,10 @@ dependencies {
     testImplementation "org.robolectric:shadows-multidex:$robolectricVersion"
     testImplementation "androidx.test:core:$androidSupportTestVersion"
     testImplementation "org.assertj:assertj-core:$assertjVersion"
-    androidTestImplementation "org.assertj:assertj-core:$assertjVersion"
+    //noinspection GradleDependency
+    androidTestImplementation "org.assertj:assertj-core:$assertjVersionAndroid"
     implementation "androidx.core:core-ktx:$ktxVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 
     // Room components
@@ -307,7 +297,6 @@ dependencies {
     androidTestImplementation "androidx.room:room-testing:$roomVersion"
 
     // Lifecycle components
-    implementation "androidx.lifecycle:lifecycle-extensions:$archLifecycleVersion"
     implementation "androidx.lifecycle:lifecycle-common-java8:$archLifecycleVersion"
 
     androidTestImplementation "androidx.arch.core:core-testing:$androidxArchVersion"
@@ -321,10 +310,10 @@ dependencies {
     //implementation "androidx.activity:activity-ktx:$activity_version"
     implementation "androidx.fragment:fragment-ktx:$fragment_version"
 
-    internImplementation "com.google.android.gms:play-services-base:17.5.0"
+    internImplementation "com.google.android.gms:play-services-base:17.6.0"
 
     //noinspection GradleDependency
-    implementation 'com.github.mtotschnig:Android-Image-Cropper:581335df71'
+    implementation 'com.github.mtotschnig:Android-Image-Cropper:b3ca5b9877'
 }
 
 static def getDate() {

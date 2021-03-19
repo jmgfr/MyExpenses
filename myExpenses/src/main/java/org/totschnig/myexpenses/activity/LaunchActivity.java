@@ -1,13 +1,11 @@
 package org.totschnig.myexpenses.activity;
 
-import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.Bundle;
 
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
-import org.totschnig.myexpenses.dialog.ConfirmationDialogFragment;
 import org.totschnig.myexpenses.dialog.ExtendProLicenceDialogFragment;
 import org.totschnig.myexpenses.model.ContribFeature;
 import org.totschnig.myexpenses.model.CrStatus;
@@ -41,7 +39,6 @@ import static org.totschnig.myexpenses.preference.PrefKey.AUTO_FILL_LEGACY;
 import static org.totschnig.myexpenses.preference.PrefKey.CATEGORIES_SORT_BY_USAGES_LEGACY;
 import static org.totschnig.myexpenses.preference.PrefKey.CURRENT_VERSION;
 import static org.totschnig.myexpenses.preference.PrefKey.HOME_CURRENCY;
-import static org.totschnig.myexpenses.preference.PrefKey.LICENCE_MIGRATION_INFO_SHOWN;
 import static org.totschnig.myexpenses.preference.PrefKey.PLANNER_CALENDAR_ID;
 import static org.totschnig.myexpenses.preference.PrefKey.PROFESSIONAL_EXPIRATION_REMINDER_LAST_SHOWN;
 import static org.totschnig.myexpenses.preference.PrefKey.SHARE_TARGET;
@@ -132,12 +129,9 @@ public abstract class LaunchActivity extends ProtectedFragmentActivity implement
       upgradeHandlerViewModel.upgrade(prev_version, current_version);
       boolean showImportantUpgradeInfo = false;
       prefHandler.putInt(CURRENT_VERSION, current_version);
-      SharedPreferences settings = MyApplication.getInstance().getSettings();
-      Editor edit = settings.edit();
       if (prev_version < 19) {
-        edit.putString(prefHandler.getKey(SHARE_TARGET), settings.getString("ftp_target", ""));
-        edit.remove("ftp_target");
-        edit.apply();
+        prefHandler.putString(SHARE_TARGET, prefHandler.getString("ftp_target", ""));
+        prefHandler.remove("ftp_target");
       }
       if (prev_version < 28) {
         Timber.i("Upgrading to version 28: Purging %d transactions from database",
@@ -146,8 +140,7 @@ public abstract class LaunchActivity extends ProtectedFragmentActivity implement
       }
       if (prev_version < 30) {
         if (!"".equals(prefHandler.getString(SHARE_TARGET, ""))) {
-          edit.putBoolean(prefHandler.getKey(SHARE_TARGET), true);
-          edit.apply();
+          prefHandler.putBoolean(SHARE_TARGET, true);
         }
       }
       if (prev_version < 40) {
@@ -155,15 +148,14 @@ public abstract class LaunchActivity extends ProtectedFragmentActivity implement
         //  DbUtils.fixDateValues(getContentResolver());
         //we do not want to show both reminder dialogs too quickly one after the other for upgrading users
         //if they are already above both thresholds, so we set some delay
-        edit.putLong("nextReminderContrib", Transaction.getSequenceCount() + 23);
-        edit.apply();
+        prefHandler.putLong("nextReminderContrib", Transaction.getSequenceCount() + 23);
       }
       if (prev_version < 163) {
-        edit.remove("qif_export_file_encoding");
-        edit.apply();
+        prefHandler.remove("qif_export_file_encoding");
       }
       if (prev_version < 199) {
         //filter serialization format has changed
+        Editor edit = settings.edit();
         for (Map.Entry<String, ?> entry : settings.getAll().entrySet()) {
           String key = entry.getKey();
           String[] keyParts = key.split("_");
@@ -211,21 +203,7 @@ public abstract class LaunchActivity extends ProtectedFragmentActivity implement
 
       showVersionDialog(prev_version, showImportantUpgradeInfo);
     } else {
-      if (licenceHandler.needsMigration() &&
-          !prefHandler.getBoolean(LICENCE_MIGRATION_INFO_SHOWN, false)) {
-        Bundle bundle = new Bundle();
-        bundle.putCharSequence(
-            ConfirmationDialogFragment.KEY_MESSAGE,
-            Utils.getTextWithAppName(this, R.string.licence_migration_info));
-        bundle.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE,
-            R.id.REQUEST_LICENCE_MIGRATION_COMMAND);
-        bundle.putString(ConfirmationDialogFragment.KEY_PREFKEY,
-            LICENCE_MIGRATION_INFO_SHOWN.getKey());
-        bundle.putInt(ConfirmationDialogFragment.KEY_POSITIVE_BUTTON_LABEL, R.string.pref_request_licence_title);
-        ConfirmationDialogFragment.newInstance(bundle).show(getSupportFragmentManager(),
-            "RESTORE");
-      }
-      if (!ContribFeature.SYNCHRONIZATION.hasAccess() && ContribFeature.SYNCHRONIZATION.usagesLeft(prefHandler) < 1 &&
+      if (!licenceHandler.hasTrialAccessTo(ContribFeature.SYNCHRONIZATION) &&
           !prefHandler.getBoolean(SYNC_UPSELL_NOTIFICATION_SHOWN, false)) {
         prefHandler.putBoolean(SYNC_UPSELL_NOTIFICATION_SHOWN, true);
         ContribUtils.showContribNotification(this, ContribFeature.SYNCHRONIZATION);
@@ -267,14 +245,11 @@ public abstract class LaunchActivity extends ProtectedFragmentActivity implement
   }
 
   @Override
-  public void onLicenceStatusSet(@Nullable LicenceStatus newStatus, @Nullable LicenceStatus oldStatus) {
-    if (newStatus != oldStatus) {
-      if (newStatus != null) {
-        showMessage(String.format("%s (%s)", getString(R.string.licence_validation_premium),
-            getString(newStatus.getResId())));
-      } else {
-        showSnackbar(R.string.licence_validation_failure);
-      }
+  public void onLicenceStatusSet(String newStatus) {
+    if (newStatus != null) {
+      showSnackbar(getString(R.string.licence_validation_premium) + " (" + newStatus + ")");
+    } else {
+      showSnackbar(R.string.licence_validation_failure);
     }
   }
 

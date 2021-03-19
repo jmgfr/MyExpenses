@@ -63,7 +63,6 @@ import org.totschnig.myexpenses.task.TaskExecutionFragment;
 import org.totschnig.myexpenses.ui.AmountInput;
 import org.totschnig.myexpenses.util.ColorUtils;
 import org.totschnig.myexpenses.util.CurrencyFormatter;
-import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.PermissionHelper;
 import org.totschnig.myexpenses.util.PermissionHelper.PermissionGroup;
 import org.totschnig.myexpenses.util.Result;
@@ -156,6 +155,9 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   protected CurrencyFormatter currencyFormatter;
 
   @Inject
+  protected SharedPreferences settings;
+
+  @Inject
   protected FeatureManager featureManager;
 
   private Pair<Integer, Integer> focusAfterRestoreInstanceState;
@@ -172,7 +174,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
       getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
           WindowManager.LayoutParams.FLAG_SECURE);
     }
-    MyApplication.getInstance().getSettings().registerOnSharedPreferenceChangeListener(this);
+    settings.registerOnSharedPreferenceChangeListener(this);
     TypedArray themeArray = getTheme().obtainStyledAttributes(new int[]{android.R.attr.textColorSecondary});
     textColorSecondary = themeArray.getColorStateList(0);
   }
@@ -281,7 +283,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    MyApplication.getInstance().getSettings().unregisterOnSharedPreferenceChangeListener(this);
+    settings.unregisterOnSharedPreferenceChangeListener(this);
   }
 
   @Override
@@ -307,7 +309,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   }
 
   protected void confirmCredentials(int requestCode, DialogUtils.PasswordDialogUnlockedCallback legacyUnlockCallback, boolean shouldHideWindow) {
-    if (Utils.hasApiLevel(Build.VERSION_CODES.LOLLIPOP) && PROTECTION_DEVICE_LOCK_SCREEN.getBoolean(false)) {
+    if (Utils.hasApiLevel(Build.VERSION_CODES.LOLLIPOP) && prefHandler.getBoolean(PROTECTION_DEVICE_LOCK_SCREEN, false)) {
       Intent intent = ((KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE))
           .createConfirmDeviceCredentialIntent(null, null);
       if (intent != null) {
@@ -323,7 +325,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
           legacyUnlockCallback.onPasswordDialogUnlocked();
         }
       }
-    } else if (PROTECTION_LEGACY.getBoolean(true)) {
+    } else if (prefHandler.getBoolean(PROTECTION_LEGACY, true)) {
       if (shouldHideWindow) hideWindow();
       if (pwDialog == null) {
         pwDialog = DialogUtils.passwordDialog(this, false);
@@ -344,10 +346,6 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
         PROTECTION_DEVICE_LOCK_SCREEN, GROUP_MONTH_STARTS, GROUP_WEEK_STARTS, HOME_CURRENCY, CUSTOM_DATE_FORMAT, CRITERION_FUTURE)) {
       scheduledRestart = true;
     }
-  }
-
-  @Override
-  public void onMessageDialogDismissOrCancel() {
   }
 
   @Override
@@ -378,98 +376,75 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
       return true;
     }
     Intent i;
-    switch (command) {
-      case R.id.RATE_COMMAND:
-        i = new Intent(Intent.ACTION_VIEW);
-        i.setData(Uri.parse(getMarketSelfUri()));
-        if (Utils.isIntentAvailable(this, i)) {
-          startActivity(i);
-        } else {
-          showSnackbar(R.string.error_accessing_market);
-        }
-        return true;
-      case R.id.SETTINGS_COMMAND:
-        i = new Intent(this, MyPreferenceActivity.class);
-        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        if (tag != null) {
-          i.putExtra(MyPreferenceActivity.KEY_OPEN_PREF_KEY, (String) tag);
-        }
-        startActivityForResult(i, PREFERENCES_REQUEST);
-        return true;
-      case R.id.FEEDBACK_COMMAND: {
-        LicenceStatus licenceStatus = licenceHandler.getLicenceStatus();
-        String licenceInfo = "";
-        if (licenceStatus != null) {
-          licenceInfo = "\nLICENCE: " + licenceStatus.name();
-          String purchaseExtraInfo = licenceHandler.getPurchaseExtraInfo();
-          if (!TextUtils.isEmpty(purchaseExtraInfo)) {
-            licenceInfo += " (" + purchaseExtraInfo + ")";
-          }
-        }
-        i = new Intent(android.content.Intent.ACTION_SEND);
-        i.setType("text/plain");
-        i.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{MyApplication.FEEDBACK_EMAIL});
-        i.putExtra(android.content.Intent.EXTRA_SUBJECT,
-            "[" + getString(R.string.app_name) + "] Feedback"
-        );
-        String messageBody = String.format(Locale.ROOT,
-            "APP_VERSION:%s\nFIRST_INSTALL_VERSION:%d (DB_SCHEMA %d)\nANDROID_VERSION:%s\nBRAND:%s\nMODEL:%s\nCONFIGURATION:%s%s\n\n",
-            getVersionInfo(this),
-            prefHandler.getInt(PrefKey.FIRST_INSTALL_VERSION, 0),
-            prefHandler.getInt(PrefKey.FIRST_INSTALL_DB_SCHEMA_VERSION, -1),
-            Build.VERSION.RELEASE,
-            Build.BRAND,
-            Build.MODEL,
-            ConfigurationHelper.configToJson(getResources().getConfiguration()),
-            licenceInfo);
-        Timber.d("Install info: %s", messageBody);
-        i.putExtra(android.content.Intent.EXTRA_TEXT, messageBody);
-        if (!Utils.isIntentAvailable(this, i)) {
-          showSnackbar(R.string.no_app_handling_email_available);
-        } else {
-          startActivity(i);
-        }
-        break;
+    if (command == R.id.RATE_COMMAND) {
+      i = new Intent(Intent.ACTION_VIEW);
+      i.setData(Uri.parse(getMarketSelfUri()));
+      if (Utils.isIntentAvailable(this, i)) {
+        startActivity(i);
+      } else {
+        showSnackbar(R.string.error_accessing_market);
       }
-      case R.id.CONTRIB_INFO_COMMAND:
-        showContribDialog(null, null);
-        return true;
-      case R.id.WEB_COMMAND:
-        startActionView(getString(R.string.website));
-        return true;
-      case R.id.HELP_COMMAND:
-        doHelp((String) tag);
-        return true;
-      case R.id.REQUEST_LICENCE_MIGRATION_COMMAND:
-        String androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-        i = new Intent(android.content.Intent.ACTION_SEND);
-        i.setType("plain/text");
-        i.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{MyApplication.FEEDBACK_EMAIL});
-        i.putExtra(android.content.Intent.EXTRA_SUBJECT,
-            "[" + getString(R.string.app_name) + "] " + getString(licenceHandler.getLicenceStatus().getResId()));
-        String extraText = String.format(
-            "Please send me a new licence key. Current key is %1$s for Android-Id %2$s\nLANGUAGE:%3$s\nVERSION:%4$s",
-            PrefKey.LICENCE_LEGACY.getString(null), androidId,
-            Locale.getDefault().toString(), DistributionHelper.getVersionInfo(this));
-        i.putExtra(android.content.Intent.EXTRA_TEXT, extraText);
-        if (!Utils.isIntentAvailable(this, i)) {
-          showSnackbar(R.string.no_app_handling_email_available);
-        } else {
-          startActivity(i);
+      return true;
+    } else if (command == R.id.SETTINGS_COMMAND) {
+      i = new Intent(this, MyPreferenceActivity.class);
+      i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+      if (tag != null) {
+        i.putExtra(MyPreferenceActivity.KEY_OPEN_PREF_KEY, (String) tag);
+      }
+      startActivityForResult(i, PREFERENCES_REQUEST);
+      return true;
+    } else if (command == R.id.FEEDBACK_COMMAND) {
+      LicenceStatus licenceStatus = licenceHandler.getLicenceStatus();
+      String licenceInfo = "";
+      if (licenceStatus != null) {
+        licenceInfo = "\nLICENCE: " + licenceStatus.name();
+        String purchaseExtraInfo = licenceHandler.getPurchaseExtraInfo();
+        if (!TextUtils.isEmpty(purchaseExtraInfo)) {
+          licenceInfo += " (" + purchaseExtraInfo + ")";
         }
-        return true;
-      case android.R.id.home:
-        doHome();
-        return true;
-      case R.id.GDPR_CONSENT_COMMAND: {
-        adHandlerFactory.setConsent(this, (Boolean) tag);
-        return true;
       }
-      case R.id.GDPR_NO_CONSENT_COMMAND: {
-        adHandlerFactory.clearConsent();
-        contribFeatureRequested(ContribFeature.AD_FREE, null);
-        return true;
+      i = new Intent(Intent.ACTION_SEND);
+      i.setType("text/plain");
+      i.putExtra(Intent.EXTRA_EMAIL, new String[]{MyApplication.FEEDBACK_EMAIL});
+      i.putExtra(Intent.EXTRA_SUBJECT,
+          "[" + getString(R.string.app_name) + "] Feedback"
+      );
+      String messageBody = String.format(Locale.ROOT,
+          "APP_VERSION:%s\nFIRST_INSTALL_VERSION:%d (DB_SCHEMA %d)\nANDROID_VERSION:%s\nBRAND:%s\nMODEL:%s\nCONFIGURATION:%s%s\n\n",
+          getVersionInfo(this),
+          prefHandler.getInt(PrefKey.FIRST_INSTALL_VERSION, 0),
+          prefHandler.getInt(PrefKey.FIRST_INSTALL_DB_SCHEMA_VERSION, -1),
+          Build.VERSION.RELEASE,
+          Build.BRAND,
+          Build.MODEL,
+          ConfigurationHelper.configToJson(getResources().getConfiguration()),
+          licenceInfo);
+      Timber.d("Install info: %s", messageBody);
+      i.putExtra(Intent.EXTRA_TEXT, messageBody);
+      if (!Utils.isIntentAvailable(this, i)) {
+        showSnackbar(R.string.no_app_handling_email_available);
+      } else {
+        startActivity(i);
       }
+    } else if (command == R.id.CONTRIB_INFO_COMMAND) {
+      showContribDialog(null, null);
+      return true;
+    } else if (command == R.id.WEB_COMMAND) {
+      startActionView(getString(R.string.website));
+      return true;
+    } else if (command == R.id.HELP_COMMAND) {
+      doHelp((String) tag);
+      return true;
+    } else if (command == android.R.id.home) {
+      doHome();
+      return true;
+    } else if (command == R.id.GDPR_CONSENT_COMMAND) {
+      adHandlerFactory.setConsent(this, (Boolean) tag);
+      return true;
+    } else if (command == R.id.GDPR_NO_CONSENT_COMMAND) {
+      adHandlerFactory.clearConsent();
+      contribFeatureRequested(ContribFeature.AD_FREE, null);
+      return true;
     }
     return false;
   }
@@ -548,8 +523,10 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
         //noinspection InlinedApi
         window.getDecorView().setSystemUiVisibility(
             ColorUtils.isBrightColor(color700) ? View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR : 0);
-        window.getDecorView().setSystemUiVisibility(
-            ColorUtils.isBrightColor(color700) ? View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+          window.getDecorView().setSystemUiVisibility(
+              ColorUtils.isBrightColor(color700) ? View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0);
+        }
       }
     }
   }
@@ -620,10 +597,6 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   /**
    * starts the given task, only if no task is currently executed,
    * informs user through snackbar in that case
-   *
-   * @param taskId
-   * @param objectIds
-   * @param extra
    * @param progressMessage if 0 no progress dialog will be shown
    */
   @Deprecated
@@ -707,7 +680,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   }
 
   public void recordUsage(ContribFeature f) {
-    f.recordUsage(prefHandler);
+    f.recordUsage(prefHandler, licenceHandler);
   }
 
   /*
@@ -770,7 +743,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   }
 
   public void contribFeatureRequested(@NonNull ContribFeature feature, @Nullable Serializable tag) {
-    if (feature.hasAccess()) {
+    if (licenceHandler.hasAccessTo(feature)) {
       ((ContribIFace) this).contribFeatureCalled(feature, tag);
     } else {
       showContribDialog(feature, tag);
@@ -786,10 +759,8 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
     boolean granted = PermissionHelper.allGranted(grantResults);
     storePermissionRequested(requestCode);
     if (granted) {
-      switch (requestCode) {
-        case PermissionHelper.PERMISSIONS_REQUEST_WRITE_CALENDAR: {
-          DailyScheduler.updatePlannerAlarms(this, false, true);
-        }
+      if (requestCode == PermissionHelper.PERMISSIONS_REQUEST_WRITE_CALENDAR) {
+        DailyScheduler.updatePlannerAlarms(this, false, true);
       }
     } else {
       if (permissions.length > 0 && ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])) {
@@ -799,7 +770,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   }
 
   private void storePermissionRequested(int requestCode) {
-    PermissionHelper.permissionRequestedKey(requestCode).putBoolean(true);
+    prefHandler.putBoolean(PermissionHelper.permissionRequestedKey(requestCode), true);
   }
 
   public boolean isCalendarPermissionPermanentlyDeclined() {
@@ -809,9 +780,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   private boolean isPermissionPermanentlyDeclined(PermissionGroup permissionGroup) {
     if (prefHandler.getBoolean(permissionGroup.prefKey, false)) {
       if (!permissionGroup.hasPermission(this)) {
-        if (!permissionGroup.shouldShowRequestPermissionRationale(this)) {
-          return true;
-        }
+        return !permissionGroup.shouldShowRequestPermissionRationale(this);
       }
     }
     return false;
@@ -870,7 +839,6 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
 
   @Override
   public void onDismissOrCancel(Bundle args) {
-
   }
 
   @VisibleForTesting
@@ -888,10 +856,6 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
     findViewById(android.R.id.content).setVisibility(View.VISIBLE);
     final ActionBar actionBar = getSupportActionBar();
     if (actionBar != null) actionBar.show();
-  }
-
-  public void showMessage(int resId) {
-    showMessage(getString(resId));
   }
 
   public void checkGdprConsent(boolean forceShow) {

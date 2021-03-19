@@ -252,7 +252,6 @@
     <string name="pm_type_debit">직불 결제</string>
     <string name="pm_type_neutral">중립</string>
     <string name="pref_app_dir_title">백업 및 내보내기에 사용할 폴더</string>
-    <string name="pref_auto_fill_title">거래 내역 자동으로 채우기</string>
     <string name="pref_backup_summary">데이터베이스와 설정값의 백업을 만들기</string>
     <string name="pref_sort_order_usages">사용 빈도</string>
     <string name="pref_category_title_advanced">고급</string>
@@ -264,6 +263,8 @@
     <string name="pref_category_title_ui">사용자 인터페이스</string>
     <string name="pref_checkbox_enabled">사용함</string>
     <string name="pref_checkbox_disabled">사용하지 않음</string>
+    <!-- premium features refers to features of all three levels (Contrib, Extended, Professional -->
+    <string name="pref_contrib_purchase_summary">프리미엄 기능에 대한 액세스를 구입하십시오.</string>
     <string name="pref_contrib_purchase_title">기부 확인 키 구매 </string>
     <string name="pref_contrib_purchase_title_upgrade">키 업그레이드</string>
     <string name="pref_contrib_purchase_title_in_app">인앱 결제</string>
@@ -300,7 +301,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">암호 없이 허가되었습니다.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">암호가 필요합니다.</string>
     <string name="pref_qif_export_file_encoding_title">문자 인코딩</string>
-    <string name="pref_request_licence_title">기부 확인 키 요청</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">대안</string>
     <string name="pref_restore_summary">데이터베이스와 설정값을 복원할 백업 파일을 선택하세요.</string>
@@ -456,6 +456,7 @@
     <string name="menu_change_picture">다른 사진 첨부</string>
     <string name="menu_distribution_show_pie_char">파이 그래프 표시</string>
     <string name="menu_distribution_aggreate">지출과 수입 총계</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">오래된 이미지</string>
     <string name="pref_manage_stale_images_summary">삭제된 거래 내역으로부터 남겨진 사진 관리</string>
     <string name="image_deleted">사진이 삭제되었습니다</string>
@@ -472,8 +473,6 @@
     <string name="pref_csv_import_delimiter">구획 문자</string>
     <string name="csv_import_preview">미리보기</string>
     <string name="menu_parse">분석</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">버리기</string>
     <string name="csv_import_field_mapped_more_than_once">%s 항목은 한번 이상 배치되었습니다.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d 기록을 가져올 수 없습니다.</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d 기록이 버려졌습니다.</string>

@@ -93,6 +93,7 @@ import org.totschnig.myexpenses.ui.ButtonWithDialog
 import org.totschnig.myexpenses.ui.DateButton
 import org.totschnig.myexpenses.ui.DiscoveryHelper
 import org.totschnig.myexpenses.ui.ExchangeRateEdit
+import org.totschnig.myexpenses.ui.IDiscoveryHelper
 import org.totschnig.myexpenses.util.CurrencyFormatter
 import org.totschnig.myexpenses.util.PermissionHelper
 import org.totschnig.myexpenses.util.PictureDirHelper
@@ -149,10 +150,6 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
     val accountId: Long
         get() = currentAccount?.id ?: 0L
 
-    @JvmField
-    @State
-    var planInstanceId: Long = 0
-
     /**
      * transaction, transfer or split
      */
@@ -202,7 +199,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
     lateinit var currencyFormatter: CurrencyFormatter
 
     @Inject
-    lateinit var discoveryHelper: DiscoveryHelper
+    lateinit var discoveryHelper: IDiscoveryHelper
 
     lateinit var delegate: TransactionDelegate<*>
 
@@ -227,7 +224,10 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         get() = intent.getBooleanExtra(KEY_CLONE, false)
 
     private val withAutoFill: Boolean
-        get() = mNewInstance && !isClone
+        get() = mNewInstance && !isClone && planInstanceId == 0L
+
+    private val planInstanceId: Long
+        get() = intent.getLongExtra(KEY_INSTANCEID, 0)
 
     public override fun getDiscardNewMessage(): Int {
         return if (isTemplate) R.string.dialog_confirm_discard_new_template else R.string.dialog_confirm_discard_new_transaction
@@ -264,13 +264,14 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             refreshPlanData()
             floatingActionButton?.show()
         } else {
+            areDatesLinked = prefHandler.getBoolean(PrefKey.DATES_ARE_LINKED, false)
+            updateDateLink()
             val extras = intent.extras
             var mRowId = Utils.getFromExtra(extras, KEY_ROWID, 0L)
             var task: TransactionViewModel.InstantiationTask? = null
             if (mRowId == 0L) {
                 mRowId = intent.getLongExtra(KEY_TEMPLATEID, 0L)
                 if (mRowId != 0L) {
-                    planInstanceId = intent.getLongExtra(KEY_INSTANCEID, 0)
                     if (planInstanceId != 0L) {
                         task = TRANSACTION_FROM_TEMPLATE
                     } else {
@@ -309,7 +310,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
                         allowed = prefHandler.getBoolean(PrefKey.NEW_SPLIT_TEMPLATE_ENABLED, true)
                     } else {
                         contribFeature = ContribFeature.SPLIT_TRANSACTION
-                        allowed = contribFeature.hasAccess() || contribFeature.usagesLeft(prefHandler) > 0
+                        allowed = licenceHandler.hasTrialAccessTo(contribFeature)
                     }
                     if (!allowed) {
                         abortWithMessage(contribFeature.buildRequiresString(this))
@@ -375,20 +376,6 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
                 delegate.setMethods(paymentMethods)
             }
         })
-        if (!isSplitPart) {
-            viewModel.getTags().observe(this, { tags ->
-                if (::delegate.isInitialized) {
-                    delegate.showTags(tags) { tag ->
-                        viewModel.removeTag(tag)
-                        setDirty()
-                    }
-                }
-            })
-        }
-        if (!isSplitPartOrTemplate) {
-            createNew = prefHandler.getBoolean(PrefKey.EXPENSE_EDIT_SAVE_AND_NEW, false)
-            updateFab()
-        }
     }
 
     private fun setupObservers(fromSavedState: Boolean) {
@@ -547,6 +534,20 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         setTitle()
         operationType = transaction.operationType()
         shouldShowCreateTemplate = transaction.originTemplateId == null
+        if (!isSplitPart) {
+            viewModel.getTags().observe(this, { tags ->
+                if (::delegate.isInitialized) {
+                    delegate.showTags(tags) { tag ->
+                        viewModel.removeTag(tag)
+                        setDirty()
+                    }
+                }
+            })
+        }
+        if (!isSplitPartOrTemplate) {
+            createNew = mNewInstance && prefHandler.getBoolean(PrefKey.EXPENSE_EDIT_SAVE_AND_NEW, false)
+            updateFab()
+        }
         invalidateOptionsMenu()
     }
 
@@ -572,7 +573,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         if (view is DateButton) {
             val date = view.date
             if (areDatesLinked) {
-                when(view.id) {
+                when (view.id) {
                     R.id.Date2Button -> dateEditBinding.DateButton
                     R.id.DateButton -> dateEditBinding.Date2Button
                     else -> null
@@ -583,6 +584,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
 
     fun toggleDateLink(view: View) {
         areDatesLinked = !areDatesLinked
+        prefHandler.putBoolean(PrefKey.DATES_ARE_LINKED, areDatesLinked);
         updateDateLink()
     }
 
@@ -1006,8 +1008,6 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             }
             if (createNew) {
                 delegate.prepareForNew()
-                //while saving the picture might have been moved from temp to permanent
-                //mPictureUri = mTransaction!!.pictureUri
                 mNewInstance = true
                 showSnackbar(getString(R.string.save_transaction_and_new_success), Snackbar.LENGTH_SHORT)
             } else {

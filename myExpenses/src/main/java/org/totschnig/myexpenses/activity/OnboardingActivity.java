@@ -1,6 +1,5 @@
 package org.totschnig.myexpenses.activity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,7 +10,6 @@ import android.view.View;
 import com.annimon.stream.Exceptional;
 import com.annimon.stream.Stream;
 
-import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.databinding.OnboardingBinding;
 import org.totschnig.myexpenses.dialog.RestoreFromCloudDialogFragment;
@@ -34,7 +32,6 @@ import java.util.List;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.preference.PreferenceManager;
 import icepick.State;
 
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_CREATE_SYNC_ACCOUNT;
@@ -50,12 +47,7 @@ public class OnboardingActivity extends SyncBackendSetupActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-    if (MyApplication.isInstrumentationTest()) {
-      PreferenceManager.setDefaultValues(this, MyApplication.getTestId(), Context.MODE_PRIVATE,
-          R.xml.preferences, true);
-    } else {
-      PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-    }
+    prefHandler.setDefaultValues(this);
     super.onCreate(savedInstanceState);
     binding = OnboardingBinding.inflate(getLayoutInflater());
     setContentView(binding.getRoot());

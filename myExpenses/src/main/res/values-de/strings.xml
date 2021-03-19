@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">Unbegrenzte Anzahl an Vorlagen für mehrteilige Buchungen</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources"><b>E-Mail-Support</b> mit garantierter Antwort innerhalb von 2 Werktagen</string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources">Stimmrecht zum <b>Entwicklungsfahrplan</b></string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Verlaufsdiagramm (Cashflow)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Verlaufsdiagramm</string>
     <string name="licence_status_free">Gratis</string>
     <string name="contrib_key">Contrib-Schlüssel</string>
     <string name="extended_key">Erweiterungsschlüssel</string>
@@ -277,7 +277,6 @@
     <string name="pm_type_debit">Ausgaben</string>
     <string name="pm_type_neutral">Neutral</string>
     <string name="pref_app_dir_title">Ordner für Backups und Exports</string>
-    <string name="pref_auto_fill_title">Automatisches Ausfüllen</string>
     <string name="pref_auto_fill_summary">Daten von der letzten Buchung für denselben Empfänger/Zahler ausfüllen</string>
     <string name="pref_backup_summary">Erzeugt ein Backup der Datenbank und der Einstellungen</string>
     <string name="pref_sort_order_usages">Häufigkeit der Benutzung</string>
@@ -331,7 +330,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">Ohne Passwort erlaubt.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">Passwort wird benötigt.</string>
     <string name="pref_qif_export_file_encoding_title">Zeichenkodierung</string>
-    <string name="pref_request_licence_title">Schlüssel beantragen</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">Alternativ</string>
     <string name="pref_restore_alternative_summary">Verwenden Sie diese alternative Methode, wenn kein Datei-Manager auf dem Gerät installiert ist.</string>
@@ -506,6 +504,7 @@
     <string name="menu_change_picture">Anderes Bild anfügen</string>
     <string name="menu_distribution_show_pie_char">Tortendiagramm anzeigen</string>
     <string name="menu_distribution_aggreate">Ausgaben und Einnahmen zusammen zählen</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">Veraltete Bilder</string>
     <string name="pref_manage_stale_images_summary">Verwalten Sie Bilder aus gelöschten Buchungen</string>
     <string name="image_deleted">Bild wurde gelöscht</string>
@@ -523,8 +522,6 @@
     <string name="pref_csv_import_delimiter">Trennzeichen</string>
     <string name="csv_import_preview">Vorschau</string>
     <string name="menu_parse">Analysieren</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">Verwerfen</string>
     <string name="csv_import_field_mapped_more_than_once">%s wird mehr als einmal zugeordnet.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d Einträge konnten nicht importiert werden.</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d Einträge wurden verworfen.</string>
@@ -677,7 +674,6 @@
     <string name="professional_key">Professioneller Schlüssel</string>
     <string name="n_months">%d Monate</string>
     <string name="eu_vat_info">Die Preise für die in der Europäischen Union ansässigen Personen verstehen sich ohne Mehrwertsteuer.</string>
-    <string name="licence_migration_info">{app_name} implementiert einen neuen Lizenzvalidierungsmechanismus. Bitte fordern Sie einen neuen Schlüssel an.</string>
     <string name="valid_until">Bis %s</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">Verlängern bis %1$s für %2$s</string>
@@ -706,7 +702,6 @@
     <string name="pref_warning_only_one_protection">Bevor Sie den Schutz durch %1$s verwenden können, müssen Sie den Schutz durch %2$s ausschalten.</string>
     <string name="warning_device_lock_screen_not_set_up_1">Der sichere Gerätesperrbildschirm wurde nicht eingerichtet.</string>
     <string name="warning_device_lock_screen_not_set_up_2">Gehen Sie zu \'Einstellungen -&gt; Sicherheit -&gt; Bildschirmsperre\', um einen Sperrbildschirm einzurichten.</string>
-    <string name="snackbar_dismiss">Verwerfen</string>
     <string name="menu_history_show_balance">Saldo anzeigen</string>
     <string name="menu_history_transfers">Umbuchungen einschließen</string>
     <string name="menu_history">Verlauf</string>
@@ -934,6 +929,7 @@
     <!-- Title of a section on the Settings screen where each entry corresponds to a subsection dedicated to one feature (functionality)  -->
     <string name="pref_category_title_features">Funktionen</string>
     <string name="scan_result_no_data">Keine Daten</string>
+    <!-- After text recognition has been run on an image, if multiple strings are found that can be interpreted as date, amount or payee, a dialogue is shown allowing to select between these "candidates". This message is the title of this dialogue.  -->
     <string name="scan_result_multiple_candidates_dialog_title">Mehrere Kandidaten gefunden. Bitte wählen:</string>
     <string name="scan_result_no_amount">Keinen Betrag gefunden</string>
     <string name="scan_result_no_date">Kein Datum gefunden</string>
@@ -967,7 +963,7 @@
     <!-- %s is replaced with language -->
     <string name="download_completed">Der Download (%s) ist abgeschlossen.</string>
     <!-- %s is replaced with information on the engine or application used for running text recognition -->
-    <string name="ocr_recognition_info">Texterkennung wird mit %sausgeführt</string>
+    <string name="ocr_recognition_info">Texterkennung wird mit %s ausgeführt</string>
     <string name="ocr_download_info">Die Texterkennungsfunktion wird von einer externen Anwendung bereitgestellt.</string>
     <!-- %s is replaced with the title of the preference for setting a passphrase for backups (pref_security_export_passphrase_title) -->
     <string name="warning_unencrypted_backup">Während Ihre Daten vor unbefugtem Zugriff auf diesem Gerät geschützt sind, werden Sicherungskopien ohne Verschlüsselung erstellt, es sei denn, Sie konfigurieren %s.</string>
@@ -975,4 +971,6 @@
     <string name="pref_group_header_show_details_summary">Detailsummen in der Gruppenkopfzeile anzeigen</string>
     <!-- Title of a menu item and a dialogue that allow to adjust the current balance. User can enter the new balance, and transaction form is opened with the amount prefiled to the difference between old and new balance  -->
     <string name="new_balance">Neuer Saldo</string>
+    <string name="title_webui">Web-Benutzeroberfläche</string>
+    <string name="single_feature_info">Alternativ können Sie uneingeschränkten Zugriff nur auf diese Funktion erwerben.</string>
 </resources>

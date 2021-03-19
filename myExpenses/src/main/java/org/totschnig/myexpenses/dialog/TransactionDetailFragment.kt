@@ -41,7 +41,6 @@ import org.totschnig.myexpenses.model.AccountType
 import org.totschnig.myexpenses.model.CrStatus
 import org.totschnig.myexpenses.model.Money
 import org.totschnig.myexpenses.model.Plan
-import org.totschnig.myexpenses.preference.PrefHandler
 import org.totschnig.myexpenses.provider.DatabaseConstants
 import org.totschnig.myexpenses.provider.TransactionProvider
 import org.totschnig.myexpenses.util.CurrencyFormatter
@@ -69,9 +68,6 @@ class TransactionDetailFragment : BaseDialogFragment(), DialogInterface.OnClickL
     lateinit var currencyFormatter: CurrencyFormatter
 
     @Inject
-    lateinit var prefHandler: PrefHandler
-
-    @Inject
     lateinit var picasso: Picasso
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,8 +76,9 @@ class TransactionDetailFragment : BaseDialogFragment(), DialogInterface.OnClickL
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val builder = initBuilderWithView(R.layout.transaction_detail)
-        _binding = TransactionDetailBinding.bind(dialogView)
+        val builder = initBuilderWithBinding {
+            TransactionDetailBinding.inflate(materialLayoutInflater).also { _binding = it }
+        }
         val viewModel = ViewModelProvider(this).get(TransactionDetailViewModel::class.java)
         val rowId = requireArguments().getLong(DatabaseConstants.KEY_ROWID)
         viewModel.transaction(rowId).observe(this, { o -> fillData(o) })

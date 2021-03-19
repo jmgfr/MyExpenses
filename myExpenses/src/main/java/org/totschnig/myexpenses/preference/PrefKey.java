@@ -101,7 +101,6 @@ public enum PrefKey {
   DEBUG_LOGGING(R.string.pref_debug_logging_key),
   SYNC_NOTIFICATION(R.string.pref_sync_notification_key),
   SYNC_WIFI_ONLY(R.string.pref_sync_wifi_only_key),
-  LICENCE_MIGRATION_INFO_SHOWN("licence_migration_info_shown"),
   DEBUG_ADS(R.string.pref_debug_show_ads_key),
   PROTECTION_DEVICE_LOCK_SCREEN(R.string.pref_protection_device_lock_screen_key),
   HISTORY_SHOW_BALANCE("history_show_balance"),
@@ -148,7 +147,9 @@ public enum PrefKey {
   ACRA_INFO(R.string.pre_acra_info_key),
   OCR_ENGINE(R.string.pref_ocr_engine_key),
   TESSERACT_LANGUAGE(R.string.pref_tesseract_language_key),
-  GROUP_HEADER(R.string.pref_group_header_show_details_key);
+  GROUP_HEADER(R.string.pref_group_header_show_details_key),
+  UI_WEB(R.string.pref_web_ui_key),
+  DATES_ARE_LINKED("dates_are_linked");
 
   int resId = 0;
   String key = null;

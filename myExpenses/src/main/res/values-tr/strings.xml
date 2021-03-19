@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">Sınırsız sayıda bölünmüş şablonlar</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources">2 iş günü sonrasında cevap garantili <b>e-posta desteği</b></string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources"><b>Geliştirme yol haritası</b> hakkında oy verme hakkı</string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Tarihçe grafiği (Nakit akışı)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Tarihçe grafiği</string>
     <string name="licence_status_free">Ücretsiz</string>
     <string name="contrib_key">Katkı Anahtarı</string>
     <string name="extended_key">Genişletilmiş Anahtarı</string>
@@ -277,7 +277,6 @@
     <string name="pm_type_debit">Gider</string>
     <string name="pm_type_neutral">Nötr</string>
     <string name="pref_app_dir_title">Yedekleme ve dışa aktarmalar için klasör</string>
-    <string name="pref_auto_fill_title">Muameleleri otomatik doldur</string>
     <string name="pref_auto_fill_summary">Aynı alacaklı/ödeyici için verileri son muameleden doldur</string>
     <string name="pref_backup_summary">SD kartına veritabanı ve tercihlerin bir yedeklemesini yap.</string>
     <string name="pref_sort_order_usages">Kullanım sayacı</string>
@@ -331,7 +330,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">Parola olmasa da izinli.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">Parola gerekli.</string>
     <string name="pref_qif_export_file_encoding_title">Karakter kodlaması</string>
-    <string name="pref_request_licence_title">Anahtarı talep et</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">Alternatif</string>
     <string name="pref_restore_alternative_summary">Eğer cihazınızda kurulu bir dosya yöneticisi yoksa istiyorsanız bu alternatif metodu kullanınız.</string>
@@ -506,6 +504,7 @@
     <string name="menu_change_picture">Değişik bir resim ekle</string>
     <string name="menu_distribution_show_pie_char">Grafiği göster</string>
     <string name="menu_distribution_aggreate">Gelir ve harcamaları beraberleştir</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">Eski resimler</string>
     <string name="pref_manage_stale_images_summary">Silinmiş muamelelerden kalan resimleri yönet</string>
     <string name="image_deleted">Resim silinmiştir</string>
@@ -523,8 +522,6 @@
     <string name="pref_csv_import_delimiter">Sınırlayıcı</string>
     <string name="csv_import_preview">Önizle</string>
     <string name="menu_parse">Çözümle</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">At</string>
     <string name="csv_import_field_mapped_more_than_once">%s bir kereden fazla haritalanmıştır.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d kayıt içe aktarılamadı.</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d kayıt atılmıştır.</string>
@@ -677,7 +674,6 @@
     <string name="professional_key">Profesyonel Anahtar</string>
     <string name="n_months">%d ay</string>
     <string name="eu_vat_info">Görüntülenen fiyatlar Avrupa Birliği\'ndeki kullanıcılar için KDV\'yi içermemektedir.</string>
-    <string name="licence_migration_info">{app_name} yeni bir lisans doğrulama mekanizması kullanmaktadır. Lütfen yeni bir anahtar talep edin.</string>
     <string name="valid_until">%s tarihine kadar geçerli</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">%1$s tarihine kadar %2$s fiyatına yenile</string>
@@ -706,7 +702,6 @@
     <string name="pref_warning_only_one_protection">%1$s ile korumayı kullanmadan önce %2$s ile korumayı devre dışı bırakmanız gerekir.</string>
     <string name="warning_device_lock_screen_not_set_up_1">Güvenli cihaz kilidi ekranı ayarlanmadı.</string>
     <string name="warning_device_lock_screen_not_set_up_2">Ekran kilidini ayarlamak için \'Ayarlar -&gt; Güvenlik -&gt; Ekran kilidine\' gidiniz.</string>
-    <string name="snackbar_dismiss">Kapat</string>
     <string name="menu_history_show_balance">Bakiyeyi göster</string>
     <string name="menu_history_transfers">Transferleri dahil et</string>
     <string name="menu_history">Tarihçe</string>
@@ -934,6 +929,7 @@
     <!-- Title of a section on the Settings screen where each entry corresponds to a subsection dedicated to one feature (functionality)  -->
     <string name="pref_category_title_features">Features</string>
     <string name="scan_result_no_data">Veri yok</string>
+    <!-- After text recognition has been run on an image, if multiple strings are found that can be interpreted as date, amount or payee, a dialogue is shown allowing to select between these "candidates". This message is the title of this dialogue.  -->
     <string name="scan_result_multiple_candidates_dialog_title">Birden çok aday bulundu. Lütfen seçin:</string>
     <string name="scan_result_no_amount">Hiçbir meblağ bulunamadı</string>
     <string name="scan_result_no_date">Hiçbir tarih bulunamadı</string>
@@ -975,4 +971,5 @@
     <string name="pref_group_header_show_details_summary">Grup başlığında ayrıntılı toplamları göster</string>
     <!-- Title of a menu item and a dialogue that allow to adjust the current balance. User can enter the new balance, and transaction form is opened with the amount prefiled to the difference between old and new balance  -->
     <string name="new_balance">Yeni bakiye</string>
-</resources>
+    <string name="title_webui">İnternet Kullanıcı Arayüzü</string>
+    </resources>

@@ -20,6 +20,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.SparseBooleanArray;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -39,9 +40,11 @@ import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
 import org.totschnig.myexpenses.provider.DatabaseConstants;
 import org.totschnig.myexpenses.provider.TransactionProvider;
 import org.totschnig.myexpenses.task.TaskExecutionFragment;
+import org.totschnig.myexpenses.util.io.FileUtils;
 
 import javax.inject.Inject;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
@@ -59,25 +62,25 @@ public class StaleImagesList extends ContextualActionBarFragment implements Load
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    MyApplication.getInstance().getAppComponent().inject(this);
+    ((MyApplication) requireActivity().getApplication()).getAppComponent().inject(this);
   }
 
   @Override
   public boolean dispatchCommandMultiple(int command,
                                          SparseBooleanArray positions, Long[] itemIds) {
+    if (super.dispatchCommandMultiple(command, positions, itemIds)) {
+      return true;
+    }
     int taskId = 0, progressMessage = 0;
-    switch (command) {
-      case R.id.SAVE_COMMAND:
-        taskId = TaskExecutionFragment.TASK_SAVE_IMAGES;
-        progressMessage = R.string.progress_dialog_saving;
-        break;
-      case R.id.DELETE_COMMAND:
-        taskId = TaskExecutionFragment.TASK_DELETE_IMAGES;
-        progressMessage = R.string.progress_dialog_deleting;
-        break;
+    if (command == R.id.SAVE_COMMAND) {
+      taskId = TaskExecutionFragment.TASK_SAVE_IMAGES;
+      progressMessage = R.string.progress_dialog_saving;
+    } else if (command == R.id.DELETE_COMMAND) {
+      taskId = TaskExecutionFragment.TASK_DELETE_IMAGES;
+      progressMessage = R.string.progress_dialog_deleting;
     }
     if (taskId == 0) {
-      return super.dispatchCommandMultiple(command, positions, itemIds);
+      return false;
     }
     finishActionMode();
     ((ProtectedFragmentActivity) getActivity()).startTaskExecution(
@@ -86,6 +89,24 @@ public class StaleImagesList extends ContextualActionBarFragment implements Load
         null,
         progressMessage);
     return true;
+  }
+
+  @Override
+  public boolean dispatchCommandSingle(int command, ContextMenu.ContextMenuInfo info) {
+    if (super.dispatchCommandSingle(command, info)) {
+      return true;
+    }
+    if (command == R.id.VIEW_COMMAND) {
+      imageViewIntentProvider.startViewIntent(requireActivity(),
+          uriAtPosition(((AdapterView.AdapterContextMenuInfo) info).position));
+    }
+    return false;
+  }
+
+  private Uri uriAtPosition(int position) {
+    mImagesCursor.moveToPosition(position);
+    return Uri.parse(mImagesCursor.getString(
+        mImagesCursor.getColumnIndex(DatabaseConstants.KEY_PICTURE_URI)));
   }
 
   @Override
@@ -125,43 +146,38 @@ public class StaleImagesList extends ContextualActionBarFragment implements Load
         v.setContentDescription(value);
       }
     };
-    lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      @Override
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        mImagesCursor.moveToPosition(position);
-        imageViewIntentProvider.startViewIntent(getActivity(),
-            Uri.parse(mImagesCursor.getString(
-                mImagesCursor.getColumnIndex(DatabaseConstants.KEY_PICTURE_URI))));
-      }
+    lv.setOnItemClickListener((parent, view, position, id) -> {
+      ((ProtectedFragmentActivity) requireActivity()).showSnackbar(
+          FileUtils.getPath(requireContext(), uriAtPosition(position)));
     });
-    getLoaderManager().initLoader(0, null, this);
+    LoaderManager.getInstance(this).initLoader(0, null, this);
     lv.setAdapter(mAdapter);
     registerForContextualActionBar(lv);
     return v;
   }
 
+  @NonNull
   @Override
   public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
-    CursorLoader cursorLoader = new CursorLoader(getActivity(),
+    return new CursorLoader(requireActivity(),
         TransactionProvider.STALE_IMAGES_URI, null, null, null, null);
-    return cursorLoader;
   }
 
   @Override
-  public void onLoadFinished(Loader<Cursor> arg0, Cursor c) {
+  public void onLoadFinished(@NonNull Loader<Cursor> arg0, Cursor c) {
     mImagesCursor = c;
     mAdapter.swapCursor(c);
   }
 
   @Override
-  public void onLoaderReset(Loader<Cursor> arg0) {
+  public void onLoaderReset(@NonNull Loader<Cursor> arg0) {
     mImagesCursor = null;
     mAdapter.swapCursor(null);
   }
 
   @Override
   protected void inflateHelper(Menu menu, int listId) {
-    MenuInflater inflater = getActivity().getMenuInflater();
+    MenuInflater inflater = requireActivity().getMenuInflater();
     inflater.inflate(R.menu.stale_images_context, menu);
   }
 }

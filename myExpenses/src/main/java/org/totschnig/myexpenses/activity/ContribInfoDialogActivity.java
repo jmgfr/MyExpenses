@@ -19,7 +19,6 @@ import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
 import org.totschnig.myexpenses.util.licence.BillingListener;
 import org.totschnig.myexpenses.util.licence.BillingManager;
-import org.totschnig.myexpenses.util.licence.LicenceStatus;
 import org.totschnig.myexpenses.util.licence.Package;
 import org.totschnig.myexpenses.util.tracking.Tracker;
 
@@ -32,7 +31,6 @@ import timber.log.Timber;
 
 import static org.totschnig.myexpenses.activity.ConstantsKt.INVOICE_REQUEST;
 import static org.totschnig.myexpenses.activity.ConstantsKt.PAYPAL_REQUEST;
-
 
 /**
  * Manages the dialog shown to user when they request usage of a premium functionality or click on
@@ -65,7 +63,7 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
   public static Intent getIntentFor(Context context, @NonNull Package aPackage, boolean shouldReplaceExisting) {
     Intent intent = new Intent(context, ContribInfoDialogActivity.class);
     intent.setAction(Intent.ACTION_MAIN);
-    intent.putExtra(KEY_PACKAGE, aPackage.name());
+    intent.putExtra(KEY_PACKAGE, aPackage);
     intent.putExtra(KEY_SHOULD_REPLACE_EXISTING, shouldReplaceExisting);
     return intent;
   }
@@ -73,7 +71,7 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    String packageFromExtra = packageFromExtra();
+    Package packageFromExtra = packageFromExtra();
 
     if (savedInstanceState == null) {
       if (packageFromExtra == null) {
@@ -83,15 +81,15 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
         getSupportFragmentManager().executePendingTransactions();
       } else {
         if (DistributionHelper.isGithub()) {
-          contribBuyDo(Package.valueOf(packageFromExtra));
+          contribBuyDo(packageFromExtra);
         }
       }
     }
     billingManager = licenceHandler.initBillingManager(this, false);
   }
 
-  private String packageFromExtra() {
-    return getIntent().getStringExtra(KEY_PACKAGE);
+  private Package packageFromExtra() {
+    return getIntent().getParcelableExtra(KEY_PACKAGE);
   }
 
   private void contribBuyGithub(Package aPackage) {
@@ -105,7 +103,7 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
 
   public void contribBuyDo(@NonNull Package aPackage) {
     Bundle bundle = new Bundle(1);
-    bundle.putString(Tracker.EVENT_PARAM_PACKAGE, aPackage.name());
+    bundle.putString(Tracker.EVENT_PARAM_PACKAGE, aPackage.getClass().getSimpleName());
     logEvent(Tracker.EVENT_CONTRIB_DIALOG_BUY, bundle);
     switch (DistributionHelper.getDistribution()) {
       case PLAY:
@@ -115,7 +113,8 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
             licenceHandler.launchPurchase(aPackage, getIntent().getBooleanExtra(KEY_SHOULD_REPLACE_EXISTING, false), billingManager);
           }
         } catch (IllegalStateException e) {
-          complain(e.getMessage());
+          CrashHandler.report(e);
+          showMessage(e.getMessage() != null ? e.getMessage() : "ERROR");
         }
         break;
       default:
@@ -126,7 +125,6 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
 
   void complain(String message) {
     CrashHandler.report(String.format("**** InAppPurchase Error: %s", message));
-    doFinishAfterMessageDismiss = false;
     showMessage(message);
   }
 
@@ -137,36 +135,32 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
 
   public void startPayment(int paymentOption, Package aPackage) {
     Intent intent;
-    switch (paymentOption) {
-      case R.string.donate_button_paypal: {
-        intent = new Intent(Intent.ACTION_VIEW);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setData(Uri.parse(licenceHandler.getPaypalUri(aPackage)));
-        try {
-          startActivityForResult(intent, PAYPAL_REQUEST);
-        } catch (ActivityNotFoundException e) {
-          complain("No activity found for opening Paypal");
-        }
-        break;
+    if (paymentOption == R.string.donate_button_paypal) {
+      intent = new Intent(Intent.ACTION_VIEW);
+      intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      intent.setData(Uri.parse(licenceHandler.getPaypalUri(aPackage)));
+      try {
+        startActivityForResult(intent, PAYPAL_REQUEST);
+      } catch (ActivityNotFoundException e) {
+        complain("No activity found for opening Paypal");
       }
-      case R.string.donate_button_invoice: {
-        intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("message/rfc822");
-        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{MyApplication.INVOICES_EMAIL});
-        String packageLabel = licenceHandler.getButtonLabel(aPackage);
-        intent.putExtra(Intent.EXTRA_SUBJECT,
-            "[" + getString(R.string.app_name) + "] " + getString(R.string.donate_button_invoice));
-        String userCountry = Utils.getCountryFromTelephonyManager(this);
-        String messageBody = String.format(
-            "Please send an invoice for %s to:\nName: (optional)\nCountry: %s (required)",
-            packageLabel, userCountry != null ? userCountry : "");
-        intent.putExtra(Intent.EXTRA_TEXT, messageBody);
-        if (!Utils.isIntentAvailable(this, intent)) {
-          complain(getString(R.string.no_app_handling_email_available));
-        } else {
-          startActivityForResult(intent, INVOICE_REQUEST);
-        }
+    } else if (paymentOption == R.string.donate_button_invoice) {
+      intent = new Intent(Intent.ACTION_SEND);
+      intent.setType("message/rfc822");
+      intent.putExtra(Intent.EXTRA_EMAIL, new String[]{MyApplication.INVOICES_EMAIL});
+      String packageLabel = licenceHandler.getButtonLabel(aPackage);
+      intent.putExtra(Intent.EXTRA_SUBJECT,
+          "[" + getString(R.string.app_name) + "] " + getString(R.string.donate_button_invoice));
+      String userCountry = Utils.getCountryFromTelephonyManager(this);
+      String messageBody = String.format(
+          "Please send an invoice for %s to:\nName: (optional)\nCountry: %s (required)",
+          packageLabel, userCountry != null ? userCountry : "");
+      intent.putExtra(Intent.EXTRA_TEXT, messageBody);
+      if (!Utils.isIntentAvailable(this, intent)) {
+        complain(getString(R.string.no_app_handling_email_available));
+      } else {
+        startActivityForResult(intent, INVOICE_REQUEST);
       }
     }
   }
@@ -183,7 +177,7 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
     if (featureStringFromExtra != null) {
       ContribFeature feature = ContribFeature.valueOf(featureStringFromExtra);
       int usagesLeft = feature.usagesLeft(prefHandler);
-      boolean shouldCallFeature = feature.hasAccess() || (!canceled && usagesLeft > 0);
+      boolean shouldCallFeature = licenceHandler.hasAccessTo(feature) || (!canceled && usagesLeft > 0);
       if (callerIsContribIface()) {
         Intent i = new Intent();
         i.putExtra(KEY_FEATURE, featureStringFromExtra);
@@ -201,15 +195,12 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
   }
 
   private void callFeature(ContribFeature feature) {
-    switch (feature) {
-      case SPLIT_TRANSACTION:
-        startActivity(ShortcutHelper.createIntentForNewSplit(this));
-        break;
-      default:
-        //should not happen
-        CrashHandler.report(new IllegalStateException(
-            String.format("Unhandlable request for feature %s (caller = %s)", feature,
-                getCallingActivity() != null ? getCallingActivity().getClassName() : "null")));
+    if (feature == ContribFeature.SPLIT_TRANSACTION) {
+      startActivity(ShortcutHelper.createIntentForNewSplit(this));
+    } else {//should not happen
+      CrashHandler.report(new IllegalStateException(
+          String.format("Unhandlable request for feature %s (caller = %s)", feature,
+              getCallingActivity() != null ? getCallingActivity().getClassName() : "null")));
     }
   }
 
@@ -227,12 +218,12 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
   }
 
   @Override
-  public void onLicenceStatusSet(@Nullable LicenceStatus newStatus, @Nullable LicenceStatus oldStatus) {
+  public void onLicenceStatusSet(String newStatus) {
     if (newStatus != null) {
       Timber.d("Purchase is premium upgrade. Congratulating user.");
       showMessage(
           String.format("%s (%s) %s", getString(R.string.licence_validation_premium),
-              getString(newStatus.getResId()), getString(R.string.thank_you)));
+              newStatus, getString(R.string.thank_you)));
     } else {
       complain("Validation of purchase failed");
     }
@@ -257,15 +248,16 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
 
   @Override
   public void onBillingSetupFinished() {
-    String packageFromExtra = packageFromExtra();
+    Package packageFromExtra = packageFromExtra();
     if (packageFromExtra != null) {
-      contribBuyDo(Package.valueOf(packageFromExtra));
+      contribBuyDo(packageFromExtra);
     }
   }
 
   @Override
   public void onBillingSetupFailed(@NonNull String reason) {
     if (DistributionHelper.isPlay()) {
+      doFinishAfterMessageDismiss = false;
       complain(String.format("Billing setup failed (%s)", reason));
     }
   }

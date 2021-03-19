@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">Неограничен брой шаблони за  разпределяне</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources"><b> Поддръжка по имейл </b> с гарантиран отговор до 2 работни дни</string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources">Право да гласувате на <b> карта за развитие </b></string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Графика на историята (паричен поток)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Графика на историята</string>
     <string name="licence_status_free">Безплатен</string>
     <string name="contrib_key">ключ за Основен вариант</string>
     <string name="extended_key">ключ за Разширен вариант</string>
@@ -277,7 +277,6 @@
     <string name="pm_type_debit">Дебит</string>
     <string name="pm_type_neutral">Неутрално</string>
     <string name="pref_app_dir_title">Папка за архивиране и експорт</string>
-    <string name="pref_auto_fill_title">Автоматично попълване</string>
     <string name="pref_auto_fill_summary">Попълни данните от последната транзакция за същия получател / платец</string>
     <string name="pref_backup_summary">Запиши сега резервно копие на базата данни и предпочитания.</string>
     <string name="pref_sort_order_usages">По брой използвания</string>
@@ -331,7 +330,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">Разрешено без парола.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">Изисква се парола.</string>
     <string name="pref_qif_export_file_encoding_title">Кодиране на знаците</string>
-    <string name="pref_request_licence_title">Поискайте ключ</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">Алтернатива</string>
     <string name="pref_restore_alternative_summary">Използвайте алтернативния начин, ако на устройството нямате файлов мениджър.</string>
@@ -506,6 +504,7 @@
     <string name="menu_change_picture">Прикачи друго изображение</string>
     <string name="menu_distribution_show_pie_char">Покажи графиката</string>
     <string name="menu_distribution_aggreate">Сумирай разходите и приходите</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">Ненужни изображения</string>
     <string name="pref_manage_stale_images_summary">Управление на изображения, останали след изтриване на транзакция</string>
     <string name="image_deleted">Изображението е изтрито</string>
@@ -523,8 +522,6 @@
     <string name="pref_csv_import_delimiter">Разделител</string>
     <string name="csv_import_preview">Предварителен оглед</string>
     <string name="menu_parse">Анализирай</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">Отхвърли</string>
     <string name="csv_import_field_mapped_more_than_once">%s е свързан повече от веднъж.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">Не могат да бъдат внесени %d записа.</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">Отхвърлени са %d записа.</string>
@@ -677,7 +674,6 @@
     <string name="professional_key">Професионален ключ</string>
     <string name="n_months">%d месеца</string>
     <string name="eu_vat_info">За гражданите на Европейския съюз цените не включват ДДС.</string>
-    <string name="licence_migration_info">{app_name} използва нов механизъм за валидиране на лицензи. Моля, поискайте нов ключ.</string>
     <string name="valid_until">Валиден до %s</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">Продължете до %1$s за %2$s</string>
@@ -706,7 +702,6 @@
     <string name="pref_warning_only_one_protection">Преди да можете да използвате защита от %1$s, трябва да изключите защитата от %2$s.</string>
     <string name="warning_device_lock_screen_not_set_up_1">Защитният екран за заключено устройството не е настроен.</string>
     <string name="warning_device_lock_screen_not_set_up_2">Отидете на \"Настройки -&gt; Настройки -&gt; Заключен екран\", за да настроите заключен екран.</string>
-    <string name="snackbar_dismiss">Отхвърли</string>
     <string name="menu_history_show_balance">Показване на салдото</string>
     <string name="menu_history_transfers">Включи преводите</string>
     <string name="menu_history">История</string>
@@ -934,6 +929,7 @@
     <!-- Title of a section on the Settings screen where each entry corresponds to a subsection dedicated to one feature (functionality)  -->
     <string name="pref_category_title_features">Функции</string>
     <string name="scan_result_no_data">Няма данни</string>
+    <!-- After text recognition has been run on an image, if multiple strings are found that can be interpreted as date, amount or payee, a dialogue is shown allowing to select between these "candidates". This message is the title of this dialogue.  -->
     <string name="scan_result_multiple_candidates_dialog_title">Намерени са няколко кандидати. Моля изберете:</string>
     <string name="scan_result_no_amount">Не е намерена сума</string>
     <string name="scan_result_no_date">Не е намерена дата</string>
@@ -975,4 +971,6 @@
     <string name="pref_group_header_show_details_summary">Показвай подробни суми в заглавието на групата</string>
     <!-- Title of a menu item and a dialogue that allow to adjust the current balance. User can enter the new balance, and transaction form is opened with the amount prefiled to the difference between old and new balance  -->
     <string name="new_balance">Ново салдо</string>
+    <string name="title_webui">Уеб потребителски интерфейс</string>
+    <string name="single_feature_info">Като алтернатива може да закупите неограничен достъп само за тази функция.</string>
 </resources>

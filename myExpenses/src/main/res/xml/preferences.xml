@@ -109,7 +109,7 @@
 
         <PreferenceScreen
             android:key="@string/pref_auto_fill_key"
-            android:title="@string/pref_auto_fill_title">
+            android:title="@string/autofill">
             <Preference
                 style="?preferenceInformationStyle"
                 android:summary="@string/pref_auto_fill_summary" />
@@ -184,6 +184,12 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_title_import">
+        <Preference android:key="@string/pref_import_csv_key" />
+        <Preference android:key="@string/pref_import_qif_key">
+            <intent
+                android:targetClass="org.totschnig.myexpenses.activity.QifImport"
+                android:targetPackage="@string/application_id" />
+        </Preference>
         <Preference
             android:key="import_from_grisbi"
             android:summary="@string/pref_import_from_grisbi_summary"
@@ -193,12 +199,6 @@
                 android:targetClass="org.totschnig.myexpenses.activity.GrisbiImport"
                 android:targetPackage="@string/application_id" />
         </Preference>
-        <Preference android:key="@string/pref_import_qif_key">
-            <intent
-                android:targetClass="org.totschnig.myexpenses.activity.QifImport"
-                android:targetPackage="@string/application_id" />
-        </Preference>
-        <Preference android:key="@string/pref_import_csv_key" />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -303,7 +303,6 @@
                 android:entryValues="@array/ocr_engine_values"
                 android:key="@string/pref_ocr_engine_key"
                 android:title="@string/pref_ocr_engine_title"
-                my:isPreferenceVisible="@bool/pref_ocr_engine_visible"
                 my:useSimpleSummaryProvider="true" />
             <ListPreference
                 android:entryValues="@array/pref_tesseract_language_values"
@@ -345,6 +344,7 @@
                 android:key="@string/pref_sync_changes_immediately_key"
                 android:summary="@string/pref_sync_changes_immediately_summary" />
         </PreferenceScreen>
+        <SwitchPreferenceCompat android:key="@string/pref_web_ui_key" android:title="@string/title_webui"/>
     </PreferenceCategory>
 
     <PreferenceCategory

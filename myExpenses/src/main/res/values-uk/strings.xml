@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">Необмежена кількість шаблонів поділу</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources"><b>Сервіс підтримки</b> через електронну пошту з гарантованою відповіддю протягом 2 робочих днів</string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources">Можливість голосувати <b>в плані розвитку програми</b></string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Історія (Рух коштів)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Історія</string>
     <string name="licence_status_free">Безкоштовна версія</string>
     <string name="contrib_key">Платна версія</string>
     <string name="extended_key">Розширена платна версія</string>
@@ -272,7 +272,6 @@
     <string name="pm_type_debit">Дебет</string>
     <string name="pm_type_neutral">Нейтральний</string>
     <string name="pref_app_dir_title">Тека для резервних копій та експорту</string>
-    <string name="pref_auto_fill_title">Автозаповнення операцій</string>
     <string name="pref_auto_fill_summary">Заповніть дані з останньої операції для того самого одержувача / платника</string>
     <string name="pref_backup_summary">Створення резервної копії бази даних та налаштувань.</string>
     <string name="pref_sort_order_usages">Кількість використань</string>
@@ -326,7 +325,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">Дозволено без пароля.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">Пароль обовʼязковий.</string>
     <string name="pref_qif_export_file_encoding_title">Кодування символів</string>
-    <string name="pref_request_licence_title">Звернутись по ключ</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">Альтернатива</string>
     <string name="pref_restore_alternative_summary">Використовуйте цю альтернативу, якщо на пристрої не встановлено файловий менеджер.</string>
@@ -510,6 +508,7 @@
     <string name="menu_change_picture">Прикріпити інше зображення</string>
     <string name="menu_distribution_show_pie_char">Показати кругову діаграму</string>
     <string name="menu_distribution_aggreate">Об\'єднати витрати та доходи</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">Старі зображення</string>
     <string name="pref_manage_stale_images_summary">Керування зображеннями, залишеними після видалених операцій</string>
     <string name="image_deleted">Зображення було видалено</string>
@@ -527,8 +526,6 @@
     <string name="pref_csv_import_delimiter">Розділювач</string>
     <string name="csv_import_preview">Попередній перегляд</string>
     <string name="menu_parse">Розпізнати</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">Відхилити</string>
     <string name="csv_import_field_mapped_more_than_once">%s було зв\'язано більше як одного разу.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">Не вдалось імпортувати %d записів.</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d записів було відхилено.</string>
@@ -677,7 +674,6 @@
     <string name="professional_key">Професійна версія</string>
     <string name="n_months">%d місяців</string>
     <string name="eu_vat_info">Для резидентів Європейського Союзу ціни вказано без ПДВ.</string>
-    <string name="licence_migration_info">{app_name} реалізує новий механізм перевірки ліцензії. Будь ласка, зверніться по новий ліцензійний ключ.</string>
     <string name="valid_until">До %s</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">Продовжити до %1$s для %2$s</string>
@@ -708,7 +704,6 @@
     <string name="pref_warning_only_one_protection">Перш ніж використовувати захист за допомогою %1$s, необхідно вимкнути захист за допомогою %2$s.</string>
     <string name="warning_device_lock_screen_not_set_up_1">Не налаштовано безпечний екран блокування пристрою .</string>
     <string name="warning_device_lock_screen_not_set_up_2">Перейдіть в \"Налаштування -&gt; Безпека -&gt; Блокування екрана\", щоб налаштувати екран блокування.</string>
-    <string name="snackbar_dismiss">Скасувати</string>
     <string name="menu_history_show_balance">Відобразити баланс</string>
     <string name="menu_history_transfers">Включити перекази</string>
     <string name="menu_history">Історія</string>

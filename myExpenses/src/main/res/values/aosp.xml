@@ -3,12 +3,24 @@
      Copyright (C) 2011 Google Inc.
      Licensed to The Android Open Source Project.
 -->
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<resources>
     <!-- packages/apps/UnifiedEmail/res/values/strings.xml -->
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <!-- packages/apps/Contacts/res/values/strings.xml -->
     <string name="toast_text_copied">Text copied</string>
     <string name="copy_text">Copy to clipboard</string>
+    <!--  packages/apps/DeskClock/res/values/strings.xml name="timer_stop" -->
+    <string name="stop">Stop</string>
+    <!-- packages/apps/Settings/res/values/strings.xml name="vpn_no_network" -->
+    <string name="no_network">There is no network connection.</string>
+    <!-- Settings name="encryption_continue_button" -->
+    <string name="button_label_continue">Continue</string>
+    <!-- AndroidSDK/platforms/android-30/data/res -->
+    <string name="autofill">Autofill</string>
+    <!--  packages/apps/SoundRecorder/res/values/strings.xml-->
+    <string name="discard">Discard</string>
+    <!--  packages/apps/Camera2/res/values/strings.xml-->
+    <string name="dialog_dismiss">Dismiss</string>
 </resources>
 

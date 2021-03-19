@@ -6,15 +6,13 @@ import android.view.View
 import android.view.ViewTreeObserver
 import com.getkeepsafe.taptargetview.TapTarget
 import com.getkeepsafe.taptargetview.TapTargetView
-import org.totschnig.myexpenses.MyApplication
 import org.totschnig.myexpenses.R
 import org.totschnig.myexpenses.preference.PrefHandler
 import org.totschnig.myexpenses.util.UiUtils
 import org.totschnig.myexpenses.util.Utils
 import timber.log.Timber
-import javax.inject.Inject
 
-class DiscoveryHelper @Inject constructor(val prefHandler: PrefHandler) {
+class DiscoveryHelper(val prefHandler: PrefHandler) : IDiscoveryHelper {
 
     enum class Feature(val key: String) {
         expense_income_switch("showDiscoveryExpenseIncomeSwitch") {
@@ -29,22 +27,22 @@ class DiscoveryHelper @Inject constructor(val prefHandler: PrefHandler) {
         };
 
         open fun getLabelResId(ctx: Context) =
-                ctx.resources.getIdentifier("discover_feature_" + name, "string", ctx.packageName)
+                ctx.resources.getIdentifier("discover_feature_$name", "string", ctx.packageName)
 
         fun toDescription(context: Context) = context.getString(getLabelResId(context))
 
         abstract fun toTitle(context: Context): String
     }
 
-    fun discover(context: Activity, target: View, daysSinceInstall: Int, feature: Feature,
-                 measureTarget: Boolean = false) =
-            (!MyApplication.isInstrumentationTest() && Utils.getDaysSinceInstall(context) >= daysSinceInstall && prefHandler.getBoolean(feature.key, true)).also {
+    override fun discover(context: Activity, target: View, daysSinceInstall: Int, feature: Feature,
+                          measureTarget: Boolean) =
+            (Utils.getDaysSinceInstall(context) >= daysSinceInstall && prefHandler.getBoolean(feature.key, true)).also {
                 if (it) {
                     if (measureTarget) {
-                        target.getViewTreeObserver().addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                        target.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
                             override fun onGlobalLayout() {
                                 discoveryShow(context, target, feature, UiUtils.px2Dp(target.width / 2))
-                                target.getViewTreeObserver().removeGlobalOnLayoutListener(this)
+                                target.viewTreeObserver.removeGlobalOnLayoutListener(this)
                             }
                         })
                     } else {
@@ -53,7 +51,7 @@ class DiscoveryHelper @Inject constructor(val prefHandler: PrefHandler) {
                 }
             }
 
-    fun markDiscovered(feature: Feature) {
+    override fun markDiscovered(feature: Feature) {
         prefHandler.putBoolean(feature.key, false)
         Timber.d("Marked as discoverd: %s", feature)
     }
@@ -62,7 +60,7 @@ class DiscoveryHelper @Inject constructor(val prefHandler: PrefHandler) {
         TapTargetView.showFor(context,
                 TapTarget.forView(target, feature.toTitle(context), feature.toDescription(context))
                         .transparentTarget(true)
-                        .outerCircleColorInt(UiUtils.themeIntAttr(context, R.attr.colorAccent))
+                        .outerCircleColorInt(UiUtils.getColor(context, R.attr.colorAccent))
                         .apply {
                             targetRadius?.let { this.targetRadius(it) }
                         },

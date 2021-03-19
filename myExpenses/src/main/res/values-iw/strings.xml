@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">מספר בלתי מוגבל של תבניות מפוצלות</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources"><b>שלח תמיכה</b> בדוא\"ל עם תגובה מובטחת בתוך 2 ימי עסקים</string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources">זכות הצבעה על <b>מפת דרכים לפיתוח</b></string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">תרשים היסטוריה (תזרים מזומנים)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">תרשים היסטוריה</string>
     <string name="licence_status_free">חופשי</string>
     <string name="contrib_key">מפתח לתורם</string>
     <string name="extended_key">מפתח מורחב</string>
@@ -283,7 +283,6 @@
     <string name="pm_type_debit">חובה</string>
     <string name="pm_type_neutral">ניטראלי</string>
     <string name="pref_app_dir_title">תיקייה לגיבויים ולייצוא</string>
-    <string name="pref_auto_fill_title">מילוי אוטומטי של עסקאות</string>
     <string name="pref_auto_fill_summary">מלא נתונים מהעסקה האחרונה עבור אותו מקבל תשלום / משלם</string>
     <string name="pref_backup_summary">צור גיבוי של מסד נתונים והעדפות.</string>
     <string name="pref_sort_order_usages">ספירת שימושים</string>
@@ -337,7 +336,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">מותרת ללא סיסמה.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">נדרשת סיסמה</string>
     <string name="pref_qif_export_file_encoding_title">קידוד תווים</string>
-    <string name="pref_request_licence_title">בקש מפתח</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">חלופה</string>
     <string name="pref_restore_alternative_summary">השתמש בשיטה חלופית זו אם אין מנהל קבצים מותקן במכשיר.</string>
@@ -524,6 +522,7 @@
     <string name="menu_change_picture">הצמד תמונה אחרת</string>
     <string name="menu_distribution_show_pie_char">הצג תרשים עוגה</string>
     <string name="menu_distribution_aggreate">הוצאות והכנסות מצטברות</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">תמונות לא ברורות</string>
     <string name="pref_manage_stale_images_summary">ניהול תמונות שנותרו מעסקאות שנמחקו</string>
     <string name="image_deleted">תמונה נמחקה</string>
@@ -541,8 +540,6 @@
     <string name="pref_csv_import_delimiter">תוחם - מציב גבול</string>
     <string name="csv_import_preview">תצוגה מקדימה</string>
     <string name="menu_parse">ביטוי</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">השלך</string>
     <string name="csv_import_field_mapped_more_than_once">%s משוייך יחותר מפעם אחת.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d רשומות לא ניתנות ליבוא..</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d רשומות נמחקו</string>
@@ -695,7 +692,6 @@
     <string name="professional_key">מפתח מקצועי</string>
     <string name="n_months">%d חודשים</string>
     <string name="eu_vat_info">לתושבי האיחוד האירופי המחירים המוצגים אינם כוללים מע\"מ.</string>
-    <string name="licence_migration_info">{app_name} מיישם מנגנון אימות רשיון חדש. אנא בקש מפתח חדש.</string>
     <string name="valid_until">עד %s</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">הארכה עד %1$s למשך %2$s</string>
@@ -726,7 +722,6 @@
     <string name="pref_warning_only_one_protection">לפני שתוכל להשתמש בהגנה על ידי%1$s, עליך לבטל את ההגנה על ידי%2$s.</string>
     <string name="warning_device_lock_screen_not_set_up_1">מסך נעילת המכשיר המאובטח לא הוגדר.</string>
     <string name="warning_device_lock_screen_not_set_up_2">גש להגדרות, בחר אבטחה,בחר נעילת מסך כדי להגדיר נעילת מסך</string>
-    <string name="snackbar_dismiss">שחרר</string>
     <string name="menu_history_show_balance">הצג את היתרה</string>
     <string name="menu_history_transfers">כלול העברות</string>
     <string name="menu_history">היסטוריה</string>
@@ -960,6 +955,7 @@
     <!-- Title of a section on the Settings screen where each entry corresponds to a subsection dedicated to one feature (functionality)  -->
     <string name="pref_category_title_features">מאפיינים</string>
     <string name="scan_result_no_data">אין מידע</string>
+    <!-- After text recognition has been run on an image, if multiple strings are found that can be interpreted as date, amount or payee, a dialogue is shown allowing to select between these "candidates". This message is the title of this dialogue.  -->
     <string name="scan_result_multiple_candidates_dialog_title">נמצאו מספר מועמדים. בבקשה תבחר:</string>
     <string name="scan_result_no_amount">לא נמצא סכום</string>
     <string name="scan_result_no_date">לא נמצא תאריך</string>
@@ -1001,4 +997,5 @@
     <string name="pref_group_header_show_details_summary">הצג סכומי פירוט בכותרת הקבוצה</string>
     <!-- Title of a menu item and a dialogue that allow to adjust the current balance. User can enter the new balance, and transaction form is opened with the amount prefiled to the difference between old and new balance  -->
     <string name="new_balance">איזון חדש</string>
-</resources>
+    <string name="title_webui">ממשק משתמש באינטרנט</string>
+    </resources>

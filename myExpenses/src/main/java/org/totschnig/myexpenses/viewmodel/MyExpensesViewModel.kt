@@ -2,7 +2,6 @@ package org.totschnig.myexpenses.viewmodel
 
 import android.app.Application
 import android.content.ContentUris
-import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
@@ -11,10 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.totschnig.myexpenses.MyApplication
-import org.totschnig.myexpenses.activity.BaseActivity
-import org.totschnig.myexpenses.feature.Callback
-import org.totschnig.myexpenses.feature.FeatureManager
-import org.totschnig.myexpenses.feature.OCR_MODULE
 import org.totschnig.myexpenses.model.Account
 import org.totschnig.myexpenses.model.AggregateAccount
 import org.totschnig.myexpenses.model.Grouping
@@ -33,35 +28,8 @@ const val ERROR_INIT_UPGRADE = -2
 
 class MyExpensesViewModel(application: Application) : ContentResolvingAndroidViewModel(application) {
 
-    init {
-        (application as MyApplication).appComponent.inject(this)
-        featureManager.registerCallback(object : Callback {
-            override fun onFeatureAvailable() {
-                featureState.postValue(Pair(FeatureState.AVAILABLE, null))
-            }
-
-            override fun onAsyncStartedFeature(feature: String) {
-                featureState.postValue(Pair(FeatureState.LOADING, null))
-            }
-
-            override fun onError(throwable: Throwable) {
-                featureState.postValue(Pair(FeatureState.ERROR, throwable.message))
-            }
-
-        })
-    }
-
-    @Inject
-    lateinit var featureManager: FeatureManager
-
     @Inject
     lateinit var prefHandler: PrefHandler
-
-    enum class FeatureState {
-        LOADING, AVAILABLE, ERROR;
-    }
-
-    private val featureState = MutableLiveData<Pair<FeatureState, String?>>()
 
     private val hasHiddenAccounts = MutableLiveData<Boolean>()
 
@@ -69,8 +37,8 @@ class MyExpensesViewModel(application: Application) : ContentResolvingAndroidVie
         return hasHiddenAccounts
     }
 
-    fun getFeatureState(): LiveData<Pair<FeatureState, String?>> {
-        return featureState
+    init {
+        (application as MyApplication).appComponent.inject(this)
     }
 
     fun initialize(): LiveData<Int> = liveData(context = coroutineContext()) {
@@ -84,7 +52,6 @@ class MyExpensesViewModel(application: Application) : ContentResolvingAndroidVie
             emit(ERROR_INIT_DOWNGRADE)
         } catch (e: SQLiteUpgradeFailedException) {
             CrashHandler.report(e)
-            val msg = "Database upgrade failed. Please contact support@myexpenses.mobi !"
             emit(ERROR_INIT_UPGRADE)
         }
         getApplication<MyApplication>().appComponent.licenceHandler().update()
@@ -118,13 +85,13 @@ class MyExpensesViewModel(application: Application) : ContentResolvingAndroidVie
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 contentResolver.update(ContentUris.withAppendedId(Account.CONTENT_URI, accountId).buildUpon().appendPath("sortDirection").appendPath(sortDirection.name).build(),
-                        null, null, null);
+                        null, null, null)
             }
         }
     }
 
     fun persistSortDirectionAggregate(currency: String, sortDirection: SortDirection) {
-        AggregateAccount.persistSortDirectionAggregate(prefHandler, currency, sortDirection);
+        AggregateAccount.persistSortDirectionAggregate(prefHandler, currency, sortDirection)
         contentResolver.notifyChange(TransactionProvider.ACCOUNTS_URI, null, false)
     }
 
@@ -132,8 +99,4 @@ class MyExpensesViewModel(application: Application) : ContentResolvingAndroidVie
         AggregateAccount.persistSortDirectionHomeAggregate(prefHandler, sortDirection)
         contentResolver.notifyChange(TransactionProvider.ACCOUNTS_URI, null, false)
     }
-
-    fun isOcrAvailable(context: Context) = featureManager.isFeatureInstalled(OCR_MODULE, context)
-
-    fun requestOcrFeature(activity: BaseActivity) = featureManager.requestFeature(OCR_MODULE, activity)
 }

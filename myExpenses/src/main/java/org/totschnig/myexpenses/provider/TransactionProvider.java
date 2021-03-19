@@ -32,6 +32,7 @@ import android.text.TextUtils;
 
 import org.totschnig.myexpenses.BuildConfig;
 import org.totschnig.myexpenses.MyApplication;
+import org.totschnig.myexpenses.di.AppComponent;
 import org.totschnig.myexpenses.model.Account;
 import org.totschnig.myexpenses.model.AccountGrouping;
 import org.totschnig.myexpenses.model.AggregateAccount;
@@ -67,6 +68,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -77,6 +79,11 @@ import static org.totschnig.myexpenses.model.AggregateAccount.AGGREGATE_HOME_CUR
 import static org.totschnig.myexpenses.model.AggregateAccount.GROUPING_AGGREGATE;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.*;
 import static org.totschnig.myexpenses.provider.DbUtils.suggestNewCategoryColor;
+import static org.totschnig.myexpenses.provider.MoreDbUtilsKt.groupByForPaymentMethodQuery;
+import static org.totschnig.myexpenses.provider.MoreDbUtilsKt.havingForPaymentMethodQuery;
+import static org.totschnig.myexpenses.provider.MoreDbUtilsKt.mapPaymentMethodProjection;
+import static org.totschnig.myexpenses.provider.MoreDbUtilsKt.tableForPaymentMethodQuery;
+import static org.totschnig.myexpenses.util.PermissionHelper.PermissionGroup.CALENDAR;
 
 public class TransactionProvider extends BaseTransactionProvider {
 
@@ -182,6 +189,7 @@ public class TransactionProvider extends BaseTransactionProvider {
   public static final String QUERY_PARAMETER_DISTINCT = "distinct";
   public static final String QUERY_PARAMETER_GROUP_BY = "groupBy";
   public static final String QUERY_PARAMETER_MARK_VOID = "markVoid";
+  //"1" from production, "2" from test
   public static final String QUERY_PARAMETER_WITH_PLAN_INFO = "withPlanInfo";
   public static final String QUERY_PARAMETER_INIT = "init";
   public static final String QUERY_PARAMETER_CALLER_IS_SYNCADAPTER = "caller_is_syncadapter";
@@ -283,20 +291,23 @@ public class TransactionProvider extends BaseTransactionProvider {
   PrefHandler prefHandler;
   @Inject
   UserLocaleProvider userLocaleProvider;
+  @Inject
+  @Named(AppComponent.DATABASE_NAME)
+  String databaseName;
 
   @Override
   public boolean onCreate() {
-    initOpenHelper();
     MyApplication.getInstance().getAppComponent().inject(this);
+    initOpenHelper();
     return true;
   }
 
   private void initOpenHelper() {
-    mOpenHelper = new TransactionDatabase(getContext());
+    mOpenHelper = new TransactionDatabase(getContext(), databaseName);
   }
 
   @Override
-  public Cursor query(@NonNull Uri uri, String[] projection, String selection,
+  public Cursor query(@NonNull Uri uri,@Nullable String[] projection, String selection,
                       String[] selectionArgs, String sortOrder) {
     SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
     SQLiteDatabase db;
@@ -311,6 +322,7 @@ public class TransactionProvider extends BaseTransactionProvider {
 
     String accountSelector;
     int uriMatch = URI_MATCHER.match(uri);
+    final Context wrappedContext = wrappedContext();
     switch (uriMatch) {
       case TRANSACTIONS:
         boolean extended = uri.getQueryParameter(QUERY_PARAMETER_EXTENDED) != null;
@@ -631,8 +643,7 @@ public class TransactionProvider extends BaseTransactionProvider {
           //home query
           String[] subQueries;
           if (homeCurrency != null) {
-            String grouping = MyApplication.getInstance().getSettings().getString(
-                GROUPING_AGGREGATE, "NONE");
+            String grouping = prefHandler.getString(GROUPING_AGGREGATE, "NONE");
             rowIdColumn = Account.HOME_AGGREGATE_ID + " AS " + KEY_ROWID;
             labelColumn = "'' AS " + KEY_LABEL;
             currencyColumn = "'" + AGGREGATE_HOME_CURRENCY_CODE + "' AS " + KEY_CURRENCY;
@@ -708,7 +719,7 @@ public class TransactionProvider extends BaseTransactionProvider {
       case AGGREGATE_ID:
         String currencyId = uri.getPathSegments().get(2);
         if (Integer.parseInt(currencyId) == Account.HOME_AGGREGATE_ID) {
-          String grouping = MyApplication.getInstance().getSettings().getString(
+          String grouping = prefHandler.getString(
               GROUPING_AGGREGATE, "NONE");
           qb.setTables(TABLE_ACCOUNTS);
           projection = new String[]{
@@ -784,16 +795,20 @@ public class TransactionProvider extends BaseTransactionProvider {
         }
         break;
       case METHODS:
-        qb.setTables(TABLE_METHODS);
+        qb.setTables(tableForPaymentMethodQuery(projection));
+        groupBy = groupByForPaymentMethodQuery(projection);
+        having = havingForPaymentMethodQuery(projection);
         if (projection == null) {
-          projection = PaymentMethod.PROJECTION(wrappedContext());
+          projection = PaymentMethod.PROJECTION(wrappedContext);
+        } else {
+          projection = mapPaymentMethodProjection(projection, wrappedContext);
         }
         if (sortOrder == null) {
-          sortOrder = PaymentMethod.localizedLabelSqlColumn(wrappedContext(), KEY_LABEL) + " COLLATE LOCALIZED";
+          sortOrder = PaymentMethod.localizedLabelSqlColumn(wrappedContext, KEY_LABEL) + " COLLATE LOCALIZED";
         }
         break;
       case MAPPED_METHODS:
-        String localizedLabel = PaymentMethod.localizedLabelSqlColumn(wrappedContext(), KEY_LABEL);
+        String localizedLabel = PaymentMethod.localizedLabelSqlColumn(wrappedContext, KEY_LABEL);
         qb.setTables(TABLE_METHODS + " JOIN " + TABLE_TRANSACTIONS + " ON (" + KEY_METHODID + " = " + TABLE_METHODS + "." + KEY_ROWID + ")");
         projection = new String[]{"DISTINCT " + TABLE_METHODS + "." + KEY_ROWID, localizedLabel + " AS " + KEY_LABEL};
         if (sortOrder == null) {
@@ -803,11 +818,11 @@ public class TransactionProvider extends BaseTransactionProvider {
       case METHOD_ID:
         qb.setTables(TABLE_METHODS);
         if (projection == null)
-          projection = PaymentMethod.PROJECTION(wrappedContext());
+          projection = PaymentMethod.PROJECTION(wrappedContext);
         qb.appendWhere(KEY_ROWID + "=" + uri.getPathSegments().get(1));
         break;
       case METHODS_FILTERED:
-        localizedLabel = PaymentMethod.localizedLabelSqlColumn(wrappedContext(), KEY_LABEL);
+        localizedLabel = PaymentMethod.localizedLabelSqlColumn(wrappedContext, KEY_LABEL);
         qb.setTables(TABLE_METHODS + " JOIN " + TABLE_ACCOUNTTYES_METHODS + " ON (" + KEY_ROWID + " = " + KEY_METHODID + ")");
         projection = new String[]{KEY_ROWID, localizedLabel + " AS " + KEY_LABEL, KEY_IS_NUMBERED};
         String paymentType = uri.getPathSegments().get(2);
@@ -989,8 +1004,9 @@ public class TransactionProvider extends BaseTransactionProvider {
     //long endTime = System.nanoTime();
     //Log.d("TIMER",uri.toString() + Arrays.toString(selectionArgs) + " : "+(endTime-startTime));
 
-    if (uriMatch == TEMPLATES && uri.getQueryParameter(QUERY_PARAMETER_WITH_PLAN_INFO) != null) {
-      c = new PlanInfoCursorWrapper(getContext(), c, sortOrder == null);
+    final String withPlanInfo = uri.getQueryParameter(QUERY_PARAMETER_WITH_PLAN_INFO);
+    if (uriMatch == TEMPLATES && withPlanInfo != null) {
+      c = new PlanInfoCursorWrapper(getContext(), c, sortOrder == null, CALENDAR.hasPermission(getContext()) || withPlanInfo.equals("2"));
     }
     c.setNotificationUri(getContext().getContentResolver(), uri);
     return c;
@@ -1385,7 +1401,7 @@ public class TransactionProvider extends BaseTransactionProvider {
           c = db.query(TABLE_CATEGORIES, new String[]{KEY_ROWID}, selection, selectionArgs, null, null, null);
           if (c.getCount() != 0) {
             c.moveToFirst();
-            if (c.getLong(0) != Long.valueOf(segment)) {
+            if (c.getLong(0) != Long.parseLong(segment)) {
               c.close();
               throw new SQLiteConstraintException();
             }
@@ -1404,7 +1420,7 @@ public class TransactionProvider extends BaseTransactionProvider {
           c = db.query(TABLE_CATEGORIES, new String[]{KEY_ROWID}, selection, selectionArgs, null, null, null);
           if (c.getCount() != 0) {
             c.moveToFirst();
-            if (c.getLong(0) == Long.valueOf(segment)) {
+            if (c.getLong(0) == Long.parseLong(segment)) {
               //silently do nothing if we try to update with the same value
               c.close();
               return 0;
@@ -1930,7 +1946,7 @@ public class TransactionProvider extends BaseTransactionProvider {
     dataDir.mkdir();
     //line below gives app_databases instead of databases ???
     //File currentDb = new File(mCtx.getDir("databases", 0),mDatabaseName);
-    File currentDb = new File(dataDir, TransactionDatabase.getDbName());
+    File currentDb = new File(dataDir, databaseName);
     boolean result = false;
     mOpenHelper.close();
     try {

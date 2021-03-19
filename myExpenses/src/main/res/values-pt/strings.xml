@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">Número ilimitado de modelos de divisão de transações</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources"><b>Suporte por e-mail</b> com garantia de resposta em até 2 dias úteis</string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources">Direito de voto no <b>roteiro de desenvolvimento</b></string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Diagrama histórico (fluxo de caixa)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">Diagrama histórico</string>
     <string name="licence_status_free">Gratuita</string>
     <string name="contrib_key">Chave de contribuição</string>
     <string name="extended_key">Chave estendida</string>
@@ -277,7 +277,6 @@
     <string name="pm_type_debit">Débito</string>
     <string name="pm_type_neutral">Neutro</string>
     <string name="pref_app_dir_title">Pasta para backups e exportações</string>
-    <string name="pref_auto_fill_title">Preenchimento automático de transações</string>
     <string name="pref_auto_fill_summary">Preencha com dados da última transação para o mesmo beneficiário/pagador</string>
     <string name="pref_backup_summary">Cria um backup do banco de dados e das preferências.</string>
     <string name="pref_sort_order_usages">Contagem de usos</string>
@@ -331,7 +330,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">Permitido sem senha.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">É necessária uma senha.</string>
     <string name="pref_qif_export_file_encoding_title">Codificação de caracteres</string>
-    <string name="pref_request_licence_title">Solicitar uma chave</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">Alternativo</string>
     <string name="pref_restore_alternative_summary">Utilize este método alternativo caso não haja um gerenciador de arquivos instalado no dispositivo.</string>
@@ -506,6 +504,7 @@
     <string name="menu_change_picture">Anexar uma imagem diferente</string>
     <string name="menu_distribution_show_pie_char">Exibir gráfico de pizza</string>
     <string name="menu_distribution_aggreate">Agregar despesas e receitas</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">Imagens obsoletas</string>
     <string name="pref_manage_stale_images_summary">Gerenciar imagens que sobraram de transações excluídas</string>
     <string name="image_deleted">A Imagem foi excluída</string>
@@ -523,8 +522,6 @@
     <string name="pref_csv_import_delimiter">Delimitador</string>
     <string name="csv_import_preview">Visualizar</string>
     <string name="menu_parse">Analisar</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">Descartar</string>
     <string name="csv_import_field_mapped_more_than_once">%s está mapeado mais de uma vez.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">Não foi possível importar %d registros.</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d registros foram descartados.</string>
@@ -677,7 +674,6 @@
     <string name="professional_key">Chave Profissional</string>
     <string name="n_months">%d meses</string>
     <string name="eu_vat_info">Para os residentes da União Europeia, os preços exibidos não incluem o VAT.</string>
-    <string name="licence_migration_info">{app_name} implementa um novo mecanismo de validação de licença. Por favor, solicite uma nova chave.</string>
     <string name="valid_until">Até %s</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">Estenda até %1$s por %2$s</string>
@@ -706,7 +702,6 @@
     <string name="pref_warning_only_one_protection">Antes de usar a proteção por %1$s, você deve desativar a proteção por %2$s.</string>
     <string name="warning_device_lock_screen_not_set_up_1">A tela de bloqueio de segurança do dispositivo não foi configurada.</string>
     <string name="warning_device_lock_screen_not_set_up_2">Vá para \'Configurações -&gt; Segurança -&gt; Tela de bloqueio\' para definir uma tela de bloqueio.</string>
-    <string name="snackbar_dismiss">Dispensar</string>
     <string name="menu_history_show_balance">Exibir saldo</string>
     <string name="menu_history_transfers">Incluir transferências</string>
     <string name="menu_history">Histórico</string>
@@ -934,6 +929,7 @@
     <!-- Title of a section on the Settings screen where each entry corresponds to a subsection dedicated to one feature (functionality)  -->
     <string name="pref_category_title_features">Características</string>
     <string name="scan_result_no_data">Sem dados</string>
+    <!-- After text recognition has been run on an image, if multiple strings are found that can be interpreted as date, amount or payee, a dialogue is shown allowing to select between these "candidates". This message is the title of this dialogue.  -->
     <string name="scan_result_multiple_candidates_dialog_title">Foram encontrados vários candidatos. Por favor selecione:</string>
     <string name="scan_result_no_amount">Não foi encontrada nenhuma quantia</string>
     <string name="scan_result_no_date">Não foi encontrada nenhuma data</string>
@@ -975,4 +971,6 @@
     <string name="pref_group_header_show_details_summary">Exibir somas detalhadas no cabeçalho do grupo</string>
     <!-- Title of a menu item and a dialogue that allow to adjust the current balance. User can enter the new balance, and transaction form is opened with the amount prefiled to the difference between old and new balance  -->
     <string name="new_balance">Novo saldo</string>
+    <string name="title_webui">Interface web do usuário</string>
+    <string name="single_feature_info">Como alternativa, você pode comprar acesso ilimitado apenas a este recurso.</string>
 </resources>

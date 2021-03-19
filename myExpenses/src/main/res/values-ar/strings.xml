@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">عدد غير محدود من القوالب المنقسمة</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources"><b>دعم البريد الإلكتروني</b> مع استجابة مضمونة في غضون يومي عمل</string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources">حق التصويت على <b> مخططات التنمية</b></string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">مخطط زمني (التدفق النقدي)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">مخطط زمني</string>
     <string name="licence_status_free">خالي</string>
     <string name="contrib_key">مفتاح المساهمة</string>
     <string name="extended_key">مفتاح موسع</string>
@@ -289,7 +289,6 @@
     <string name="pm_type_debit">مدين</string>
     <string name="pm_type_neutral">محايد</string>
     <string name="pref_app_dir_title">مجلد للنسخ الاحتياطية والتصديرات</string>
-    <string name="pref_auto_fill_title">الملء التلقائي للمعاملات</string>
     <string name="pref_auto_fill_summary">قم بتعبئة البيانات من آخر معاملة لنفس المستفيد / الدافع</string>
     <string name="pref_backup_summary">حفظ نسخة احتياطية لقاعدة البيانات والتفضيلات في الذاكرة.</string>
     <string name="pref_sort_order_usages">عدد مرات الاستعمال</string>
@@ -343,7 +342,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">بدون باسوورد.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">يتطلب كلمة مرور.</string>
     <string name="pref_qif_export_file_encoding_title">ترميز الحروف</string>
-    <string name="pref_request_licence_title">اطلب مفتاح</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">بديل</string>
     <string name="pref_restore_alternative_summary">استخدم هذه الطريقة البديلة إذا لم يكن مدير ملفات مثبتا على الجهاز</string>
@@ -542,6 +540,7 @@
     <string name="menu_change_picture">أرفق صورة أخرى</string>
     <string name="menu_distribution_show_pie_char">أظهر التخطيط البياني</string>
     <string name="menu_distribution_aggreate">مجموع المصروفات والدخل</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">صور قديمة</string>
     <string name="pref_manage_stale_images_summary">إدارة الصور المتبقية من المعاملات المحذوفة</string>
     <string name="image_deleted">تم حدذف الصورة</string>
@@ -559,8 +558,6 @@
     <string name="pref_csv_import_delimiter">المحدد</string>
     <string name="csv_import_preview">معاينة</string>
     <string name="menu_parse">تحليل</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">تجاهل</string>
     <string name="csv_import_field_mapped_more_than_once">تم تعيين %s أكثر من مرة.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d غير قادر على استيراد التسجيلات</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d التسجيلات تم تجاهلها</string>
@@ -713,7 +710,6 @@
     <string name="professional_key">المفتاح شامل</string>
     <string name="n_months">%d شهراً</string>
     <string name="eu_vat_info">بالنسبة للمقيمين في الاتحاد الأوروبي، الأسعار المعروضة لا تشمل ضريبة القيمة المضافة.</string>
-    <string name="licence_migration_info">ينفذ {app_name} آلية جديدة للتحقق من الترخيص. يُرجى طلب مفتاح جديد.</string>
     <string name="valid_until">حتى %s</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">تمديد حتى %1$s لـ %2$s</string>
@@ -746,7 +742,6 @@
     <string name="pref_warning_only_one_protection">قبل أن تتمكن من استخدام الحماية بنسبة %1$s، يجب إيقاف تشغيل الحماية بنسبة %2$s.</string>
     <string name="warning_device_lock_screen_not_set_up_1">لم يتم إعداد شاشة تأمين الجهاز الآمن.</string>
     <string name="warning_device_lock_screen_not_set_up_2">انتقل إلى \"الإعدادات -> الأمان -> قفل الشاشة\" لإعداد شاشة القفل.</string>
-    <string name="snackbar_dismiss">رفض</string>
     <string name="menu_history_show_balance">إظهار الرصيد</string>
     <string name="menu_history_transfers">تضمين التحويلات</string>
     <string name="menu_history">السجل</string>
@@ -982,6 +977,7 @@
     <!-- Title of a section on the Settings screen where each entry corresponds to a subsection dedicated to one feature (functionality)  -->
     <string name="pref_category_title_features">الخصائص</string>
     <string name="scan_result_no_data">لا توجد بيانات</string>
+    <!-- After text recognition has been run on an image, if multiple strings are found that can be interpreted as date, amount or payee, a dialogue is shown allowing to select between these "candidates". This message is the title of this dialogue.  -->
     <string name="scan_result_multiple_candidates_dialog_title">تم العثور على عدة مرشحين. يُرجى تحديد:</string>
     <string name="scan_result_no_amount">لم يتم العثور على مبلغ</string>
     <string name="scan_result_no_date">لم يتم العثور على تاريخ</string>
@@ -1023,4 +1019,4 @@
     <string name="pref_group_header_show_details_summary"> إظهار المجموع التفصيلي في ترويسة المجموعة</string>
     <!-- Title of a menu item and a dialogue that allow to adjust the current balance. User can enter the new balance, and transaction form is opened with the amount prefiled to the difference between old and new balance  -->
     <string name="new_balance">الرصيد الجديد</string>
-</resources>
+    </resources>

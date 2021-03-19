@@ -14,7 +14,6 @@ import android.widget.ArrayAdapter;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
-import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.activity.QifImport;
 import org.totschnig.myexpenses.adapter.CurrencyAdapter;
@@ -26,9 +25,10 @@ import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.viewmodel.CurrencyViewModel;
 import org.totschnig.myexpenses.viewmodel.data.Currency;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
@@ -44,8 +44,8 @@ public class QifImportDialogFragment extends TextSourceDialogFragment implements
   Spinner mAccountSpinner, mDateFormatSpinner, mCurrencySpinner, mEncodingSpinner;
   private SimpleCursorAdapter mAccountsAdapter;
 
-  public static final String PREFKEY_IMPORT_DATE_FORMAT = "import_qif_date_format";
-  public static final String PREFKEY_IMPORT_ENCODING = "import_qif_encoding";
+  public static final String PREF_KEY_IMPORT_DATE_FORMAT = "import_qif_date_format";
+  public static final String PREF_KEY_IMPORT_ENCODING = "import_qif_encoding";
   private MergeCursor mAccountsCursor;
   private long accountId = 0;
   private String currency = null;
@@ -58,9 +58,10 @@ public class QifImportDialogFragment extends TextSourceDialogFragment implements
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    currencyViewModel = ViewModelProviders.of(this).get(CurrencyViewModel.class);
+    currencyViewModel = new ViewModelProvider(this).get(CurrencyViewModel.class);
   }
 
+  @NonNull
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
     if (savedInstanceState != null) {
@@ -104,10 +105,8 @@ public class QifImportDialogFragment extends TextSourceDialogFragment implements
       QifDateFormat format = (QifDateFormat) mDateFormatSpinner.getSelectedItem();
       String encoding = (String) mEncodingSpinner.getSelectedItem();
       maybePersistUri();
-      MyApplication.getInstance().getSettings().edit()
-          .putString(PREFKEY_IMPORT_ENCODING, encoding)
-          .putString(PREFKEY_IMPORT_DATE_FORMAT, format.name())
-          .apply();
+      prefHandler.putString(PREF_KEY_IMPORT_ENCODING, encoding);
+      prefHandler.putString(PREF_KEY_IMPORT_DATE_FORMAT, format.name());
       ((QifImport) getActivity()).onSourceSelected(
           mUri,
           format,
@@ -123,12 +122,13 @@ public class QifImportDialogFragment extends TextSourceDialogFragment implements
     }
   }
 
+  @NonNull
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
     if (getActivity() == null) {
       return null;
     }
-    CursorLoader cursorLoader = new CursorLoader(
+    return new CursorLoader(
         getActivity(),
         TransactionProvider.ACCOUNTS_BASE_URI,
         new String[]{
@@ -136,11 +136,10 @@ public class QifImportDialogFragment extends TextSourceDialogFragment implements
             KEY_LABEL,
             KEY_CURRENCY},
         KEY_SEALED + " = 0 ", null, null);
-    return cursorLoader;
   }
 
   @Override
-  public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+  public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
     MatrixCursor extras = new MatrixCursor(new String[]{
         KEY_ROWID,
         KEY_LABEL,
@@ -157,7 +156,7 @@ public class QifImportDialogFragment extends TextSourceDialogFragment implements
   }
 
   @Override
-  public void onLoaderReset(Loader<Cursor> loader) {
+  public void onLoaderReset(@NonNull Loader<Cursor> loader) {
     mAccountsCursor = null;
     mAccountsAdapter.swapCursor(null);
   }
@@ -172,13 +171,16 @@ public class QifImportDialogFragment extends TextSourceDialogFragment implements
     mAccountsAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
     mAccountSpinner.setAdapter(mAccountsAdapter);
     mAccountSpinner.setOnItemSelectedListener(this);
-    getLoaderManager().initLoader(0, null, this);
+    LoaderManager.getInstance(this).initLoader(0, null, this);
 
-    mDateFormatSpinner = DialogUtils.configureDateFormat(view, wrappedCtx, PREFKEY_IMPORT_DATE_FORMAT);
+    mDateFormatSpinner = view.findViewById(R.id.DateFormat);
+    DialogUtils.configureDateFormat(mDateFormatSpinner, wrappedCtx, prefHandler, PREF_KEY_IMPORT_DATE_FORMAT);
 
-    mEncodingSpinner = DialogUtils.configureEncoding(view, wrappedCtx, PREFKEY_IMPORT_ENCODING);
+    mEncodingSpinner = view.findViewById(R.id.Encoding);
+    DialogUtils.configureEncoding(mEncodingSpinner, wrappedCtx, prefHandler, PREF_KEY_IMPORT_ENCODING);
 
-    mCurrencySpinner = DialogUtils.configureCurrencySpinner(view, this);
+    mCurrencySpinner = view.findViewById(R.id.Currency);
+    DialogUtils.configureCurrencySpinner(mCurrencySpinner, this);
     currencyViewModel.getCurrencies().observe(this, currencies -> {
       final CurrencyAdapter adapter = (CurrencyAdapter) mCurrencySpinner.getAdapter();
       adapter.addAll(currencies);

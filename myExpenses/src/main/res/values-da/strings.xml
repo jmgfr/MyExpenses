@@ -49,7 +49,7 @@
     <string name="contrib_key">Contrib Nøgle</string>
     <string name="extended_key">Nøgle til udvidet version</string>
     <!-- Placeholder: 1 will be replace with either My Expenses Contrib Key or My Expenses Extended Key -->
-    <string name="contrib_key_requires">Kræver %s.</string>
+    <string name="contrib_key_requires">Kræver %1$s.</string>
     <string name="currency">Valuta</string>
     <string name="current_balance">Aktuel saldo</string>
     <string name="date">Dato</string>
@@ -242,7 +242,6 @@
     <string name="pm_type_debit">Udgifter</string>
     <string name="pm_type_neutral">Neutral</string>
     <string name="pref_app_dir_title">Mappen til sikkerhedskopier og eksport</string>
-    <string name="pref_auto_fill_title">AutoFyld</string>
     <string name="pref_backup_summary">Opret en sikkerhedskopi af databasen og indstillingerne.</string>
     <string name="pref_category_title_advanced">Avanceret</string>
     <string name="pref_category_title_export">Eksporter</string>
@@ -291,7 +290,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">Adgang uden adgangskode.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">Adgangskode er påkrævet.</string>
     <string name="pref_qif_export_file_encoding_title">Tegnsæt</string>
-    <string name="pref_request_licence_title">Anmode om at få tilsendt en nøgle</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">Alternativ</string>
     <string name="pref_restore_alternative_summary">Brug denne alternative metode, hvis der ikke er nogen fil manager installeret på enheden.</string>
@@ -447,6 +445,7 @@
     <string name="menu_change_picture">Vedhæft forskellige billeder</string>
     <string name="menu_distribution_show_pie_char">Vis cirkeldiagram</string>
     <string name="menu_distribution_aggreate">Samlede udgifter og indtægter</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">Gamle billeder</string>
     <string name="pref_manage_stale_images_summary">Administrer billeder fra slettede posteringer</string>
     <string name="image_deleted">Billedet slettet</string>
@@ -463,8 +462,6 @@
     <string name="pref_csv_import_delimiter">Adskillelsestegn</string>
     <string name="csv_import_preview">Preview</string>
     <string name="menu_parse">Analyser</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">Forkast</string>
     <string name="csv_import_field_mapped_more_than_once">%s er tilknyttet til flere.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d dataposter kunne ikke importeres</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d dataposter ignoreret</string>
@@ -480,6 +477,7 @@
     <string name="preferences_week_start_day_title">Ugen starter</string>
     <string name="content_description_calculator">Lommeregner</string>
     <string name="contrib_feature_synchronization_label" tools:ignore="UnusedResources">Cloud synkronisering</string>
+    <string name="professional_key">Professionel Nøgle</string>
     <string name="split_transaction_one_error">Denne postering kunne ikke splittes.</string>
     <!-- Content description for icon that indicates that a synchronization backend is encrypted. -->
     <string name="content_description_encrypted">Krypteret</string>

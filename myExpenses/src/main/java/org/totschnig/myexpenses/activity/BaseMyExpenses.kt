@@ -15,6 +15,7 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.lifecycle.ViewModelProvider
 import eltos.simpledialogfragment.SimpleDialog.OnDialogResultListener
 import eltos.simpledialogfragment.form.AmountEdit
 import eltos.simpledialogfragment.form.Hint
@@ -26,6 +27,7 @@ import org.threeten.bp.LocalTime
 import org.totschnig.myexpenses.R
 import org.totschnig.myexpenses.activity.ExpenseEdit.Companion.KEY_OCR_RESULT
 import org.totschnig.myexpenses.contract.TransactionsContract.Transactions
+import org.totschnig.myexpenses.feature.Feature
 import org.totschnig.myexpenses.feature.OcrHost
 import org.totschnig.myexpenses.feature.OcrResult
 import org.totschnig.myexpenses.feature.OcrResultFlat
@@ -34,21 +36,26 @@ import org.totschnig.myexpenses.model.AggregateAccount
 import org.totschnig.myexpenses.model.ContribFeature
 import org.totschnig.myexpenses.model.CurrencyUnit
 import org.totschnig.myexpenses.model.Money
+import org.totschnig.myexpenses.preference.PrefKey
 import org.totschnig.myexpenses.provider.DatabaseConstants
 import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_AMOUNT
 import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_DATE
 import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PAYEE_NAME
 import org.totschnig.myexpenses.ui.DiscoveryHelper
+import org.totschnig.myexpenses.ui.IDiscoveryHelper
+import org.totschnig.myexpenses.util.TextUtils
+import org.totschnig.myexpenses.viewmodel.MyExpensesViewModel
 import timber.log.Timber
 import java.io.File
 import java.math.BigDecimal
 import java.util.*
 import javax.inject.Inject
 
+
 const val DIALOG_TAG_OCR_DISAMBIGUATE = "DISAMBIGUATE"
 const val DIALOG_TAG_NEW_BALANCE = "NEW_BALANCE"
 
-abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListener {
+abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListener, ContribIFace {
     @JvmField
     @State
     var scanFile: File? = null
@@ -56,13 +63,14 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
     @JvmField
     @State
     var accountId: Long = 0
+
     var currentCurrency: String? = null
 
     val currentCurrencyUnit: CurrencyUnit?
         get() = currentCurrency?.let { currencyContext.get(it) }
 
     @Inject
-    lateinit var discoveryHelper: DiscoveryHelper
+    lateinit var discoveryHelper: IDiscoveryHelper
     var accountsCursor: Cursor? = null
     lateinit var toolbar: Toolbar
 
@@ -76,11 +84,23 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
     private var currentBalance: String? = null
     var currentPosition = -1
 
+    lateinit var viewModel: MyExpensesViewModel
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
         if (savedInstanceState == null) {
             floatingActionButton?.let { discoveryHelper.discover(this, it, 3, DiscoveryHelper.Feature.fab_long_press) }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(this)[MyExpensesViewModel::class.java]
+    }
+
+    override fun onFeatureAvailable(feature: Feature) {
+        if (feature == Feature.OCR) {
+            activateOcrMode()
         }
     }
 
@@ -156,7 +176,7 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
         }
     }
 
-    fun createRow(type: Int, isIncome: Boolean) {
+    private fun createRow(type: Int, isIncome: Boolean) {
         if (type == Transactions.TYPE_SPLIT) {
             contribFeatureRequested(ContribFeature.SPLIT_TRANSACTION, null)
         } else {
@@ -185,7 +205,7 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
 
     override fun onResult(dialogTag: String, which: Int, extras: Bundle): Boolean {
         if (which == OnDialogResultListener.BUTTON_POSITIVE) {
-            when(dialogTag) {
+            when (dialogTag) {
                 DIALOG_TAG_OCR_DISAMBIGUATE -> {
                     startEditFromOcrResult(extras.getParcelable<OcrResult>(KEY_OCR_RESULT)!!.selectCandidates(
                             extras.getInt(KEY_AMOUNT), extras.getInt(KEY_DATE), extras.getInt(KEY_PAYEE_NAME)))
@@ -193,14 +213,16 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
                 }
                 DIALOG_TAG_NEW_BALANCE -> {
                     if (currentPosition > -1) {
-                        accountsCursor?.let {
-                            it.moveToPosition(currentPosition)
-                            startEdit(
-                                    createRowIntent(Transactions.TYPE_TRANSACTION, false).apply {
-                                        putExtra(KEY_AMOUNT, (extras.getSerializable(KEY_AMOUNT) as BigDecimal) -
-                                                Money(currentCurrencyUnit, it.getLong(it.getColumnIndex(DatabaseConstants.KEY_CURRENT_BALANCE))).amountMajor)
-                                    }
-                            )
+                        accountsCursor?.let { cursor ->
+                            currentCurrencyUnit?.let { currencyUnit ->
+                                cursor.moveToPosition(currentPosition)
+                                startEdit(
+                                        createRowIntent(Transactions.TYPE_TRANSACTION, false).apply {
+                                            putExtra(KEY_AMOUNT, (extras.getSerializable(KEY_AMOUNT) as BigDecimal) -
+                                                    Money(currencyUnit, cursor.getLong(cursor.getColumnIndex(DatabaseConstants.KEY_CURRENT_BALANCE))).amountMajor)
+                                        }
+                                )
+                            }
                         }
                     }
                 }
@@ -221,16 +243,17 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
                     ?.activityInfo?.let {
                         intent.component = ComponentName(it.applicationInfo.packageName, it.name)
                         startActivity(intent)
-                    } ?: run { Toast.makeText(this, "F-Droid not installed", Toast.LENGTH_LONG).show()}
+                    }
+                    ?: run { Toast.makeText(this, "F-Droid not installed", Toast.LENGTH_LONG).show() }
             return true
         }
         return false
     }
 
     fun setupFabSubMenu() {
-        floatingActionButton?.setOnLongClickListener {
+        floatingActionButton?.setOnLongClickListener { fab ->
             discoveryHelper.markDiscovered(DiscoveryHelper.Feature.fab_long_press)
-            val popup = PopupMenu(this, it)
+            val popup = PopupMenu(this, fab)
             val popupMenu = popup.menu
             popup.setOnMenuItemClickListener { item ->
                 createRow(when (item.itemId) {
@@ -251,6 +274,11 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
             popup.show()
             true
         }
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        menu.findItem(R.id.SCAN_MODE_COMMAND)?.isChecked = prefHandler.getBoolean(PrefKey.OCR, false)
+        return super.onPrepareOptionsMenu(menu)
     }
 
     fun setupToolbarPopupMenu() {
@@ -277,15 +305,17 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
     }
 
     fun setBalance() {
-        accountsCursor?.let {
-            val balance = it.getLong(it.getColumnIndex(DatabaseConstants.KEY_CURRENT_BALANCE))
-            val label = it.getString(columnIndexLabel)
-            val isHome = it.getInt(it.getColumnIndex(DatabaseConstants.KEY_IS_AGGREGATE)) == AggregateAccount.AGGREGATE_HOME
-            currentBalance = String.format(Locale.getDefault(), "%s%s", if (isHome) " ≈ " else "",
-                    currencyFormatter.formatCurrency(Money(currentCurrencyUnit, balance)))
-            title = if (isHome) getString(R.string.grand_total) else label
-            toolbar.subtitle = currentBalance
-            toolbar.setSubtitleTextColor(resources.getColor(if (balance < 0) R.color.colorExpense else R.color.colorIncome))
+        accountsCursor?.let { cursor ->
+            currentCurrencyUnit?.let { currencyUnit ->
+                val balance = cursor.getLong(cursor.getColumnIndex(DatabaseConstants.KEY_CURRENT_BALANCE))
+                val label = cursor.getString(columnIndexLabel)
+                val isHome = cursor.getInt(cursor.getColumnIndex(DatabaseConstants.KEY_IS_AGGREGATE)) == AggregateAccount.AGGREGATE_HOME
+                currentBalance = String.format(Locale.getDefault(), "%s%s", if (isHome) " ≈ " else "",
+                        currencyFormatter.formatCurrency(Money(currencyUnit, balance)))
+                title = if (isHome) getString(R.string.grand_total) else label
+                toolbar.subtitle = currentBalance
+                toolbar.setSubtitleTextColor(resources.getColor(if (balance < 0) R.color.colorExpense else R.color.colorIncome))
+            }
         }
 
     }
@@ -297,6 +327,25 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
         } catch (e: RuntimeException) {
             Timber.e(e)
         }
+    }
 
+    fun updateFab() {
+        val scanMode = isScanMode()
+        requireFloatingActionButtonWithContentDescription(if (scanMode)
+            getString(R.string.contrib_feature_ocr_label)
+        else
+            TextUtils.concatResStrings(this, ". ",
+                    R.string.menu_create_transaction, R.string.menu_create_transfer, R.string.menu_create_split))
+        floatingActionButton!!.setImageResource(if (scanMode) R.drawable.ic_scan else R.drawable.ic_menu_add_fab)
+    }
+
+    fun isScanMode(): Boolean {
+        return prefHandler.getBoolean(PrefKey.OCR, false)
+    }
+
+    fun activateOcrMode() {
+        prefHandler.putBoolean(PrefKey.OCR, true)
+        updateFab()
+        invalidateOptionsMenu()
     }
 }

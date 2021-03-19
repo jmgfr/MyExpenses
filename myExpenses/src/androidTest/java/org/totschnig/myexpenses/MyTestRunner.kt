@@ -5,10 +5,8 @@ import android.annotation.TargetApi
 import android.app.Application
 import android.content.Context
 import android.os.Build
-import android.os.Bundle
 import android.provider.Settings
 import android.provider.Settings.SettingNotFoundException
-import android.util.Log
 import androidx.test.runner.AndroidJUnitRunner
 import org.totschnig.myexpenses.util.Utils
 
@@ -50,17 +48,6 @@ class MyTestRunner : AndroidJUnitRunner() {
     @Throws(SettingNotFoundException::class)
     private fun settingSystemFloat(setting: String?): Float {
         return Settings.System.getFloat(targetContext.contentResolver, setting)
-    }
-
-    override fun finish(resultCode: Int, results: Bundle) {
-        MyApplication.cleanUpAfterTest()
-        super.finish(resultCode, results)
-    }
-
-    init {
-        // Inform the app we are an instrumentation test before the object graph is initialized.
-        Log.d("instrumentationTest", "now setting instrumentationTest to true")
-        MyApplication.setInstrumentationTest(true)
     }
 
     companion object {

@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">வரம்பற்ற பிரிவு வார்ப்புருக்கள்</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources">2 வணிக நாட்களுக்குள் உத்தரவாத பதிலுடன் <b> மின்னஞ்சல் ஆதரவு </b></string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources"><b>மேம்பாட்டு  திட்டத்தில்</b> வாக்களிக்கும் உரிமை</string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">வரலாற்று விளக்கப்படம் (பணச் செலவு)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">வரலாற்று விளக்கப்படம்</string>
     <string name="licence_status_free">இலவசம்</string>
     <string name="contrib_key">பங்களிப்பு திறவுகோல்</string>
     <string name="extended_key">விரிவாக்கப்பட்ட திறவுகோல்</string>
@@ -277,7 +277,6 @@
     <string name="pm_type_debit">செலவு</string>
     <string name="pm_type_neutral">நடுநிலை</string>
     <string name="pref_app_dir_title">காப்புப்பிரதி மற்றும் ஏற்றுமதிகளுக்கான கோப்புறை</string>
-    <string name="pref_auto_fill_title">பரிவர்த்தனைகளை தன்னிரப்புதல்</string>
     <string name="pref_auto_fill_summary">அதே பணம் பெறுபவர்/செலுத்துபவர் எனும் பட்சத்தில் கடந்த பரிவர்த்தனையிலிருந்து தரவை நிரப்பு</string>
     <string name="pref_backup_summary">தரவுதளம் மற்றும் விருப்பத்தேர்வுகளின் காப்புப்பிரதி உருவாக்குதல்.</string>
     <string name="pref_sort_order_usages">பயன்பாடுகளின் எண்ணிக்கை</string>
@@ -331,7 +330,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">கடவுச்சொல் இல்லாமல் அனுமதி.</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">கடவுச்சொல் தேவை.</string>
     <string name="pref_qif_export_file_encoding_title">எழுத்து குறியேற்றம்</string>
-    <string name="pref_request_licence_title">திறவுகோல் கோரு</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">மாற்று வழி</string>
     <string name="pref_restore_alternative_summary">கருவியில் கோப்பு நிர்வகிக்கும் செயலி நிறுவப்படவில்லை என்றால், இந்த மாற்று முறையைப் பயன்படுத்தவும்.</string>
@@ -506,6 +504,7 @@
     <string name="menu_change_picture">வேறு படத்தை இணைக்கவும்</string>
     <string name="menu_distribution_show_pie_char">பை விளக்கப்படத்தை காட்டு</string>
     <string name="menu_distribution_aggreate">மொத்த செலவுகள் மற்றும் வருமானம்</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">நாள்பட்ட படங்கள்</string>
     <string name="pref_manage_stale_images_summary">நீக்கப்பட்ட பரிவர்த்தனைகளில் இருந்து மீதமுள்ள படங்களை நிர்வகிக்கவும்</string>
     <string name="image_deleted">படம் நீக்கப்பட்டது</string>
@@ -523,8 +522,6 @@
     <string name="pref_csv_import_delimiter">வரம்புச் சுட்டி</string>
     <string name="csv_import_preview">முன்னோட்டம்</string>
     <string name="menu_parse">பாகுபடுத்து</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">நிராகரி</string>
     <string name="csv_import_field_mapped_more_than_once">%s ஒன்றுக்கு மேலாக தொடற்பு படுத்தப்பட்டுள்ளது.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d பதிவுகளை இறக்குமதி செய்ய முடியவில்லை.</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d பதிவுகள்  நீக்கப்பட்டது.</string>
@@ -677,7 +674,6 @@
     <string name="professional_key">நிபுணத்துவ திறவுகோல்</string>
     <string name="n_months">%d மாதங்கள்</string>
     <string name="eu_vat_info">ஐரோப்பிய ஒன்றியத்தில் வாழ்பவர்களுக்கு, காட்டப்படும் விலை VAT சேர்க்கப்படாதது.</string>
-    <string name="licence_migration_info">{app_name} புதிய உரிம அங்கீகார முறையை செயல்படுத்துகிறது. தயவு செய்து ஒரு புதிய திறவுகோலை கோருக.</string>
     <string name="valid_until">%s வரை</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">%2$sசெலவில் %1$s வரை நீட்டிக்கவும்</string>
@@ -706,7 +702,6 @@
     <string name="pref_warning_only_one_protection">நீங்கள் %1$s மூலம் பாதுகாப்பைப் பயன்படுத்தும் முன், %2$s மூலம் பாதுகாப்பை நிறுத்த வேண்டும்.</string>
     <string name="warning_device_lock_screen_not_set_up_1">பாதுகாப்பான கருவி பூட்டு திரை அமைக்கப்படவில்லை.</string>
     <string name="warning_device_lock_screen_not_set_up_2">\'அமைப்புகள் -&gt; பாதுகாப்பு -&gt; திரைப்பூட்டு\';-க்கு சென்று ஒரு பூட்டு திரையை அமைக்கவும்.</string>
-    <string name="snackbar_dismiss">அகற்று</string>
     <string name="menu_history_show_balance">இருப்பை காட்டு</string>
     <string name="menu_history_transfers">பரிமாற்றங்களை உள்ளடக்கு</string>
     <string name="menu_history">வரலாறு</string>
@@ -933,6 +928,7 @@
     <!-- Title of a section on the Settings screen where each entry corresponds to a subsection dedicated to one feature (functionality)  -->
     <string name="pref_category_title_features">அம்சங்கள்</string>
     <string name="scan_result_no_data">தகவல் இல்லை</string>
+    <!-- After text recognition has been run on an image, if multiple strings are found that can be interpreted as date, amount or payee, a dialogue is shown allowing to select between these "candidates". This message is the title of this dialogue.  -->
     <string name="scan_result_multiple_candidates_dialog_title">பல வேட்புகள் கண்டறியப்பட்டன. தயவு செய்து தேர்வு செய்யவும்:</string>
     <string name="scan_result_no_amount">தொகை எதுவும் கிடைக்கவில்லை</string>
     <string name="scan_result_no_date">தேதி எதுவும் கிடைக்கவில்லை</string>

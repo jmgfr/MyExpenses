@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">Неограниченное число шаблонов разделенных операций</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources"><b>E-mail поддержка</b> с обязательным ответом в течении 2 рабочих дней</string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources">Право голоса на <b>дорожной карте разработки</b></string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">История (Cash flow)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">История</string>
     <string name="licence_status_free">Бесплатный</string>
     <string name="contrib_key">Contrib-ключ</string>
     <string name="extended_key">Расширенный ключ</string>
@@ -282,7 +282,6 @@
     <string name="pm_type_debit">Дебет</string>
     <string name="pm_type_neutral">Нейтральный</string>
     <string name="pref_app_dir_title">Каталог для бэкапов и экспортируемых данных</string>
-    <string name="pref_auto_fill_title">Автозаполнение операций</string>
     <string name="pref_auto_fill_summary">Автозаполнение данных из предыдущей транзакции с тем же получателем / плательщиком</string>
     <string name="pref_backup_summary">Создать резервную копию базы данных и настроек.</string>
     <string name="pref_sort_order_usages">Количество использований</string>
@@ -336,7 +335,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">Разрешено без пароля</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">Требуется пароль</string>
     <string name="pref_qif_export_file_encoding_title">Кодировка</string>
-    <string name="pref_request_licence_title">Запросить ключ</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">Альтернатива</string>
     <string name="pref_restore_alternative_summary">Используйте этот альтернативный метод если на устройстве не установлен файл-менеджер.</string>
@@ -523,6 +521,7 @@
     <string name="menu_change_picture">Прикрепить другое изображение</string>
     <string name="menu_distribution_show_pie_char">Показать круговую диаграмму</string>
     <string name="menu_distribution_aggreate">Объединить расходы и доходы</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">Устаревшие изображения</string>
     <string name="pref_manage_stale_images_summary">Управляйте фотографиями, оставшимися от удаленных транзакций</string>
     <string name="image_deleted">Изображение было удалено</string>
@@ -540,8 +539,6 @@
     <string name="pref_csv_import_delimiter">Разделитель</string>
     <string name="csv_import_preview">Предпросмотр</string>
     <string name="menu_parse">Анализировать</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">Сброс</string>
     <string name="csv_import_field_mapped_more_than_once">%s отображается более одного раза.</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d не могут быть импортированы.</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">Записи %d были отброшены.</string>
@@ -694,7 +691,6 @@
     <string name="professional_key">Professional-ключ</string>
     <string name="n_months">%d месяцев</string>
     <string name="eu_vat_info">Для резидентов Европейского союза цены указаны без НДС</string>
-    <string name="licence_migration_info">{app_name} реализует новый механизм проверки лицензии. Пожалуйста, запросите новый ключ.</string>
     <string name="valid_until">До %s</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">Продлите до %1$s за %2$s</string>
@@ -725,7 +721,6 @@
     <string name="pref_warning_only_one_protection">Прежде чем вы сможете использовать защиту с помощью %1$s, вы должны отключить защиту с помощью %2$s.</string>
     <string name="warning_device_lock_screen_not_set_up_1">Безопасный экран блокировки устройства не настроен.</string>
     <string name="warning_device_lock_screen_not_set_up_2">Перейдите в «Настройки -&gt; Безопасность -&gt; Блокировка экрана», чтобы настроить экран блокировки.</string>
-    <string name="snackbar_dismiss">Отменить</string>
     <string name="menu_history_show_balance">Отобразить баланс</string>
     <string name="menu_history_transfers">Включать переводы</string>
     <string name="menu_history">История</string>

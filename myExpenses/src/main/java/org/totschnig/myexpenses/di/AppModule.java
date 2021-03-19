@@ -8,12 +8,9 @@ import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.model.CurrencyContext;
 import org.totschnig.myexpenses.model.PreferencesCurrencyContext;
 import org.totschnig.myexpenses.preference.PrefHandler;
-import org.totschnig.myexpenses.preference.PrefHandlerImpl;
 import org.totschnig.myexpenses.util.Utils;
-import org.totschnig.myexpenses.util.crashreporting.AcraCrashHandler;
-import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
-import org.totschnig.myexpenses.util.locale.UserLocaleProviderImpl;
 import org.totschnig.myexpenses.util.locale.UserLocaleProvider;
+import org.totschnig.myexpenses.util.locale.UserLocaleProviderImpl;
 import org.totschnig.myexpenses.util.tracking.Tracker;
 
 import java.util.Locale;
@@ -34,12 +31,6 @@ public class AppModule {
   @Singleton
   static Context provideContext(MyApplication myApplication) {
     return myApplication;
-  }
-
-  @Provides
-  @Singleton
-  static CrashHandler providesCrashHandler() {
-    return (MyApplication.isInstrumentationTest()) ? CrashHandler.NO_OP : new AcraCrashHandler();
   }
 
   @Provides
@@ -79,12 +70,6 @@ public class AppModule {
       final String countryFromTelephonyManager = Utils.getCountryFromTelephonyManager(application);
       return countryFromTelephonyManager != null ? countryFromTelephonyManager : defaultCountry;
     }
-  }
-
-  @Provides
-  @Singleton
-  static PrefHandler providePrefHandler(MyApplication context) {
-    return new PrefHandlerImpl(context);
   }
 
   @Provides

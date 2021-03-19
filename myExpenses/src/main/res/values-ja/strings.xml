@@ -52,7 +52,7 @@
     <string name="contrib_feature_split_template_label" tools:ignore="UnusedResources">無制限の分割テンプレート</string>
     <string name="contrib_feature_pro_support_label" tools:ignore="UnusedResources">2 営業日以内の <b>メールサポート</b> 対応を保証</string>
     <string name="contrib_feature_roadmap_voting_label" tools:ignore="UnusedResources"><b>開発ロードマップ</b> の投票権</string>
-    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">履歴チャート (キャッシュフロー)</string>
+    <string name="contrib_feature_history_label" tools:ignore="UnusedResources">履歴チャート</string>
     <string name="licence_status_free">無料</string>
     <string name="contrib_key">貢献キー</string>
     <string name="extended_key">拡張キー</string>
@@ -272,7 +272,6 @@
     <string name="pm_type_debit">借方</string>
     <string name="pm_type_neutral">中性</string>
     <string name="pref_app_dir_title">バックアップとエクスポート先のフォルダー</string>
-    <string name="pref_auto_fill_title">取引の自動入力</string>
     <string name="pref_auto_fill_summary">同じ受取人/支払人の最終取引のデータを記入する</string>
     <string name="pref_backup_summary">データベースとプリファレンスのバックアップを作成します。</string>
     <string name="pref_sort_order_usages">使用件数</string>
@@ -326,7 +325,6 @@
     <string name="pref_protection_enable_data_entry_from_widget_summary_on">パスワードなしを許可。</string>
     <string name="pref_protection_enable_data_entry_from_widget_summary_off">パスワードが必要。</string>
     <string name="pref_qif_export_file_encoding_title">ｷｬﾗｸﾀｰ ｴﾝｺｰﾃﾞｨﾝｸﾞ</string>
-    <string name="pref_request_licence_title">キーをリクエスト</string>
     <!-- Alternative is used as an adjective designing an alternative method for restoring backups -->
     <string name="pref_restore_alternative">代替</string>
     <string name="pref_restore_alternative_summary">デバイスにファイルマネージャーがインストールされていない、この代替の方法を使用します。</string>
@@ -495,6 +493,7 @@
     <string name="menu_change_picture">別の写真を添付</string>
     <string name="menu_distribution_show_pie_char">パイチャートを表示</string>
     <string name="menu_distribution_aggreate">支出と収入を集計</string>
+    <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">古くなった画像</string>
     <string name="pref_manage_stale_images_summary">削除された取引から残っている写真を管理します</string>
     <string name="image_deleted">写真が削除されました</string>
@@ -512,8 +511,6 @@
     <string name="pref_csv_import_delimiter">デリミタ</string>
     <string name="csv_import_preview">プレビュー</string>
     <string name="menu_parse">解析</string>
-    <!-- Label for column where user can check rows to be discarded from import -->
-    <string name="cvs_import_discard">破棄</string>
     <string name="csv_import_field_mapped_more_than_once">%s は複数に配置されます。</string>
     <string name="csv_import_records_failed" tools:ignore="PluralsCandidate">%d レコードインポートできませんでした。</string>
     <string name="csv_import_records_discarded" tools:ignore="PluralsCandidate">%d レコード破棄されました。</string>
@@ -666,7 +663,6 @@
     <string name="professional_key">プロフェッショナルキー</string>
     <string name="n_months">%d ヶ月</string>
     <string name="eu_vat_info">表示されている EU 価格には、付加価値税は含まれていません。</string>
-    <string name="licence_migration_info">{app_name}は新しいライセンス検証メカニズムを実装しています。 新しいキーを要求してください。</string>
     <string name="valid_until">%s まで</string>
     <!-- %1$s date, %2$s price  -->
     <string name="extend_until">%1$s から %2$s まで延長</string>
@@ -694,7 +690,6 @@
     <string name="pref_warning_only_one_protection">%1$s による保護を使用する前に、%2$s の保護をオフにする必要があります。</string>
     <string name="warning_device_lock_screen_not_set_up_1">安全なデバイスロック画面は設定されていません。</string>
     <string name="warning_device_lock_screen_not_set_up_2">\'設定 -&gt; セキュリティ -&gt; 画面ロック\' でロック画面を設定してください。</string>
-    <string name="snackbar_dismiss">消去</string>
     <string name="menu_history_show_balance">残高を表示</string>
     <string name="menu_history_transfers">振替を含む</string>
     <string name="menu_history">履歴</string>

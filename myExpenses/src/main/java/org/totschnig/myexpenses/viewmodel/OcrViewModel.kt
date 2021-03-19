@@ -29,7 +29,7 @@ class OcrViewModel(application: Application) : AndroidViewModel(application) {
     @Inject
     lateinit var prefHandler: PrefHandler
 
-    val ocrFeature: OcrFeature
+    private val ocrFeature: OcrFeature
         get() = getApplication<MyApplication>().appComponent.ocrFeature() ?: object : OcrFeature {}
 
     fun tessDataExists() = liveData(context = viewModelScope.coroutineContext + Dispatchers.IO) {
@@ -69,4 +69,6 @@ class OcrViewModel(application: Application) : AndroidViewModel(application) {
     fun configureTesseractLanguagePref(listPreference: ListPreference) {
         ocrFeature.configureTesseractLanguagePref(listPreference)
     }
+
+    fun shouldShowEngineSelection() = ocrFeature.shouldShowEngineSelection()
 }

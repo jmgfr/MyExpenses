@@ -44,7 +44,6 @@ import org.totschnig.myexpenses.model.Plan;
 import org.totschnig.myexpenses.model.Template;
 import org.totschnig.myexpenses.preference.PrefKey;
 import org.totschnig.myexpenses.sync.json.TransactionChange;
-import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.PictureDirHelper;
 import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
@@ -157,8 +156,7 @@ import static org.totschnig.myexpenses.util.ColorUtils.MAIN_COLORS;
 import static org.totschnig.myexpenses.util.PermissionHelper.PermissionGroup.CALENDAR;
 
 public class TransactionDatabase extends SQLiteOpenHelper {
-  public static final int DATABASE_VERSION = 112;
-  private static final String DATABASE_NAME = "data";
+  public static final int DATABASE_VERSION = 114;
   private Context mCtx;
 
   /**
@@ -729,14 +727,14 @@ public class TransactionDatabase extends SQLiteOpenHelper {
 
   private static final String INSERT_TRANSFER_TAGS_TRIGGER =
       String.format(Locale.ROOT, "CREATE TRIGGER insert_transfer_tags AFTER INSERT ON %1$s "
-          + "WHEN %2$s IS NOT NULL "
-          + "BEGIN INSERT INTO %1$s (%3$s, %4$s) VALUES (%2$s, new.%4$s); END",
+              + "WHEN %2$s IS NOT NULL "
+              + "BEGIN INSERT INTO %1$s (%3$s, %4$s) VALUES (%2$s, new.%4$s); END",
           TABLE_TRANSACTIONS_TAGS, SELECT_TRANSFER_PEER("new"), KEY_TRANSACTIONID, KEY_TAGID);
 
   private static final String DELETE_TRANSFER_TAGS_TRIGGER =
       String.format(Locale.ROOT, "CREATE TRIGGER delete_transfer_tags AFTER DELETE ON %1$s "
-          + "WHEN %2$s IS NOT NULL "
-          + "BEGIN DELETE FROM %1$s WHERE %3$s = %2$s; END",
+              + "WHEN %2$s IS NOT NULL "
+              + "BEGIN DELETE FROM %1$s WHERE %3$s = %2$s; END",
           TABLE_TRANSACTIONS_TAGS, SELECT_TRANSFER_PEER("old"), KEY_TRANSACTIONID);
 
   private static String SELECT_TRANSFER_PEER(String reference) {
@@ -752,16 +750,12 @@ public class TransactionDatabase extends SQLiteOpenHelper {
   public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
   public static final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
-  TransactionDatabase(Context context) {
-    super(context, getDbName(), null, DATABASE_VERSION);
+  TransactionDatabase(Context context, String databaseName) {
+    super(context, databaseName, null, DATABASE_VERSION);
     mCtx = context;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
       setWriteAheadLoggingEnabled(false);
     }
-  }
-
-  public static String getDbName() {
-    return MyApplication.isInstrumentationTest() ? MyApplication.getTestId() : DATABASE_NAME;
   }
 
   @Override
@@ -2176,15 +2170,7 @@ public class TransactionDatabase extends SQLiteOpenHelper {
         db.execSQL("DROP TRIGGER IF EXISTS sealed_account_transaction_update");
         db.execSQL(TRANSACTIONS_SEALED_UPDATE_TRIGGER_CREATE);
         //repair uuids that got lost by bug
-        db.execSQL("update accounts set sealed = -1 where sealed = 1");
-        try {
-          //this has failed for some users, when it was run in update to version 101, possibly this failure was caused by the faulty sealed_account_transaction_update
-          //and then it should succeed now
-          db.execSQL("update transactions set uuid = (select uuid from transactions peer where peer._id=transactions.transfer_peer) where uuid is null and transfer_peer is not null;");
-        } catch (SQLException e) {
-          Timber.e(e);
-        }
-        db.execSQL("update accounts set sealed = 1 where sealed = -1");
+        repairTransferUuids(db);
       }
       if (oldVersion < 105) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_WITH_ACCOUNT);
@@ -2215,7 +2201,10 @@ public class TransactionDatabase extends SQLiteOpenHelper {
         if (!(templateDefaultAction.equals("SAVE") || templateDefaultAction.equals("EDIT"))) {
           templateDefaultAction = "SAVE";
         }
-        db.execSQL(String.format(Locale.ROOT,"ALTER TABLE templates add column default_action text not null check (default_action in ('SAVE', 'EDIT')) default '%s'", templateDefaultAction));
+        db.execSQL(String.format(Locale.ROOT, "ALTER TABLE templates add column default_action text not null check (default_action in ('SAVE', 'EDIT')) default '%s'", templateDefaultAction));
+      }
+      if (oldVersion < 114) {
+        repairTransferUuids(db);
       }
       TransactionProvider.resumeChangeTrigger(db);
     } catch (SQLException e) {
@@ -2223,10 +2212,22 @@ public class TransactionDatabase extends SQLiteOpenHelper {
     }
   }
 
-  public void repairSplitPartDates(SQLiteDatabase db) {
+  public void repairTransferUuids(SQLiteDatabase db) {
+    try {
+      repairWithSealedAccounts(db, () -> db.execSQL("update transactions set uuid = (select uuid from transactions peer where peer._id=transactions.transfer_peer) where uuid is null and transfer_peer is not null;"));
+    } catch (SQLException e) {
+      Timber.e(e);
+    }
+  }
+
+  private void repairWithSealedAccounts(SQLiteDatabase db, Runnable run) {
     db.execSQL("update accounts set sealed = -1 where sealed = 1");
-    db.execSQL("UPDATE transactions set date = (select date from transactions parents where _id = transactions.parent_id) where parent_id is not null");
+    run.run();
     db.execSQL("update accounts set sealed = 1 where sealed = -1");
+  }
+
+  public void repairSplitPartDates(SQLiteDatabase db) {
+    repairWithSealedAccounts(db, () -> db.execSQL("UPDATE transactions set date = (select date from transactions parents where _id = transactions.parent_id) where parent_id is not null"));
   }
 
   private void createOrRefreshAccountTriggers(SQLiteDatabase db) {

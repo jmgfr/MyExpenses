@@ -28,7 +28,7 @@ data class Transaction(
         val crStatus: CrStatus, val referenceNumber: String, val originTemplate: Template?,
         val isSealed: Boolean, val accountLabel: String, val accountType: AccountType) {
     val isSameCurrency: Boolean
-        get() = transferAmount?.let { amount.getCurrencyUnit() == it.currencyUnit } ?: true
+        get() = transferAmount?.let { amount.currencyUnit == it.currencyUnit } ?: true
     val isTransfer
         get() = transferPeer != null
     val isSplit
@@ -76,8 +76,8 @@ data class Transaction(
                             ?: Money(homeCurrency, money.amountMajor.multiply(BigDecimal(
                                     Utils.adjustExchangeRate(cursor.getDouble(cursor.getColumnIndex(KEY_EXCHANGE_RATE)),
                                             currencyUnit)))),
-                    pictureUri = cursor.getString(cursor.getColumnIndex(KEY_PICTURE_URI))?.let {
-                        var parsedUri = Uri.parse(it)
+                    pictureUri = cursor.getString(cursor.getColumnIndex(KEY_PICTURE_URI))?.let { uri ->
+                        var parsedUri = Uri.parse(uri)
                         if ("file" == parsedUri.scheme) { // Upgrade from legacy uris
                             parsedUri.path?.let {
                                 try {

@@ -112,6 +112,7 @@ import org.totschnig.myexpenses.util.Result;
 import org.totschnig.myexpenses.util.UiUtils;
 import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
+import org.totschnig.myexpenses.util.licence.LicenceHandler;
 import org.totschnig.myexpenses.util.locale.UserLocaleProvider;
 import org.totschnig.myexpenses.viewmodel.TransactionListViewModel;
 import org.totschnig.myexpenses.viewmodel.data.DateInfo;
@@ -163,7 +164,6 @@ import static org.totschnig.myexpenses.dialog.ConfirmationDialogFragment.KEY_TIT
 import static org.totschnig.myexpenses.dialog.ConfirmationDialogFragment.KEY_TITLE_STRING;
 import static org.totschnig.myexpenses.fragment.TagListKt.KEY_TAG_LIST;
 import static org.totschnig.myexpenses.preference.PrefKey.NEW_SPLIT_TEMPLATE_ENABLED;
-import static org.totschnig.myexpenses.preference.PrefKey.OCR;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.HAS_TRANSFERS;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ACCOUNTID;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ACCOUNT_TYPE;
@@ -283,6 +283,8 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   CurrencyContext currencyContext;
   @Inject
   UserLocaleProvider userLocaleProvider;
+  @Inject
+  LicenceHandler licenceHandler;
   FilterPersistence filterPersistence;
 
   @State
@@ -337,7 +339,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     });
     ((MyApplication) requireActivity().getApplication()).getAppComponent().inject(this);
     firstLoadCompleted = (savedInstanceState != null);
-    if (ContribFeature.BUDGET.isAvailable(prefHandler)) {
+    if (licenceHandler.hasTrialAccessTo(ContribFeature.BUDGET)) {
       budgetsObserver = new BudgetObserver();
       requireContext().getContentResolver().registerContentObserver(
           TransactionProvider.BUDGETS_URI,
@@ -457,157 +459,145 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
   @Override
   public boolean dispatchCommandMultiple(int command,
                                          SparseBooleanArray positions, Long[] itemIds) {
+    if (super.dispatchCommandMultiple(command, positions, itemIds)) {
+      return true;
+    }
     MyExpenses ctx = (MyExpenses) getActivity();
     if (ctx == null) return false;
     FragmentManager fm = getParentFragmentManager();
-    switch (command) {
-      case R.id.DELETE_COMMAND: {
-        boolean hasReconciled = false, hasNotVoid = false;
+    if (command == R.id.DELETE_COMMAND) {
+      boolean hasReconciled = false, hasNotVoid = false;
+      for (int i = 0; i < positions.size(); i++) {
+        if (positions.valueAt(i)) {
+          mTransactionsCursor.moveToPosition(positions.keyAt(i));
+          CrStatus status;
+          try {
+            status = CrStatus.valueOf(mTransactionsCursor.getString(columnIndexCrStatus));
+          } catch (IllegalArgumentException ex) {
+            status = CrStatus.UNRECONCILED;
+          }
+          if (status == CrStatus.RECONCILED) {
+            hasReconciled = true;
+          }
+          if (status != CrStatus.VOID) {
+            hasNotVoid = true;
+          }
+          if (hasNotVoid && hasReconciled) break;
+        }
+      }
+      boolean finalHasReconciled = hasReconciled;
+      boolean finalHasNotVoid = hasNotVoid;
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
+        String message = getResources().getQuantityString(R.plurals.warning_delete_transaction, itemIds.length, itemIds.length);
+        if (finalHasReconciled) {
+          message += " " + getString(R.string.warning_delete_reconciled);
+        }
+        Bundle b = new Bundle();
+        b.putInt(KEY_TITLE, R.string.dialog_title_warning_delete_transaction);
+        b.putString(ConfirmationDialogFragment.KEY_MESSAGE, message);
+        b.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE, R.id.DELETE_COMMAND_DO);
+        b.putInt(ConfirmationDialogFragment.KEY_COMMAND_NEGATIVE, R.id.CANCEL_CALLBACK_COMMAND);
+        b.putInt(ConfirmationDialogFragment.KEY_POSITIVE_BUTTON_LABEL, R.string.menu_delete);
+        if (finalHasNotVoid) {
+          b.putInt(ConfirmationDialogFragment.KEY_CHECKBOX_LABEL,
+              R.string.mark_void_instead_of_delete);
+        }
+        b.putLongArray(TaskExecutionFragment.KEY_OBJECT_IDS, ArrayUtils.toPrimitive(itemIds));
+        ConfirmationDialogFragment.newInstance(b).show(fm, "DELETE_TRANSACTION");
+      });
+      return true;
+    } else if (command == R.id.SPLIT_TRANSACTION_COMMAND) {
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> ctx.contribFeatureRequested(ContribFeature.SPLIT_TRANSACTION, ArrayUtils.toPrimitive(itemIds)));
+    } else if (command == R.id.UNGROUP_SPLIT_COMMAND) {
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
+        Bundle b = new Bundle();
+        b.putString(ConfirmationDialogFragment.KEY_MESSAGE, getString(R.string.warning_ungroup_split_transactions));
+        b.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE, R.id.UNGROUP_SPLIT_COMMAND);
+        b.putInt(ConfirmationDialogFragment.KEY_COMMAND_NEGATIVE, R.id.CANCEL_CALLBACK_COMMAND);
+        b.putInt(ConfirmationDialogFragment.KEY_POSITIVE_BUTTON_LABEL, R.string.menu_ungroup_split_transaction);
+        b.putLongArray(KEY_LONG_IDS, ArrayUtils.toPrimitive(itemIds));
+        ConfirmationDialogFragment.newInstance(b).show(fm, "UNSPLIT_TRANSACTION");
+      });
+      return true;
+    } else if (command == R.id.UNDELETE_COMMAND) {
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> ctx.startTaskExecution(
+          TaskExecutionFragment.TASK_UNDELETE_TRANSACTION,
+          itemIds,
+          null,
+          0));
+    } else if (command == R.id.REMAP_CATEGORY_COMMAND) {
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
+        Intent i = new Intent(getActivity(), ManageCategories.class);
+        i.setAction(ACTION_SELECT_MAPPING);
+        startActivityForResult(i, MAP_CATEGORY_REQUEST);
+      });
+      return true;
+    } else if (command == R.id.MAP_TAG_COMMAND) {
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
+        Intent i = new Intent(getActivity(), ManageTags.class);
+        i.setAction(ACTION_SELECT_MAPPING);
+        startActivityForResult(i, MAP_TAG_REQUEST);
+      });
+      return true;
+    } else if (command == R.id.REMAP_PAYEE_COMMAND) {
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
+        Intent i = new Intent(getActivity(), ManageParties.class);
+        i.setAction(ACTION_SELECT_MAPPING);
+        startActivityForResult(i, MAP_PAYEE_REQUEST);
+      });
+      return true;
+    } else if (command == R.id.REMAP_METHOD_COMMAND) {
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
+        boolean hasExpense = false, hasIncome = false;
+        Set<String> accountTypes = new HashSet<>();
         for (int i = 0; i < positions.size(); i++) {
           if (positions.valueAt(i)) {
             mTransactionsCursor.moveToPosition(positions.keyAt(i));
-            CrStatus status;
-            try {
-              status = CrStatus.valueOf(mTransactionsCursor.getString(columnIndexCrStatus));
-            } catch (IllegalArgumentException ex) {
-              status = CrStatus.UNRECONCILED;
-            }
-            if (status == CrStatus.RECONCILED) {
-              hasReconciled = true;
-            }
-            if (status != CrStatus.VOID) {
-              hasNotVoid = true;
-            }
-            if (hasNotVoid && hasReconciled) break;
+            long amount = mTransactionsCursor.getLong(mTransactionsCursor.getColumnIndex(KEY_AMOUNT));
+            if (amount > 0) hasIncome = true;
+            if (amount < 0) hasExpense = true;
+            accountTypes.add(mTransactionsCursor.getString(mTransactionsCursor.getColumnIndex(KEY_ACCOUNT_TYPE)));
           }
         }
-        boolean finalHasReconciled = hasReconciled;
-        boolean finalHasNotVoid = hasNotVoid;
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
-          String message = getResources().getQuantityString(R.plurals.warning_delete_transaction, itemIds.length, itemIds.length);
-          if (finalHasReconciled) {
-            message += " " + getString(R.string.warning_delete_reconciled);
-          }
-          Bundle b = new Bundle();
-          b.putInt(KEY_TITLE, R.string.dialog_title_warning_delete_transaction);
-          b.putString(ConfirmationDialogFragment.KEY_MESSAGE, message);
-          b.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE, R.id.DELETE_COMMAND_DO);
-          b.putInt(ConfirmationDialogFragment.KEY_COMMAND_NEGATIVE, R.id.CANCEL_CALLBACK_COMMAND);
-          b.putInt(ConfirmationDialogFragment.KEY_POSITIVE_BUTTON_LABEL, R.string.menu_delete);
-          if (finalHasNotVoid) {
-            b.putInt(ConfirmationDialogFragment.KEY_CHECKBOX_LABEL,
-                R.string.mark_void_instead_of_delete);
-          }
-          b.putLongArray(TaskExecutionFragment.KEY_OBJECT_IDS, ArrayUtils.toPrimitive(itemIds));
-          ConfirmationDialogFragment.newInstance(b).show(fm, "DELETE_TRANSACTION");
-        });
-        return true;
-      }
-      case R.id.SPLIT_TRANSACTION_COMMAND:
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> ctx.contribFeatureRequested(ContribFeature.SPLIT_TRANSACTION, ArrayUtils.toPrimitive(itemIds)));
-        break;
-      case R.id.UNGROUP_SPLIT_COMMAND: {
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
-          Bundle b = new Bundle();
-          b.putString(ConfirmationDialogFragment.KEY_MESSAGE, getString(R.string.warning_ungroup_split_transactions));
-          b.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE, R.id.UNGROUP_SPLIT_COMMAND);
-          b.putInt(ConfirmationDialogFragment.KEY_COMMAND_NEGATIVE, R.id.CANCEL_CALLBACK_COMMAND);
-          b.putInt(ConfirmationDialogFragment.KEY_POSITIVE_BUTTON_LABEL, R.string.menu_ungroup_split_transaction);
-          b.putLongArray(KEY_LONG_IDS, ArrayUtils.toPrimitive(itemIds));
-          ConfirmationDialogFragment.newInstance(b).show(fm, "UNSPLIT_TRANSACTION");
-        });
-        return true;
-      }
-      case R.id.UNDELETE_COMMAND:
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> ctx.startTaskExecution(
-            TaskExecutionFragment.TASK_UNDELETE_TRANSACTION,
-            itemIds,
-            null,
-            0));
-        break;
-
-      case R.id.REMAP_CATEGORY_COMMAND: {
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
-          Intent i = new Intent(getActivity(), ManageCategories.class);
-          i.setAction(ACTION_SELECT_MAPPING);
-          startActivityForResult(i, MAP_CATEGORY_REQUEST);
-        });
-        return true;
-      }
-
-      case R.id.MAP_TAG_COMMAND: {
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
-          Intent i = new Intent(getActivity(), ManageTags.class);
-          i.setAction(ACTION_SELECT_MAPPING);
-          startActivityForResult(i, MAP_TAG_REQUEST);
-        });
-        return true;
-      }
-
-      case R.id.REMAP_PAYEE_COMMAND: {
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
-          Intent i = new Intent(getActivity(), ManageParties.class);
-          i.setAction(ACTION_SELECT_MAPPING);
-          startActivityForResult(i, MAP_PAYEE_REQUEST);
-        });
-        return true;
-      }
-
-      case R.id.REMAP_METHOD_COMMAND: {
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
-          boolean hasExpense = false, hasIncome = false;
-          Set<String> accountTypes = new HashSet<>();
-          for (int i = 0; i < positions.size(); i++) {
-            if (positions.valueAt(i)) {
-              mTransactionsCursor.moveToPosition(positions.keyAt(i));
-              long amount = mTransactionsCursor.getLong(mTransactionsCursor.getColumnIndex(KEY_AMOUNT));
-              if (amount > 0) hasIncome = true;
-              if (amount < 0) hasExpense = true;
-              accountTypes.add(mTransactionsCursor.getString(mTransactionsCursor.getColumnIndex(KEY_ACCOUNT_TYPE)));
+        int type = 0;
+        if (hasExpense && !hasIncome) type = -1;
+        else if (hasIncome && !hasExpense) type = 1;
+        final SelectSingleMethodDialogFragment dialogFragment = SelectSingleMethodDialogFragment.newInstance(
+            R.string.menu_remap, R.string.remap_empty_list, accountTypes.toArray(new String[0]), type);
+        dialogFragment.setTargetFragment(this, MAP_METHOD_REQUEST);
+        dialogFragment.show(getActivity().getSupportFragmentManager(), "REMAP_METHOD");
+      });
+      return true;
+    } else if (command == R.id.REMAP_ACCOUNT_COMMAND) {
+      checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
+        List<Long> excludedIds = new ArrayList<>();
+        List<Long> splitIds = new ArrayList<>();
+        if (!mAccount.isAggregate()) {
+          excludedIds.add(mAccount.getId());
+        }
+        for (int i = 0; i < positions.size(); i++) {
+          if (positions.valueAt(i)) {
+            mTransactionsCursor.moveToPosition(positions.keyAt(i));
+            long transferAccount = DbUtils.getLongOr0L(mTransactionsCursor, KEY_TRANSFER_ACCOUNT);
+            if (transferAccount != 0) {
+              excludedIds.add(transferAccount);
+            }
+            if (SPLIT_CATID.equals(DbUtils.getLongOrNull(mTransactionsCursor, KEY_CATID))) {
+              splitIds.add(DbUtils.getLongOr0L(mTransactionsCursor, KEY_ROWID));
             }
           }
-          int type = 0;
-          if (hasExpense && !hasIncome) type = -1;
-          else if (hasIncome && !hasExpense) type = 1;
-          final SelectSingleMethodDialogFragment dialogFragment = SelectSingleMethodDialogFragment.newInstance(
-              R.string.menu_remap, R.string.remap_empty_list, accountTypes.toArray(new String[0]), type);
-          dialogFragment.setTargetFragment(this, MAP_METHOD_REQUEST);
-          dialogFragment.show(getActivity().getSupportFragmentManager(), "REMAP_METHOD");
+        }
+        new CheckTransferAccountOfSplitPartsHandler(getActivity().getContentResolver()).check(splitIds, result -> {
+          excludedIds.addAll(result);
+          final SelectSingleAccountDialogFragment dialogFragment = SelectSingleAccountDialogFragment.newInstance(
+              R.string.menu_remap, R.string.remap_empty_list, excludedIds);
+          dialogFragment.setTargetFragment(this, MAP_ACCOUNT_REQUEST);
+          dialogFragment.show(getActivity().getSupportFragmentManager(), "REMAP_ACCOUNT");
         });
-        return true;
-      }
-      case R.id.REMAP_ACCOUNT_COMMAND: {
-        checkSealed(ArrayUtils.toPrimitive(itemIds), () -> {
-          List<Long> excludedIds = new ArrayList<>();
-          List<Long> splitIds = new ArrayList<>();
-          if (!mAccount.isAggregate()) {
-            excludedIds.add(mAccount.getId());
-          }
-          for (int i = 0; i < positions.size(); i++) {
-            if (positions.valueAt(i)) {
-              mTransactionsCursor.moveToPosition(positions.keyAt(i));
-              long transferAccount = DbUtils.getLongOr0L(mTransactionsCursor, KEY_TRANSFER_ACCOUNT);
-              if (transferAccount != 0) {
-                excludedIds.add(transferAccount);
-              }
-              if (SPLIT_CATID.equals(DbUtils.getLongOrNull(mTransactionsCursor, KEY_CATID))) {
-                splitIds.add(DbUtils.getLongOr0L(mTransactionsCursor, KEY_ROWID));
-              }
-            }
-          }
-          new CheckTransferAccountOfSplitPartsHandler(getActivity().getContentResolver()).check(splitIds, result -> {
-            excludedIds.addAll(result);
-            final SelectSingleAccountDialogFragment dialogFragment = SelectSingleAccountDialogFragment.newInstance(
-                R.string.menu_remap, R.string.remap_empty_list, excludedIds);
-            dialogFragment.setTargetFragment(this, MAP_ACCOUNT_REQUEST);
-            dialogFragment.show(getActivity().getSupportFragmentManager(), "REMAP_ACCOUNT");
-          });
-        });
-        return true;
-      }
-      //super is handling deactivation of mActionMode
+      });
+      return true;
     }
-    return super.dispatchCommandMultiple(command, positions, itemIds);
+    return false;
   }
 
   private void checkSealed(long[] itemIds, Runnable onChecked) {
@@ -622,56 +612,57 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
 
   @Override
   public boolean dispatchCommandSingle(int command, ContextMenu.ContextMenuInfo info) {
+    if (super.dispatchCommandSingle(command, info)) {
+      return true;
+    }
     AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) info;
     MyExpenses ctx = (MyExpenses) requireActivity();
     mTransactionsCursor.moveToPosition(acmi.position);
-    switch (command) {
-      case R.id.EDIT_COMMAND:
-      case R.id.CLONE_TRANSACTION_COMMAND:
-        final boolean isTransferPartPeer = DbUtils.getLongOrNull(mTransactionsCursor, KEY_TRANSFER_PEER_PARENT) != null;
-        checkSealed(new long[]{acmi.id}, () -> {
-          if (isTransferPartPeer) {
-            ctx.showSnackbar(R.string.warning_splitpartcategory_context);
-          } else {
-            Intent i = new Intent(ctx, ExpenseEdit.class);
-            i.putExtra(KEY_ROWID, acmi.id);
-            if (command == R.id.CLONE_TRANSACTION_COMMAND) {
-              i.putExtra(ExpenseEdit.KEY_CLONE, true);
-            }
-            ctx.startActivityForResult(i, EDIT_REQUEST);
+    if (command == R.id.EDIT_COMMAND || command == R.id.CLONE_TRANSACTION_COMMAND) {
+      final boolean isTransferPartPeer = DbUtils.getLongOrNull(mTransactionsCursor, KEY_TRANSFER_PEER_PARENT) != null;
+      checkSealed(new long[]{acmi.id}, () -> {
+        if (isTransferPartPeer) {
+          ctx.showSnackbar(R.string.warning_splitpartcategory_context);
+        } else {
+          Intent i = new Intent(ctx, ExpenseEdit.class);
+          i.putExtra(KEY_ROWID, acmi.id);
+          if (command == R.id.CLONE_TRANSACTION_COMMAND) {
+            i.putExtra(ExpenseEdit.KEY_CLONE, true);
           }
-        });
-        //super is handling deactivation of mActionMode
-        break;
-      case R.id.CREATE_TEMPLATE_COMMAND:
-        final boolean splitAtPosition = isSplitAtPosition(acmi.position);
-        String label = mTransactionsCursor.getString(columnIndexPayee);
-        if (TextUtils.isEmpty(label))
-          label = mTransactionsCursor.getString(columnIndexLabelSub);
-        if (TextUtils.isEmpty(label))
-          label = mTransactionsCursor.getString(columnIndexLabelMain);
-        String finalLabel = label;
-        checkSealed(new long[]{acmi.id}, () -> {
-          if (splitAtPosition && !prefHandler.getBoolean(NEW_SPLIT_TEMPLATE_ENABLED, true)) {
-            ctx.showContribDialog(ContribFeature.SPLIT_TEMPLATE, null);
-          } else {
-            Bundle args = new Bundle();
-            args.putLong(KEY_ROWID, acmi.id);
-            SimpleInputDialog.build()
-                .title(R.string.menu_create_template)
-                .cancelable(false)
-                .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
-                .hint(R.string.title)
-                .text(finalLabel)
-                .extra(args)
-                .pos(R.string.dialog_button_add)
-                .neut()
-                .show(this, NEW_TEMPLATE_DIALOG);
-          }
-        });
-        return true;
+          ctx.startActivityForResult(i, EDIT_REQUEST);
+        }
+      });
+      finishActionMode();
+      return true;
+    } else if (command == R.id.CREATE_TEMPLATE_COMMAND) {
+      final boolean splitAtPosition = isSplitAtPosition(acmi.position);
+      String label = mTransactionsCursor.getString(columnIndexPayee);
+      if (TextUtils.isEmpty(label))
+        label = mTransactionsCursor.getString(columnIndexLabelSub);
+      if (TextUtils.isEmpty(label))
+        label = mTransactionsCursor.getString(columnIndexLabelMain);
+      String finalLabel = label;
+      checkSealed(new long[]{acmi.id}, () -> {
+        if (splitAtPosition && !prefHandler.getBoolean(NEW_SPLIT_TEMPLATE_ENABLED, true)) {
+          ctx.showContribDialog(ContribFeature.SPLIT_TEMPLATE, null);
+        } else {
+          Bundle args = new Bundle();
+          args.putLong(KEY_ROWID, acmi.id);
+          SimpleInputDialog.build()
+              .title(R.string.menu_create_template)
+              .cancelable(false)
+              .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
+              .hint(R.string.title)
+              .text(finalLabel)
+              .extra(args)
+              .pos(R.string.dialog_button_add)
+              .neut()
+              .show(this, NEW_TEMPLATE_DIALOG);
+        }
+      });
+      return true;
     }
-    return super.dispatchCommandSingle(command, info);
+    return false;
   }
 
   private void warnSealedAccount() {
@@ -911,6 +902,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
 
   private class MyGroupedAdapter extends TransactionAdapter implements SectionIndexingStickyListHeadersAdapter {
     private final LayoutInflater inflater;
+    private final SparseBooleanArray sumLineState = new SparseBooleanArray();
 
     private MyGroupedAdapter(Context context, int layout, Cursor c, int flags) {
       super(context, layout, c, flags, currencyFormatter, prefHandler, currencyContext);
@@ -949,7 +941,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     @Override
     public View getHeaderView(int position, View convertView, ViewGroup parent) {
       HeaderViewHolder holder = null;
-      final long headerId = getHeaderId(position);
+      final int headerId = getHeaderIdInt(position);
       final boolean withBudget = BaseTransactionList.this.getFilter().isEmpty() &&
           budget != null;
 
@@ -964,23 +956,30 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
         holder = new HeaderViewHolder(binding);
         convertView.setTag(holder);
       }
-      holder.sumLine().setVisibility(prefHandler.getBoolean(PrefKey.GROUP_HEADER, true) ? View.VISIBLE : View.GONE);
+      boolean sumLineVisibility = sumLineState.get(headerId, prefHandler.getBoolean(PrefKey.GROUP_HEADER, true));
+      holder.sumLine().setVisibility(sumLineVisibility ? View.VISIBLE : View.GONE);
       HeaderViewHolder finalHolder = holder;
-      holder.interimBalance().setOnClickListener(v -> finalHolder.sumLine().setVisibility(finalHolder.sumLine().getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
+      holder.interimBalance().setOnClickListener(v -> {
+        final boolean oldState = finalHolder.sumLine().getVisibility() == View.VISIBLE;
+        sumLineState.put(headerId, !oldState);
+        finalHolder.sumLine().setVisibility(oldState ? View.GONE : View.VISIBLE);
+      });
       if (mAccount.getGrouping() != Grouping.NONE) {
         holder.headerIndicator().setVisibility(View.VISIBLE);
         holder.headerIndicator().setExpanded(!binding.list.isHeaderCollapsed(headerId));
         holder.headerIndicator().setOnClickListener(v -> finalHolder.headerIndicator().rotate(
             !binding.list.isHeaderCollapsed(headerId), expanded -> {
-              if (expanded) {
-                binding.list.expand(headerId);
-                mAdapter.notifyDataSetChanged();
-                persistCollapsedHeaderIds();
-                finalHolder.dividerBottom().setVisibility(View.VISIBLE);
-              } else {
-                binding.list.collapse(headerId);
-                persistCollapsedHeaderIds();
-                finalHolder.dividerBottom().setVisibility(View.GONE);
+              if (binding != null) {
+                if (expanded) {
+                  binding.list.expand(headerId);
+                  mAdapter.notifyDataSetChanged();
+                  persistCollapsedHeaderIds();
+                  finalHolder.dividerBottom().setVisibility(View.VISIBLE);
+                } else {
+                  binding.list.collapse(headerId);
+                  persistCollapsedHeaderIds();
+                  finalHolder.dividerBottom().setVisibility(View.GONE);
+                }
               }
             }));
       } else {
@@ -1002,7 +1001,7 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
       Long[] data = headerData != null ? headerData.get(headerId) : null;
       if (data != null) {
         holder.sumIncome().setText("⊕ " + currencyFormatter.convAmount(data[0], mAccount.getCurrencyUnit()));
-        final Long expensesSum = -data[1];
+        final long expensesSum = -data[1];
         holder.sumExpense().setText("⊖ " + currencyFormatter.convAmount(expensesSum, mAccount.getCurrencyUnit()));
         holder.sumTransfer().setText(Transfer.BI_ARROW + " " + currencyFormatter.convAmount(
             data[2], mAccount.getCurrencyUnit()));
@@ -1394,28 +1393,21 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
       for (int i = 0; i < filterMenu.size(); i++) {
         MenuItem filterItem = filterMenu.getItem(i);
         boolean enabled = true;
-        switch (filterItem.getItemId()) {
-          case R.id.FILTER_CATEGORY_COMMAND:
-            enabled = mappedCategories;
-            break;
-          case R.id.FILTER_STATUS_COMMAND:
-            enabled = mAccount.isAggregate() || !mAccount.getType().equals(AccountType.CASH);
-            break;
-          case R.id.FILTER_PAYEE_COMMAND:
-            enabled = mappedPayees;
-            break;
-          case R.id.FILTER_METHOD_COMMAND:
-            enabled = mappedMethods;
-            break;
-          case R.id.FILTER_TRANSFER_COMMAND:
-            enabled = hasTransfers;
-            break;
-          case R.id.FILTER_TAG_COMMAND:
-            enabled = hasTags;
-            break;
-          case R.id.FILTER_ACCOUNT_COMMAND:
-            enabled = mAccount.isAggregate();
-            break;
+        int itemId = filterItem.getItemId();
+        if (itemId == R.id.FILTER_CATEGORY_COMMAND) {
+          enabled = mappedCategories;
+        } else if (itemId == R.id.FILTER_STATUS_COMMAND) {
+          enabled = mAccount.isAggregate() || !mAccount.getType().equals(AccountType.CASH);
+        } else if (itemId == R.id.FILTER_PAYEE_COMMAND) {
+          enabled = mappedPayees;
+        } else if (itemId == R.id.FILTER_METHOD_COMMAND) {
+          enabled = mappedMethods;
+        } else if (itemId == R.id.FILTER_TRANSFER_COMMAND) {
+          enabled = hasTransfers;
+        } else if (itemId == R.id.FILTER_TAG_COMMAND) {
+          enabled = hasTags;
+        } else if (itemId == R.id.FILTER_ACCOUNT_COMMAND) {
+          enabled = mAccount.isAggregate();
         }
         Criteria c = getFilter().get(filterItem.getItemId());
         Utils.menuItemSetEnabledAndVisible(filterItem, enabled || c != null);
@@ -1449,10 +1441,6 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
     if (syncItem != null) {
       Utils.menuItemSetEnabledAndVisible(syncItem, mAccount.getSyncAccountName() != null);
     }
-    MenuItem scanItem = menu.findItem(R.id.SCAN_MODE_COMMAND);
-    if (scanItem != null) {
-      scanItem.setChecked(prefHandler.getBoolean(OCR, false));
-    }
   }
 
   @Override
@@ -1470,98 +1458,91 @@ public abstract class BaseTransactionList extends ContextualActionBarFragment im
       return false;
     }
     int command = item.getItemId();
-    switch (command) {
-      case R.id.FILTER_CATEGORY_COMMAND:
-        if (!removeFilter(command)) {
-          Intent i = new Intent(getActivity(), ManageCategories.class);
-          i.setAction(ACTION_SELECT_FILTER);
-          startActivityForResult(i, FILTER_CATEGORY_REQUEST);
-        }
-        return true;
-      case R.id.FILTER_TAG_COMMAND:
-        if (!removeFilter(command)) {
-          Intent i = new Intent(getActivity(), ManageTags.class);
-          i.setAction(ACTION_SELECT_FILTER);
-          startActivityForResult(i, FILTER_TAGS_REQUEST);
-        }
-        return true;
-      case R.id.FILTER_AMOUNT_COMMAND:
-        if (!removeFilter(command)) {
-          AmountFilterDialog.newInstance(mAccount.getCurrencyUnit())
-              .show(getActivity().getSupportFragmentManager(), "AMOUNT_FILTER");
-        }
-        return true;
-      case R.id.FILTER_DATE_COMMAND:
-        if (!removeFilter(command)) {
-          DateFilterDialog.newInstance()
-              .show(getActivity().getSupportFragmentManager(), "DATE_FILTER");
-        }
-        return true;
-      case R.id.FILTER_COMMENT_COMMAND:
-        if (!removeFilter(command)) {
-          SimpleInputDialog.build()
-              .title(R.string.search_comment)
-              .pos(R.string.menu_search)
-              .neut()
-              .show(this, FILTER_COMMENT_DIALOG);
-        }
-        return true;
-      case R.id.FILTER_STATUS_COMMAND:
-        if (!removeFilter(command)) {
-          SelectCrStatusDialogFragment.newInstance()
-              .show(getActivity().getSupportFragmentManager(), "STATUS_FILTER");
-        }
-        return true;
-      case R.id.FILTER_PAYEE_COMMAND:
-        if (!removeFilter(command)) {
-          Intent i = new Intent(getActivity(), ManageParties.class);
-          i.setAction(ACTION_SELECT_FILTER);
-          i.putExtra(KEY_ACCOUNTID, mAccount.getId());
-          startActivityForResult(i, FILTER_PAYEE_REQUEST);
-        }
-        return true;
-      case R.id.FILTER_METHOD_COMMAND:
-        if (!removeFilter(command)) {
-          SelectMethodDialogFragment.newInstance(mAccount.getId())
-              .show(getActivity().getSupportFragmentManager(), "METHOD_FILTER");
-        }
-        return true;
-      case R.id.FILTER_TRANSFER_COMMAND:
-        if (!removeFilter(command)) {
-          SelectTransferAccountDialogFragment.newInstance(mAccount.getId())
-              .show(getActivity().getSupportFragmentManager(), "TRANSFER_FILTER");
-        }
-        return true;
-      case R.id.FILTER_ACCOUNT_COMMAND:
-        if (!removeFilter(command)) {
-          SelectMultipleAccountDialogFragment.newInstance(mAccount.getCurrencyUnit().getCode())
-              .show(getActivity().getSupportFragmentManager(), "ACCOUNT_FILTER");
-        }
-        return true;
-      case R.id.PRINT_COMMAND:
-        MyExpenses ctx = (MyExpenses) getActivity();
-        Result appDirStatus = AppDirHelper.checkAppDir(ctx);
-        if (hasItems) {
-          if (appDirStatus.isSuccess()) {
-            ctx.contribFeatureRequested(ContribFeature.PRINT, null);
-          } else {
-            ctx.showSnackbar(appDirStatus.print(ctx), Snackbar.LENGTH_LONG);
-          }
+    if (command == R.id.FILTER_CATEGORY_COMMAND) {
+      if (!removeFilter(command)) {
+        Intent i = new Intent(getActivity(), ManageCategories.class);
+        i.setAction(ACTION_SELECT_FILTER);
+        startActivityForResult(i, FILTER_CATEGORY_REQUEST);
+      }
+      return true;
+    } else if (command == R.id.FILTER_TAG_COMMAND) {
+      if (!removeFilter(command)) {
+        Intent i = new Intent(getActivity(), ManageTags.class);
+        i.setAction(ACTION_SELECT_FILTER);
+        startActivityForResult(i, FILTER_TAGS_REQUEST);
+      }
+      return true;
+    } else if (command == R.id.FILTER_AMOUNT_COMMAND) {
+      if (!removeFilter(command)) {
+        AmountFilterDialog.newInstance(mAccount.getCurrencyUnit())
+            .show(getActivity().getSupportFragmentManager(), "AMOUNT_FILTER");
+      }
+      return true;
+    } else if (command == R.id.FILTER_DATE_COMMAND) {
+      if (!removeFilter(command)) {
+        DateFilterDialog.newInstance()
+            .show(getActivity().getSupportFragmentManager(), "DATE_FILTER");
+      }
+      return true;
+    } else if (command == R.id.FILTER_COMMENT_COMMAND) {
+      if (!removeFilter(command)) {
+        SimpleInputDialog.build()
+            .title(R.string.search_comment)
+            .pos(R.string.menu_search)
+            .neut()
+            .show(this, FILTER_COMMENT_DIALOG);
+      }
+      return true;
+    } else if (command == R.id.FILTER_STATUS_COMMAND) {
+      if (!removeFilter(command)) {
+        SelectCrStatusDialogFragment.newInstance()
+            .show(getActivity().getSupportFragmentManager(), "STATUS_FILTER");
+      }
+      return true;
+    } else if (command == R.id.FILTER_PAYEE_COMMAND) {
+      if (!removeFilter(command)) {
+        Intent i = new Intent(getActivity(), ManageParties.class);
+        i.setAction(ACTION_SELECT_FILTER);
+        i.putExtra(KEY_ACCOUNTID, mAccount.getId());
+        startActivityForResult(i, FILTER_PAYEE_REQUEST);
+      }
+      return true;
+    } else if (command == R.id.FILTER_METHOD_COMMAND) {
+      if (!removeFilter(command)) {
+        SelectMethodDialogFragment.newInstance(mAccount.getId())
+            .show(getActivity().getSupportFragmentManager(), "METHOD_FILTER");
+      }
+      return true;
+    } else if (command == R.id.FILTER_TRANSFER_COMMAND) {
+      if (!removeFilter(command)) {
+        SelectTransferAccountDialogFragment.newInstance(mAccount.getId())
+            .show(getActivity().getSupportFragmentManager(), "TRANSFER_FILTER");
+      }
+      return true;
+    } else if (command == R.id.FILTER_ACCOUNT_COMMAND) {
+      if (!removeFilter(command)) {
+        SelectMultipleAccountDialogFragment.newInstance(mAccount.getCurrencyUnit().getCode())
+            .show(getActivity().getSupportFragmentManager(), "ACCOUNT_FILTER");
+      }
+      return true;
+    } else if (command == R.id.PRINT_COMMAND) {
+      MyExpenses ctx = (MyExpenses) getActivity();
+      Result appDirStatus = AppDirHelper.checkAppDir(ctx);
+      if (hasItems) {
+        if (appDirStatus.isSuccess()) {
+          ctx.contribFeatureRequested(ContribFeature.PRINT, null);
         } else {
-          ctx.showExportDisabledCommand();
+          ctx.showSnackbar(appDirStatus.print(ctx), Snackbar.LENGTH_LONG);
         }
-        return true;
-
-      case R.id.SYNC_COMMAND: {
-        mAccount.requestSync();
-        return true;
+      } else {
+        ctx.showExportDisabledCommand();
       }
-      case R.id.SCAN_MODE_COMMAND: {
-        ((MyExpenses) getActivity()).toggleScanMode();
-      }
-      default:
-        return super.onOptionsItemSelected(item);
+      return true;
+    } else if (command == R.id.SYNC_COMMAND) {
+      mAccount.requestSync();
+      return true;
     }
+    return super.onOptionsItemSelected(item);
   }
 
   public ArrayList<Criteria> getFilterCriteria() {

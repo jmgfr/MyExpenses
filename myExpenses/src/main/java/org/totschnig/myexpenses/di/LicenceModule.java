@@ -9,8 +9,8 @@ import com.google.android.vending.licensing.Obfuscator;
 import com.google.android.vending.licensing.PreferenceObfuscator;
 
 import org.totschnig.myexpenses.MyApplication;
+import org.totschnig.myexpenses.preference.PrefHandler;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
-import org.totschnig.myexpenses.util.licence.HashLicenceHandler;
 import org.totschnig.myexpenses.util.licence.LicenceHandler;
 
 import javax.inject.Named;
@@ -23,8 +23,8 @@ import dagger.Provides;
 public class LicenceModule {
   @Provides
   @Singleton
-  LicenceHandler providesLicenceHandler(PreferenceObfuscator preferenceObfuscator, CrashHandler crashHandler, MyApplication application) {
-    return new HashLicenceHandler(application, preferenceObfuscator, crashHandler);
+  LicenceHandler providesLicenceHandler(PreferenceObfuscator preferenceObfuscator, CrashHandler crashHandler, MyApplication application, PrefHandler prefHandler) {
+    return new LicenceHandler(application, preferenceObfuscator, crashHandler, prefHandler);
   }
 
   @Provides

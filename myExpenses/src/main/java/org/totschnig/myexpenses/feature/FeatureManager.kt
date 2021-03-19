@@ -2,18 +2,30 @@ package org.totschnig.myexpenses.feature
 
 import android.app.Activity
 import android.content.Context
+import androidx.annotation.StringRes
 import org.totschnig.myexpenses.MyApplication
+import org.totschnig.myexpenses.R
 import org.totschnig.myexpenses.activity.BaseActivity
 import org.totschnig.myexpenses.preference.PrefHandler
 import org.totschnig.myexpenses.preference.PrefKey
 import org.totschnig.myexpenses.util.Utils
 import java.util.*
 
-const val OCR_MODULE = "ocr"
-const val ENGINE_TESSERACT = "tesseract"
-const val ENGINE_MLKIT = "mlkit"
+enum class Feature(@StringRes val labelResId: Int) {
+    OCR(R.string.title_scan_receipt_feature), WEBUI(R.string.title_webui), TESSERACT(R.string.title_tesseract), MLKIT(R.string.title_mlkit);
+    val moduleName
+        get() = name.toLowerCase(Locale.ROOT)
+    companion object {
+        fun fromModuleName(moduleName: String?) = try {
+            moduleName?.let { valueOf(it.toUpperCase(Locale.ROOT)) }
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+    }
+}
 
-fun getUserConfiguredOcrEngine(context: Context, prefHandler: PrefHandler) = prefHandler.getString(PrefKey.OCR_ENGINE, null) ?: getDefaultOcrEngine(context)
+fun getUserConfiguredOcrEngine(context: Context, prefHandler: PrefHandler) =
+        Feature.fromModuleName(prefHandler.getString(PrefKey.OCR_ENGINE, null)) ?: getDefaultOcrEngine(context)
 
 /**
  * check if language has non-latin script and is supported by Tesseract
@@ -22,7 +34,7 @@ fun getDefaultOcrEngine(context: Context) = if (getLocaleForUserCountry(context)
                 "am", "ar", "as", "be", "bn", "bo", "bg", "zh", "dz", "el", "fa", "gu", "iw", "hi",
                 "iu", "jv", "kn", "ka", "kk", "km", "ky", "ko", "lo", "ml", "mn", "my", "ne", "or",
                 "pa", "ps", "ru", "si", "sd", "sr", "ta", "te", "tg", "th", "ti", "ug", "uk", "ur"))
-    ENGINE_TESSERACT else ENGINE_MLKIT
+    Feature.TESSERACT else Feature.MLKIT
 
 fun getLocaleForUserCountry(context: Context) =
         getLocaleForUserCountry(Utils.getCountryFromTelephonyManager(context))
@@ -41,21 +53,21 @@ fun getLocaleForUserCountry(country: String?, defaultLocale: Locale): Locale {
 abstract class FeatureManager {
     lateinit var application: MyApplication
     var callback: Callback? = null
-    val ocrFeature: OcrFeature?
+    private val ocrFeature: OcrFeature?
         get() = application.appComponent.ocrFeature()
 
     open fun initApplication(application: MyApplication) {
         this.application = application
     }
     open fun initActivity(activity: Activity) {}
-    open fun isFeatureInstalled(feature: String, context: Context) =
-            if (feature == OCR_MODULE) {
+    open fun isFeatureInstalled(feature: Feature, context: Context) =
+            if (feature == Feature.OCR) {
                 ocrFeature?.isAvailable(context) ?: false
             } else
-                false
+                true
 
-    open fun requestFeature(feature: String, activity: BaseActivity) {
-        if (feature == OCR_MODULE) {
+    open fun requestFeature(feature: Feature, activity: BaseActivity) {
+        if (feature == Feature.OCR) {
             ocrFeature?.offerInstall(activity)
         }
     }
@@ -80,8 +92,8 @@ abstract class FeatureManager {
 
 interface Callback {
     fun onLanguageAvailable() {}
-    fun onFeatureAvailable() {}
-    fun onAsyncStartedFeature(feature: String) {}
+    fun onFeatureAvailable(moduleNames: List<String>) {}
+    fun onAsyncStartedFeature(feature: Feature) {}
     fun onAsyncStartedLanguage(displayLanguage: String) {}
     fun onError(throwable: Throwable) {}
 }

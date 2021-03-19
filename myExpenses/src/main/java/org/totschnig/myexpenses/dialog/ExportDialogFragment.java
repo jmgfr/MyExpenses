@@ -22,7 +22,6 @@ import android.content.DialogInterface.OnClickListener;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.Html;
 import android.text.InputFilter;
 import android.text.Layout;
 import android.text.StaticLayout;
@@ -41,11 +40,9 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
-import org.totschnig.myexpenses.activity.MyExpenses;
 import org.totschnig.myexpenses.databinding.ExportDialogBinding;
 import org.totschnig.myexpenses.dialog.ConfirmationDialogFragment.ConfirmationDialogListener;
 import org.totschnig.myexpenses.model.Account;
-import org.totschnig.myexpenses.preference.PrefHandler;
 import org.totschnig.myexpenses.preference.PrefKey;
 import org.totschnig.myexpenses.task.ExportTask;
 import org.totschnig.myexpenses.task.TaskExecutionFragment;
@@ -59,12 +56,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
-import javax.inject.Inject;
-
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.text.HtmlCompat;
 
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ACCOUNTID;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CURRENCY;
@@ -73,9 +69,6 @@ import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ROWID;
 public class ExportDialogFragment extends BaseDialogFragment implements OnClickListener, OnCheckedChangeListener {
   private static final String KEY_IS_FILTERED = "is_filtered";
   private ExportDialogBinding binding;
-
-  @Inject
-  PrefHandler prefHandler;
 
   AlertDialog mDialog;
   String currency;
@@ -101,7 +94,6 @@ public class ExportDialogFragment extends BaseDialogFragment implements OnClickL
   @NonNull
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
-    MyExpenses ctx = (MyExpenses) getActivity();
     Bundle args = getArguments();
     if (args == null) {
       throw new IllegalStateException("Cannot be used without args");
@@ -112,10 +104,10 @@ public class ExportDialogFragment extends BaseDialogFragment implements OnClickL
     final String fileName;
     String now = new SimpleDateFormat("yyyMMdd-HHmmss", Locale.US)
         .format(new Date());
-    AlertDialog.Builder builder = initBuilder();
-    binding = ExportDialogBinding.inflate(layoutInflater);
-    dialogView = binding.getRoot();
-    builder.setView(dialogView);
+    AlertDialog.Builder builder = initBuilderWithBinding(() -> {
+      binding = ExportDialogBinding.inflate(materialLayoutInflater);
+      return binding;
+    });
 
     //TODO Strict mode violation
     Account a = Account.getInstanceFromDb(accountId);
@@ -357,7 +349,7 @@ public class ExportDialogFragment extends BaseDialogFragment implements OnClickL
       else
         sb.append(". ");
     }
-    return TextUtils.concat(sb, Html.fromHtml(getString(R.string.help_ExportDialog_date_format)));
+    return TextUtils.concat(sb, HtmlCompat.fromHtml(getString(R.string.help_ExportDialog_date_format), HtmlCompat.FROM_HTML_MODE_LEGACY));
   }
 
 
@@ -373,29 +365,23 @@ public class ExportDialogFragment extends BaseDialogFragment implements OnClickL
     String dateFormat = binding.dateFormat.getText().toString();
     char decimalSeparator = binding.separator.getCheckedRadioButtonId() == R.id.dot ? '.' : ',';
     final char delimiter;
-    switch (binding.Delimiter.getCheckedRadioButtonId()) {
-      case R.id.delimiter_tab:
-        delimiter = '\t';
-        break;
-      case R.id.delimiter_semicolon:
-        delimiter = ';';
-        break;
-      case R.id.delimiter_comma:
-      default:
-        delimiter = ',';
-        break;
+    int checkedRadioButtonId = binding.Delimiter.getCheckedRadioButtonId();
+    if (checkedRadioButtonId == R.id.delimiter_tab) {
+      delimiter = '\t';
+    } else if (checkedRadioButtonId == R.id.delimiter_semicolon) {
+      delimiter = ';';
+    } else {
+      delimiter = ',';
     }
 
     int handleDeleted;
-    switch (binding.handleDeleted.getCheckedRadioButtonId()) {
-      case R.id.update_balance:
-        handleDeleted = Account.EXPORT_HANDLE_DELETED_UPDATE_BALANCE;
-        break;
-      case R.id.create_helper:
-        handleDeleted = Account.EXPORT_HANDLE_DELETED_CREATE_HELPER;
-        break;
-      default: //-1
-        handleDeleted = Account.EXPORT_HANDLE_DELETED_DO_NOTHING;
+    int radioButtonId = binding.handleDeleted.getCheckedRadioButtonId();//-1
+    if (radioButtonId == R.id.update_balance) {
+      handleDeleted = Account.EXPORT_HANDLE_DELETED_UPDATE_BALANCE;
+    } else if (radioButtonId == R.id.create_helper) {
+      handleDeleted = Account.EXPORT_HANDLE_DELETED_CREATE_HELPER;
+    } else {
+      handleDeleted = Account.EXPORT_HANDLE_DELETED_DO_NOTHING;
     }
 
     String encoding = (String) binding.Encoding.getSelectedItem();

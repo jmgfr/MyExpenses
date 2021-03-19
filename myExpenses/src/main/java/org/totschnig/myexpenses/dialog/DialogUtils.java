@@ -50,6 +50,7 @@ import org.totschnig.myexpenses.adapter.CurrencyAdapter;
 import org.totschnig.myexpenses.export.qif.QifDateFormat;
 import org.totschnig.myexpenses.model.Account;
 import org.totschnig.myexpenses.model.AccountType;
+import org.totschnig.myexpenses.preference.PrefHandler;
 import org.totschnig.myexpenses.preference.PrefKey;
 import org.totschnig.myexpenses.provider.DatabaseConstants;
 import org.totschnig.myexpenses.util.DistributionHelper;
@@ -166,7 +167,7 @@ public class DialogUtils {
                 }
               }
             }
-          } catch (Exception e) {
+          } catch (Exception ignored) {
           } finally {
             cursor.close();
           }
@@ -208,11 +209,11 @@ public class DialogUtils {
       TextView error = dialog.findViewById(R.id.passwordInvalid);
       if (v == dialog.getButton(AlertDialog.BUTTON_NEUTRAL)) {
         if ((Boolean) input.getTag()) {
-          input.setTag(Boolean.valueOf(false));
+          input.setTag(Boolean.FALSE);
           ((Button) v).setText(R.string.password_lost);
           dialog.setTitle(R.string.password_prompt);
         } else {
-          input.setTag(Boolean.valueOf(true));
+          input.setTag(Boolean.TRUE);
           dialog.setTitle(securityQuestion);
           ((Button) v).setText(android.R.string.cancel);
         }
@@ -226,10 +227,10 @@ public class DialogUtils {
           callback.onPasswordDialogUnlocked();
           if (isInSecurityQuestion) {
             PrefKey.PROTECTION_LEGACY.putBoolean(false);
-            ctx.showDismissableSnackbar(R.string.password_disabled_reenable);
+            ctx.showDismissibleSnackbar(R.string.password_disabled_reenable);
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setText(R.string.password_lost);
             dialog.setTitle(R.string.password_prompt);
-            input.setTag(Boolean.valueOf(false));
+            input.setTag(Boolean.FALSE);
           }
           dialog.dismiss();
         } else {
@@ -275,8 +276,7 @@ public class DialogUtils {
     void onCalendarPermissionDenied();
   }
 
-  public static Spinner configureDateFormat(View view, Context context, String prefName) {
-    Spinner spinner = view.findViewById(R.id.DateFormat);
+  public static void configureDateFormat(Spinner spinner, Context context, PrefHandler prefHandler, String prefName) {
     ArrayAdapter<QifDateFormat> dateFormatAdapter =
         new ArrayAdapter<>(
             context, android.R.layout.simple_spinner_item, QifDateFormat.values());
@@ -284,53 +284,34 @@ public class DialogUtils {
     spinner.setAdapter(dateFormatAdapter);
     QifDateFormat qdf;
     try {
-      qdf = QifDateFormat.valueOf(
-          MyApplication.getInstance().getSettings()
-              .getString(prefName, "EU"));
+      qdf = QifDateFormat.valueOf(prefHandler.getString(prefName, "EU"));
     } catch (IllegalArgumentException e) {
       qdf = QifDateFormat.EU;
     }
     spinner.setSelection(qdf.ordinal());
-    return spinner;
   }
 
-  public static Spinner configureEncoding(View view, Context context, String prefName) {
-    Spinner spinner = view.findViewById(R.id.Encoding);
+  public static void configureEncoding(Spinner spinner, Context context, PrefHandler prefHandler, String prefName) {
     spinner.setSelection(
         Arrays.asList(context.getResources().getStringArray(R.array.pref_qif_export_file_encoding))
-            .indexOf(MyApplication.getInstance().getSettings()
-                .getString(prefName, "UTF-8")));
-    return spinner;
+            .indexOf(prefHandler.getString(prefName, "UTF-8")));
   }
 
-  public static Spinner configureDelimiter(View view, Context context, String prefName) {
-    Spinner spinner = (Spinner) view.findViewById(R.id.Delimiter);
+  public static void configureDelimiter(Spinner spinner, Context context, PrefHandler prefHandler, String prefName) {
     spinner.setSelection(
         Arrays.asList(context.getResources().getStringArray(R.array.pref_csv_import_delimiter_values))
-            .indexOf(MyApplication.getInstance().getSettings()
-                .getString(prefName, ",")));
-    return spinner;
+            .indexOf(prefHandler.getString(prefName, ",")));
   }
 
-  public static EditText configureFilename(View view) {
-    return (EditText) view.findViewById(R.id.Filename);
-  }
-
-  public static Spinner configureCurrencySpinner(
-      View view, AdapterView.OnItemSelectedListener listener) {
-    Spinner spinner = view instanceof Spinner ? (Spinner) view : view.findViewById(R.id.Currency);
-    CurrencyAdapter curAdapter = new CurrencyAdapter(view.getContext(), android.R.layout.simple_spinner_item);
+  public static void configureCurrencySpinner(Spinner spinner, AdapterView.OnItemSelectedListener listener) {
+    CurrencyAdapter curAdapter = new CurrencyAdapter(spinner.getContext(), android.R.layout.simple_spinner_item);
     spinner.setAdapter(curAdapter);
     spinner.setOnItemSelectedListener(listener);
-    return spinner;
   }
 
-  public static Spinner configureTypeSpinner(View view) {
-    Spinner spinner = view instanceof Spinner ? (Spinner) view :
-        (Spinner) view.findViewById(R.id.AccountType);
+  public static void configureTypeSpinner(Spinner spinner) {
     ArrayAdapter<AccountType> typAdapter = new AccountTypeAdapter(spinner.getContext());
     spinner.setAdapter(typAdapter);
-    return spinner;
   }
 
   public static void openBrowse(Uri uri, Fragment fragment) {

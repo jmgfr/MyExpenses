@@ -6,12 +6,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.widget.EditText;
 
-import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
 import org.totschnig.myexpenses.dialog.DialogUtils;
+import org.totschnig.myexpenses.preference.PrefHandler;
 import org.totschnig.myexpenses.util.io.FileUtils;
 
+import androidx.annotation.Nullable;
 import timber.log.Timber;
 
 public class ImportFileResultHandler {
@@ -74,18 +75,15 @@ public class ImportFileResultHandler {
         typeParts[0].equals("application");
   }
 
-  public static void maybePersistUri(FileNameHostFragment hostFragment) {
+  public static void maybePersistUri(FileNameHostFragment hostFragment, PrefHandler prefHandler) {
     if (!FileUtils.isDocumentUri(hostFragment.getContext(), hostFragment.getUri())) {
-      MyApplication.getInstance().getSettings().edit()
-          .putString(hostFragment.getPrefKey(), hostFragment.getUri().toString())
-          .apply();
+     prefHandler.putString(hostFragment.getPrefKey(), hostFragment.getUri().toString());
     }
   }
 
-  public static void handleFileNameHostOnResume(FileNameHostFragment hostFragment) {
+  public static void handleFileNameHostOnResume(FileNameHostFragment hostFragment, PrefHandler prefHandler) {
     if (hostFragment.getUri() == null) {
-      String restoredUriString = MyApplication.getInstance().getSettings()
-          .getString(hostFragment.getPrefKey(), "");
+      String restoredUriString = prefHandler.getString(hostFragment.getPrefKey(), "");
       if (!restoredUriString.equals("")) {
         Uri restoredUri = Uri.parse(restoredUriString);
         if (!FileUtils.isDocumentUri(hostFragment.getContext(), restoredUri)) {
@@ -102,9 +100,10 @@ public class ImportFileResultHandler {
   public interface FileNameHostFragment {
     String getPrefKey();
 
+    @Nullable
     Uri getUri();
 
-    void setUri(Uri uri);
+    void setUri(@Nullable Uri uri);
 
     EditText getFilenameEditText();
 

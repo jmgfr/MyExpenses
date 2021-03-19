@@ -27,23 +27,23 @@ import org.totschnig.myexpenses.viewmodel.data.Tag
 import java.util.concurrent.TimeUnit
 
 class TransactionListViewModel(application: Application) : BudgetViewModel(application) {
-    val budgetAmount = MutableLiveData<Money>()
-    private var accuntDisposable: Disposable? = null
+    val budgetAmount = MutableLiveData<Money?>()
+    private var accountDisposable: Disposable? = null
     private var cloneAndRemapProgressInternal = MutableLiveData<Pair<Int, Int>>()
 
     private val accountLiveData: Map<Long, LiveData<Account>> = lazyMap { accountId ->
         val liveData = MutableLiveData<Account>()
-        accuntDisposable?.let {
+        accountDisposable?.let {
             if (!it.isDisposed) it.dispose()
         }
         val base = if (accountId > 0) TransactionProvider.ACCOUNTS_URI else TransactionProvider.ACCOUNTS_AGGREGATE_URI
-        accuntDisposable = briteContentResolver.createQuery(ContentUris.withAppendedId(base, accountId),
+        accountDisposable = briteContentResolver.createQuery(ContentUris.withAppendedId(base, accountId),
                         Account.PROJECTION_BASE, null, null, null, true)
                 .mapToOne { Account.fromCursor(it) }
                 .throttleFirst(100, TimeUnit.MILLISECONDS)
                 .subscribe {
                     liveData.postValue(it)
-                    if (ContribFeature.BUDGET.isAvailable(prefHandler)) {
+                    if (licenceHandler.hasTrialAccessTo(ContribFeature.BUDGET)) {
                         loadBudget(it)
                     }
                 }
@@ -79,9 +79,9 @@ class TransactionListViewModel(application: Application) : BudgetViewModel(appli
                     val ops = transaction.buildSaveOperations(true)
                     val newUpdate = ContentProviderOperation.newUpdate(TRANSACTIONS_URI).withValue(column, rowId)
                     if (transaction.isSplit) {
-                        newUpdate.withSelection(KEY_ROWID + " = ?", arrayOf(transaction.id.toString()))
+                        newUpdate.withSelection("$KEY_ROWID = ?", arrayOf(transaction.id.toString()))
                     } else {
-                        newUpdate.withSelection(KEY_ROWID + " = ?", arrayOf(""))//replaced by back reference
+                        newUpdate.withSelection("$KEY_ROWID = ?", arrayOf(""))//replaced by back reference
                                 .withSelectionBackReference(0, 0)
                     }
                     ops.add(newUpdate.build())
@@ -100,7 +100,7 @@ class TransactionListViewModel(application: Application) : BudgetViewModel(appli
         emit(run {
             var selection = "%s %s".format(KEY_ROWID, WhereFilter.Operation.IN.getOp(transactionIds.size))
             var selectionArgs = transactionIds.map(Long::toString).toTypedArray()
-            if (column.equals(DatabaseConstants.KEY_ACCOUNTID)) {
+            if (column == DatabaseConstants.KEY_ACCOUNTID) {
                 selection += " OR %s %s".format(DatabaseConstants.KEY_PARENTID, WhereFilter.Operation.IN.getOp(transactionIds.size))
                 selectionArgs = arrayOf(*selectionArgs, *selectionArgs)
             }

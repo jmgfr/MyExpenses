@@ -9,10 +9,8 @@ import android.text.TextUtils;
 import com.android.calendar.CalendarContractCompat;
 import com.android.calendar.CalendarContractCompat.Events;
 
-import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.model.Plan;
 import org.totschnig.myexpenses.provider.CalendarProviderProxy;
-import org.totschnig.myexpenses.provider.DatabaseConstants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,32 +18,33 @@ import java.util.Collections;
 import androidx.collection.LongSparseArray;
 import androidx.collection.SparseArrayCompat;
 
-import static org.totschnig.myexpenses.util.PermissionHelper.PermissionGroup.CALENDAR;
+import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PLANID;
+import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PLAN_INFO;
 
 public class PlanInfoCursorWrapper extends CursorWrapperHelper {
-  private Context context;
+  private final Context context;
   private final LongSparseArray<String> planInfo = new LongSparseArray<>();
   private final SparseArrayCompat<Long> nextInstance = new SparseArrayCompat<>();
-  private ArrayList<Integer> sortedPositions = new ArrayList<>();
-  private boolean shouldSortByNextInstance;
+  private final ArrayList<Integer> sortedPositions = new ArrayList<>();
+  private final boolean shouldSortByNextInstance;
 
-  public PlanInfoCursorWrapper(Context context, Cursor cursor, boolean shouldSortByNextInstance) {
+  public PlanInfoCursorWrapper(Context context, Cursor cursor, boolean shouldSortByNextInstance, boolean initializePlanInfo) {
     super(cursor);
     this.context = context;
-    this.shouldSortByNextInstance = shouldSortByNextInstance;
-    initializePlanInfo();
+    if (initializePlanInfo) {
+      this.shouldSortByNextInstance = shouldSortByNextInstance;
+      initializePlanInfo();
+    } else {
+      this.shouldSortByNextInstance = false;
+    }
   }
 
   private void initializePlanInfo() {
-    if (!(CALENDAR.hasPermission(context) || MyApplication.isInstrumentationTest())) {
-      shouldSortByNextInstance = false;
-      return;
-    }
     Cursor wrapped = getWrappedCursor();
     if (wrapped.moveToFirst()) {
       ArrayList<Long> plans = new ArrayList<>();
       long planId;
-      int columnIndexPlanId = getColumnIndex(DatabaseConstants.KEY_PLANID);
+      int columnIndexPlanId = getColumnIndex(KEY_PLANID);
       while (!wrapped.isAfterLast()) {
         int wrappedPos = wrapped.getPosition();
         if ((planId = getLong(columnIndexPlanId)) != 0L) {
@@ -140,7 +139,7 @@ public class PlanInfoCursorWrapper extends CursorWrapperHelper {
   @Override
   public int getColumnIndex(String columnName) {
     int result;
-    if (columnName.equals(DatabaseConstants.KEY_PLAN_INFO)) {
+    if (columnName.equals(KEY_PLAN_INFO)) {
       result = getColumnCount();
     } else {
       result = super.getColumnIndex(columnName);
@@ -149,9 +148,17 @@ public class PlanInfoCursorWrapper extends CursorWrapperHelper {
   }
 
   @Override
+  public String getColumnName(int columnIndex) {
+    if (columnIndex == getColumnCount()) {
+      return KEY_PLAN_INFO;
+    }
+    return super.getColumnName(columnIndex);
+  }
+
+  @Override
   public String getString(int columnIndex) {
     if (columnIndex == getColumnCount()) {
-      return planInfo.get(getLong(getColumnIndex(DatabaseConstants.KEY_PLANID)));
+      return planInfo.get(getLong(getColumnIndex(KEY_PLANID)));
     }
     return super.getString(columnIndex);
   }
