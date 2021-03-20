@@ -483,8 +483,11 @@
     <string name="comparison_operator_equal">equal to</string>
     <string name="comparison_operator_greater_than">greater than</string>
     <string name="comparison_operator_lesser_than">lesser than</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">between</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions before a specified date.  -->
     <string name="comparison_operator_date_before">before</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions after a specified date. -->
     <string name="comparison_operator_date_after">after</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Purchasing failed or cancelled.</string>
     <string name="hint_auto_fill">Should data be filled in automatically from last transaction for same payee/payer? You can always change this behaviour from the settings.</string>
@@ -973,4 +976,6 @@
     <string name="new_balance">New balance</string>
     <string name="title_webui">Web User Interface</string>
     <string name="single_feature_info">Alternatively you can buy unlimited access to only this feature.</string>
+    <!-- This refers to a plan that recurs every last day of the month. It is shown next to a checkbox allowing user to select this type of recurrence. -->
+    <string name="recurrence_last_day_of_month">Last day</string>
 </resources>
