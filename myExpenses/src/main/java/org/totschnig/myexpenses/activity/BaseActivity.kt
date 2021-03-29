@@ -178,36 +178,26 @@ abstract class BaseActivity : AppCompatActivity(), MessageDialogFragment.Message
                 SnackbarAction(R.string.dialog_dismiss) { snackbar?.dismiss() })
     }
 
-    fun showSnackbar(message: Int) {
-        showSnackbar(message, Snackbar.LENGTH_LONG)
-    }
-
-    fun showSnackbar(message: Int, duration: Int) {
+    @JvmOverloads
+    fun showSnackbar(message: Int, duration: Int = Snackbar.LENGTH_LONG) {
         showSnackbar(getText(message), duration)
     }
 
-    fun showSnackbar(message: CharSequence) {
-        showSnackbar(message, Snackbar.LENGTH_LONG, null)
-    }
-
-    fun showSnackbar(message: CharSequence, duration: Int) {
-        showSnackbar(message, duration, null)
-    }
-
-    open fun showSnackbar(message: CharSequence, duration: Int, snackbarAction: SnackbarAction?) {
-        showSnackbar(message, duration, snackbarAction, null)
-    }
-
-    fun showSnackbar(message: CharSequence, duration: Int, snackbarAction: SnackbarAction?,
-                     callback: Snackbar.Callback?) {
+    @JvmOverloads
+    fun showSnackbar(message: CharSequence, duration: Int = Snackbar.LENGTH_LONG, snackbarAction: SnackbarAction? = null,
+                     callback: Snackbar.Callback? = null) {
         findViewById<View>(getSnackbarContainerId())?.let {
             showSnackbar(message, duration, snackbarAction, callback, it)
         } ?: showSnackBarFallBack(message)
     }
 
     private fun showSnackBarFallBack(message: CharSequence) {
-        CrashHandler.report(String.format("Class %s is unable to display snackbar", javaClass))
+        reportMissingSnackbarContainer()
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    open fun reportMissingSnackbarContainer() {
+        CrashHandler.report(String.format("Class %s is unable to display snackbar", javaClass))
     }
 
     fun showProgressSnackBar(message: String, total: Int = 0, progress: Int = 0) {

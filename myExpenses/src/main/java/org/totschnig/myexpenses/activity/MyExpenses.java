@@ -75,6 +75,7 @@ import org.totschnig.myexpenses.provider.filter.Criteria;
 import org.totschnig.myexpenses.task.TaskExecutionFragment;
 import org.totschnig.myexpenses.ui.CursorFragmentPagerAdapter;
 import org.totschnig.myexpenses.ui.FragmentPagerAdapter;
+import org.totschnig.myexpenses.ui.SnackbarAction;
 import org.totschnig.myexpenses.util.AppDirHelper;
 import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.Result;
@@ -185,21 +186,6 @@ public class MyExpenses extends BaseMyExpenses implements
     }
   }
 
-  public enum HelpVariant {
-    crStatus
-  }
-
-  private void setHelpVariant() {
-    if (getCurrentPosition() > -1) {
-      getAccountsCursor().moveToPosition(getCurrentPosition());
-      String accountType = getAccountsCursor().getString(getColumnIndexType());
-      setHelpVariant(accountType.equals(AccountType.CASH.name()) ?
-          null : HelpVariant.crStatus);
-    } else {
-      setHelpVariant(null);
-    }
-  }
-
   ExpandableStickyListHeadersListView accountList() {
     return binding.accountPanel.accountList;
   }
@@ -231,7 +217,7 @@ public class MyExpenses extends BaseMyExpenses implements
     final ViewGroup adContainer = findViewById(R.id.adContainer);
     accountGrouping = readAccountGroupingFromPref();
     accountSort = readAccountSortFromPref();
-    adHandler = adHandlerFactory.create(adContainer);
+    adHandler = adHandlerFactory.create(adContainer, this);
     adContainer.getViewTreeObserver().addOnGlobalLayoutListener(
         new ViewTreeObserver.OnGlobalLayoutListener() {
 
@@ -352,9 +338,10 @@ public class MyExpenses extends BaseMyExpenses implements
         }
       });
     }
-/*    if (savedInstanceState == null) {
-      voteReminderCheck();
-    }*/
+    if (savedInstanceState == null) {
+      //voteReminderCheck();
+      voteReminderCheck2();
+    }
   }
 
   public void showTransactionFromIntent(Bundle extras) {
@@ -404,8 +391,19 @@ public class MyExpenses extends BaseMyExpenses implements
               "ROAD_MAP_VOTE_REMINDER");
         }
       });
-      roadmapViewModel.loadLastVote();
     }
+  }
+
+  private void voteReminderCheck2() {
+    roadmapViewModel.getShouldShowVoteReminder().observe(this, shouldShow -> {
+      if (shouldShow) {
+        prefHandler.putLong(PrefKey.VOTE_REMINDER_LAST_CHECK, System.currentTimeMillis());
+        showSnackbar(getString(R.string.reminder_vote_update), Snackbar.LENGTH_INDEFINITE, new SnackbarAction(R.string.roadmap_vote, v -> {
+          Intent intent = new Intent(this, RoadmapVoteActivity.class);
+          startActivity(intent);
+        }));
+      }
+    });
   }
 
   private void moveToPosition(int position) {
@@ -498,12 +496,6 @@ public class MyExpenses extends BaseMyExpenses implements
     if (tl != null) {
       tl.addFilterCriteria(c);
     }
-  }
-
-  @Override
-  protected void doHelp(String variant) {
-    setHelpVariant();
-    super.doHelp(variant);
   }
 
   /**
@@ -1168,9 +1160,14 @@ public class MyExpenses extends BaseMyExpenses implements
     } else if (anInt == R.id.DELETE_COMMAND_DO) {//Confirmation dialog was shown without Checkbox, because it was called with only void transactions
       onPositive(args, false);
     } else if (anInt == R.id.SPLIT_TRANSACTION_COMMAND) {
+      finishActionMode();
       startTaskExecution(TASK_SPLIT, args, R.string.progress_dialog_saving);
     } else if (anInt == R.id.UNGROUP_SPLIT_COMMAND) {
+      finishActionMode();
       startTaskExecution(TASK_REVOKE_SPLIT, args, R.string.progress_dialog_saving);
+    } else  if (anInt == R.id.LINK_TRANSFER_COMMAND) {
+      finishActionMode();
+      viewModel.linkTransfer(args.getLongArray(KEY_LONG_IDS));
     }
   }
 
