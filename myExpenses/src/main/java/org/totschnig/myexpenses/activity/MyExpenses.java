@@ -38,7 +38,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
@@ -50,7 +49,6 @@ import org.totschnig.myexpenses.dialog.ConfirmationDialogFragment.ConfirmationDi
 import org.totschnig.myexpenses.dialog.ExportDialogFragment;
 import org.totschnig.myexpenses.dialog.MessageDialogFragment;
 import org.totschnig.myexpenses.dialog.ProgressDialogFragment;
-import org.totschnig.myexpenses.dialog.RemindRateDialogFragment;
 import org.totschnig.myexpenses.dialog.SortUtilityDialogFragment;
 import org.totschnig.myexpenses.dialog.TransactionDetailFragment;
 import org.totschnig.myexpenses.dialog.select.SelectFilterDialog;
@@ -60,7 +58,6 @@ import org.totschnig.myexpenses.fragment.ContextualActionBarFragment;
 import org.totschnig.myexpenses.fragment.TransactionList;
 import org.totschnig.myexpenses.model.Account;
 import org.totschnig.myexpenses.model.AccountGrouping;
-import org.totschnig.myexpenses.model.AccountType;
 import org.totschnig.myexpenses.model.ContribFeature;
 import org.totschnig.myexpenses.model.CurrencyUnit;
 import org.totschnig.myexpenses.model.ExportFormat;
@@ -77,7 +74,6 @@ import org.totschnig.myexpenses.ui.CursorFragmentPagerAdapter;
 import org.totschnig.myexpenses.ui.FragmentPagerAdapter;
 import org.totschnig.myexpenses.ui.SnackbarAction;
 import org.totschnig.myexpenses.util.AppDirHelper;
-import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.Result;
 import org.totschnig.myexpenses.util.ShareUtils;
 import org.totschnig.myexpenses.util.TextUtils;
@@ -85,6 +81,7 @@ import org.totschnig.myexpenses.util.UiUtils;
 import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.util.ads.AdHandler;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
+import org.totschnig.myexpenses.util.distrib.DistributionHelper;
 import org.totschnig.myexpenses.viewmodel.RoadmapViewModel;
 
 import java.io.Serializable;
@@ -110,7 +107,6 @@ import kotlin.Unit;
 import se.emilsjolander.stickylistheaders.ExpandableStickyListHeadersListView;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 
-import static android.text.format.DateUtils.DAY_IN_MILLIS;
 import static com.theartofdev.edmodo.cropper.CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE;
 import static eltos.simpledialogfragment.list.CustomListDialog.SELECTED_SINGLE_ID;
 import static org.totschnig.myexpenses.activity.ConstantsKt.CREATE_ACCOUNT_REQUEST;
@@ -138,7 +134,6 @@ import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_SYNC_ACCOU
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TRANSACTIONID;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TYPE;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_YEAR;
-import static org.totschnig.myexpenses.task.TaskExecutionFragment.KEY_LONG_IDS;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_BALANCE;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_EXPORT;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_PRINT;
@@ -146,6 +141,7 @@ import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_REVOKE_SP
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_SET_ACCOUNT_HIDDEN;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_SET_ACCOUNT_SEALED;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_SPLIT;
+import static org.totschnig.myexpenses.viewmodel.ContentResolvingAndroidViewModelKt.KEY_ROW_IDS;
 import static org.totschnig.myexpenses.viewmodel.MyExpensesViewModelKt.ERROR_INIT_DOWNGRADE;
 
 /**
@@ -202,11 +198,6 @@ public class MyExpenses extends BaseMyExpenses implements
   boolean indexesCalculated = false;
 
   private RoadmapViewModel roadmapViewModel;
-
-  @Override
-  protected void injectDependencies() {
-    ((MyApplication) getApplicationContext()).getAppComponent().inject(this);
-  }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -321,6 +312,7 @@ public class MyExpenses extends BaseMyExpenses implements
       accountId = prefHandler.getLong(PrefKey.CURRENT_ACCOUNT, 0L);
     }
     roadmapViewModel = new ViewModelProvider(this).get(RoadmapViewModel.class);
+    ((MyApplication) getApplicationContext()).getAppComponent().inject(roadmapViewModel);
     viewModel.getHasHiddenAccounts().observe(this,
         result -> navigationView().getMenu().findItem(R.id.HIDDEN_ACCOUNTS_COMMAND).setVisible(result != null && result));
     if (savedInstanceState != null) {
@@ -342,6 +334,7 @@ public class MyExpenses extends BaseMyExpenses implements
       //voteReminderCheck();
       voteReminderCheck2();
     }
+    reviewManager.init(this);
   }
 
   public void showTransactionFromIntent(Bundle extras) {
@@ -369,7 +362,6 @@ public class MyExpenses extends BaseMyExpenses implements
     if (firstCreate) {
       mManager.initLoader(ACCOUNTS_CURSOR, null, this);
     }
-
   }
 
   private void voteReminderCheck() {
@@ -461,16 +453,9 @@ public class MyExpenses extends BaseMyExpenses implements
     if (requestCode == EDIT_REQUEST) {
       floatingActionButton.show();
       if (resultCode == RESULT_OK) {
-        if (!DistributionHelper.isGithub()) {
-          long nextReminder = prefHandler.getLong(PrefKey.NEXT_REMINDER_RATE, Utils.getInstallTime(this) + DAY_IN_MILLIS * 30);
-          if (nextReminder != -1 && nextReminder < System.currentTimeMillis()) {
-            RemindRateDialogFragment f = new RemindRateDialogFragment();
-            f.setCancelable(false);
-            f.show(getSupportFragmentManager(), "REMIND_RATE");
-            return;
-          }
+        if (!adHandler.onEditTransactionResult()) {
+          reviewManager.onEditTransactionResult(this);
         }
-        adHandler.onEditTransactionResult();
       }
     }
     if (requestCode == CREATE_ACCOUNT_REQUEST && resultCode == RESULT_OK) {
@@ -630,11 +615,7 @@ public class MyExpenses extends BaseMyExpenses implements
       Uri data = AppDirHelper.ensureContentUri(Uri.parse((String) tag));
       i.setDataAndType(data, "application/pdf");
       i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-      if (!Utils.isIntentAvailable(this, i)) {
-        showSnackbar(R.string.no_app_handling_pdf_available);
-      } else {
-        startActivity(i);
-      }
+      startActivity(i, R.string.no_app_handling_pdf_available, null);
       return true;
     } else if (command == R.id.SHARE_PDF_COMMAND) {
       Result shareResult = ShareUtils.share(this,
@@ -794,10 +775,10 @@ public class MyExpenses extends BaseMyExpenses implements
         recordUsage(feature);
         Intent i = new Intent(this, Distribution.class);
         i.putExtra(KEY_ACCOUNTID, accountId);
+        i.putExtra(KEY_GROUPING, getAccountsCursor().getString(getColumnIndexGrouping()));
         if (tag != null) {
           int year = (int) ((Long) tag / 1000);
           int groupingSecond = (int) ((Long) tag % 1000);
-          i.putExtra(KEY_GROUPING, Grouping.valueOf(getAccountsCursor().getString(getColumnIndexGrouping())));
           i.putExtra(KEY_YEAR, year);
           i.putExtra(KEY_SECOND_GROUP, groupingSecond);
         }
@@ -806,8 +787,10 @@ public class MyExpenses extends BaseMyExpenses implements
       }
       case HISTORY: {
         recordUsage(feature);
+        getAccountsCursor().moveToPosition(getCurrentPosition());
         Intent i = new Intent(this, HistoryActivity.class);
         i.putExtra(KEY_ACCOUNTID, accountId);
+        i.putExtra(KEY_GROUPING, getAccountsCursor().getString(getColumnIndexGrouping()));
         startActivity(i);
         break;
       }
@@ -818,7 +801,7 @@ public class MyExpenses extends BaseMyExpenses implements
           b.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE, R.id.SPLIT_TRANSACTION_COMMAND);
           b.putInt(ConfirmationDialogFragment.KEY_COMMAND_NEGATIVE, R.id.CANCEL_CALLBACK_COMMAND);
           b.putInt(ConfirmationDialogFragment.KEY_POSITIVE_BUTTON_LABEL, R.string.menu_split_transaction);
-          b.putLongArray(KEY_LONG_IDS, (long[]) tag);
+          b.putLongArray(TaskExecutionFragment.KEY_LONG_IDS, (long[]) tag);
           ConfirmationDialogFragment.newInstance(b).show(getSupportFragmentManager(), "SPLIT_TRANSACTION");
         } else {
           createRowDo(TYPE_SPLIT, false);
@@ -1161,13 +1144,13 @@ public class MyExpenses extends BaseMyExpenses implements
       onPositive(args, false);
     } else if (anInt == R.id.SPLIT_TRANSACTION_COMMAND) {
       finishActionMode();
-      startTaskExecution(TASK_SPLIT, args, R.string.progress_dialog_saving);
+      startTaskExecution(TASK_SPLIT, args, R.string.saving);
     } else if (anInt == R.id.UNGROUP_SPLIT_COMMAND) {
       finishActionMode();
-      startTaskExecution(TASK_REVOKE_SPLIT, args, R.string.progress_dialog_saving);
+      startTaskExecution(TASK_REVOKE_SPLIT, args, R.string.saving);
     } else  if (anInt == R.id.LINK_TRANSFER_COMMAND) {
       finishActionMode();
-      viewModel.linkTransfer(args.getLongArray(KEY_LONG_IDS));
+      viewModel.linkTransfer(args.getLongArray(KEY_ROW_IDS));
     }
   }
 
@@ -1176,11 +1159,16 @@ public class MyExpenses extends BaseMyExpenses implements
     int anInt = args.getInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE);
     if (anInt == R.id.DELETE_COMMAND_DO) {
       finishActionMode();
-      startTaskExecution(
-          TaskExecutionFragment.TASK_DELETE_TRANSACTION,
-          ArrayUtils.toObject(args.getLongArray(TaskExecutionFragment.KEY_OBJECT_IDS)),
-          checked,
-          R.string.progress_dialog_deleting);
+      showSnackbar(R.string.progress_dialog_deleting);
+      viewModel.deleteTransactions(args.getLongArray(KEY_ROW_IDS), checked).observe(this, result -> {
+        if (result > 0) {
+          if (!checked) {
+            showSnackbar(getResources().getQuantityString(R.plurals.delete_success, result, result));
+          }
+        } else {
+          showDeleteFailureFeedback();
+        }
+      });
     } else if (anInt == R.id.BALANCE_COMMAND_DO) {
       startTaskExecution(TASK_BALANCE,
           new Long[]{args.getLong(KEY_ROWID)},
@@ -1325,7 +1313,7 @@ public class MyExpenses extends BaseMyExpenses implements
   public void onSortOrderConfirmed(long[] sortedIds) {
     Bundle extras = new Bundle(1);
     extras.putLongArray(KEY_SORT_KEY, sortedIds);
-    startTaskExecution(TaskExecutionFragment.TASK_ACCOUNT_SORT, extras, R.string.progress_dialog_saving);
+    startTaskExecution(TaskExecutionFragment.TASK_ACCOUNT_SORT, extras, R.string.saving);
   }
 
   public void clearFilter(View view) {

@@ -23,7 +23,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Build;
@@ -54,110 +53,12 @@ import java.util.Locale;
 
 import timber.log.Timber;
 
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ACCOUNTID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ACCOUNT_LABEL;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ACCOUNT_TYPE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_AMOUNT;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_BUDGET;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_BUDGETID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CATID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CODE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_COLOR;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_COMMENT;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CRITERION;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CR_STATUS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CURRENCY;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CURRENCY_OTHER;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CURRENCY_SELF;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_DATE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_DEFAULT_ACTION;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_DESCRIPTION;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_END;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_EQUIVALENT_AMOUNT;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_EXCHANGE_RATE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_EXCLUDE_FROM_TOTALS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_GROUPING;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_HIDDEN;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ICON;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_INSTANCEID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_IS_NUMBERED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_KEY;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_LABEL;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_LABEL_NORMALIZED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_LAST_USED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_METHODID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_METHOD_LABEL;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_OPENING_BALANCE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ORIGINAL_AMOUNT;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ORIGINAL_CURRENCY;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PARENTID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PARENT_UUID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PAYEEID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PAYEE_NAME;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PAYEE_NAME_NORMALIZED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PICTURE_URI;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PLANID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PLAN_EXECUTION;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PLAN_EXECUTION_ADVANCE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_REFERENCE_NUMBER;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ROWID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_SEALED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_SORT_DIRECTION;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_SORT_KEY;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_START;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_STATUS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_SYNC_ACCOUNT_NAME;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_SYNC_SEQUENCE_LOCAL;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TAGID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TAGLIST;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TEMPLATEID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TIMESTAMP;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TITLE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TRANSACTIONID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TRANSFER_ACCOUNT;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TRANSFER_PEER;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TYPE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_USAGES;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_UUID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_VALUE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_VALUE_DATE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.SPLIT_CATID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.STATUS_UNCOMMITTED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_ACCOUNTS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_ACCOUNTTYES_METHODS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_ACCOUNT_EXCHANGE_RATES;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_BUDGETS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_BUDGET_CATEGORIES;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_CATEGORIES;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_CHANGES;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_CURRENCIES;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_EVENT_CACHE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_METHODS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_PAYEES;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_PLAN_INSTANCE_STATUS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_SETTINGS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_STALE_URIS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_SYNC_STATE;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_TAGS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_TEMPLATES;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_TEMPLATES_TAGS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_TRANSACTIONS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_TRANSACTIONS_TAGS;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_ALL;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_CHANGES_EXTENDED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_COMMITTED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_EXTENDED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_TEMPLATES_ALL;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_TEMPLATES_EXTENDED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_TEMPLATES_UNCOMMITTED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_UNCOMMITTED;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.VIEW_WITH_ACCOUNT;
+import static org.totschnig.myexpenses.provider.DatabaseConstants.*;
 import static org.totschnig.myexpenses.util.ColorUtils.MAIN_COLORS;
 import static org.totschnig.myexpenses.util.PermissionHelper.PermissionGroup.CALENDAR;
 
-public class TransactionDatabase extends SQLiteOpenHelper {
-  public static final int DATABASE_VERSION = 115;
-  private Context mCtx;
+public class TransactionDatabase extends BaseTransactionDatabase {
+  private final Context mCtx;
 
   /**
    * SQL statement for expenses TABLE
@@ -725,6 +626,12 @@ public class TransactionDatabase extends SQLiteOpenHelper {
           + KEY_TRANSACTIONID + " integer references " + TABLE_TRANSACTIONS + "(" + KEY_ROWID + ") ON DELETE CASCADE, "
           + "primary key (" + KEY_TAGID + "," + KEY_TRANSACTIONID + "));";
 
+  private static final String ACCOUNT_TAGS_CREATE =
+          "CREATE TABLE " + TABLE_ACCOUNTS_TAGS
+            + " ( " + KEY_TAGID + " integer references " + TABLE_TAGS + "(" + KEY_ROWID + ") ON DELETE CASCADE, "
+            + KEY_ACCOUNTID + " integer references " + TABLE_ACCOUNTS + "(" + KEY_ROWID + ") ON DELETE CASCADE, "
+            + "primary key (" + KEY_TAGID + "," + KEY_ACCOUNTID + "));";
+
   private static final String INSERT_TRANSFER_TAGS_TRIGGER =
       String.format(Locale.ROOT, "CREATE TRIGGER insert_transfer_tags AFTER INSERT ON %1$s "
               + "WHEN %2$s IS NOT NULL "
@@ -751,7 +658,7 @@ public class TransactionDatabase extends SQLiteOpenHelper {
   public static final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
   TransactionDatabase(Context context, String databaseName) {
-    super(context, databaseName, null, DATABASE_VERSION);
+    super(context, databaseName);
     mCtx = context;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
       setWriteAheadLoggingEnabled(false);
@@ -849,14 +756,14 @@ public class TransactionDatabase extends SQLiteOpenHelper {
 
     db.execSQL(TAGS_CREATE);
     db.execSQL(TRANSACTIONS_TAGS_CREATE);
+    db.execSQL(ACCOUNT_TAGS_CREATE);
     createOrRefreshTransferTagsTriggers(db);
     db.execSQL(TEMPLATES_TAGS_CREATE);
 
     //Views
     createOrRefreshViews(db);
-    //Run on ForTest build type
     //insertTestData(db, 50, 50);
-    PrefKey.FIRST_INSTALL_DB_SCHEMA_VERSION.putInt(DATABASE_VERSION);
+    super.onCreate(db);
   }
 
   public void createOrRefreshTransferTagsTriggers(SQLiteDatabase db) {
@@ -2150,12 +2057,11 @@ public class TransactionDatabase extends SQLiteOpenHelper {
         createOrRefreshAccountTriggers(db);
         createOrRefreshAccountMetadataTrigger(db);
       }
-      if (oldVersion < 100) {
+/*      if (oldVersion < 100) {
         ContentValues initialValues = new ContentValues();
         initialValues.put("code", CurrencyEnum.VEB.name());
-        //will log SQLiteConstraintException if value already exists in table
         db.insert("currency", null, initialValues);
-      }
+      }*/
       if (oldVersion < 102) {
         db.execSQL("CREATE TABLE tags (_id integer primary key autoincrement, label text UNIQUE not null)");
         db.execSQL("CREATE TABLE transactions_tags ( tag_id integer references tags(_id) ON DELETE CASCADE, transaction_id integer references transactions(_id) ON DELETE CASCADE, primary key (tag_id,transaction_id))");
@@ -2238,6 +2144,12 @@ public class TransactionDatabase extends SQLiteOpenHelper {
         createOrRefreshTransactionTriggers(db);
         createOrRefreshAccountTriggers(db);
         createOrRefreshAccountMetadataTrigger(db);
+      }
+      if (oldVersion < 116) {
+        db.execSQL("CREATE TABLE accounts_tags ( tag_id integer references tags(_id) ON DELETE CASCADE, account_id integer references accounts(_id) ON DELETE CASCADE, primary key (tag_id,account_id));");
+      }
+      if (oldVersion < 117) {
+        upgradeTo117(db);
       }
       TransactionProvider.resumeChangeTrigger(db);
     } catch (SQLException e) {

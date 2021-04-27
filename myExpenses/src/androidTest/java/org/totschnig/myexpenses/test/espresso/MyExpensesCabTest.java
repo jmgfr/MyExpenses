@@ -7,7 +7,6 @@ import android.os.RemoteException;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.activity.MyExpenses;
@@ -22,17 +21,18 @@ import org.totschnig.myexpenses.provider.DatabaseConstants;
 import org.totschnig.myexpenses.testutils.BaseUiTest;
 
 import java.util.Currency;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
+import androidx.annotation.NonNull;
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.matcher.CursorMatchers;
 import androidx.test.filters.FlakyTest;
-import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.closeSoftKeyboard;
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.action.ViewActions.longClick;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
@@ -50,9 +50,7 @@ import static org.totschnig.myexpenses.testutils.Matchers.withAdaptedData;
 
 public final class MyExpensesCabTest extends BaseUiTest {
 
-  @Rule
-  public ActivityTestRule<MyExpenses> mActivityRule =
-      new ActivityTestRule<>(MyExpenses.class, true, false);
+  private ActivityScenario<MyExpenses> activityScenario = null;
   private Account account;
 
   @Before
@@ -67,9 +65,9 @@ public final class MyExpensesCabTest extends BaseUiTest {
     for (int i = 0; i < times; i++) {
       op0.saveAsNew();
     }
-    Intent i = new Intent();
+    Intent i = new Intent(getTargetContext(), MyExpenses.class);
     i.putExtra(KEY_ROWID, account.getId());
-    mActivityRule.launchActivity(i);
+    activityScenario = ActivityScenario.launch(i);
   }
 
   @After
@@ -85,13 +83,6 @@ public final class MyExpensesCabTest extends BaseUiTest {
     clickMenuItem(R.id.CLONE_TRANSACTION_COMMAND, true);
     closeKeyboardAndSave();
     assertThat(waitForAdapter().getCount()).isEqualTo(origListSize + 1);
-  }
-
-  private void openCab() {
-    onData(is(instanceOf(Cursor.class)))
-        .inAdapterView(getWrappedList())
-        .atPosition(1)
-        .perform(longClick());
   }
 
   @Test
@@ -110,7 +101,7 @@ public final class MyExpensesCabTest extends BaseUiTest {
     String templateTitle = "Espresso Template Test";
     openCab();
     clickMenuItem(R.id.CREATE_TEMPLATE_COMMAND, true);
-    onView(withText(containsString(mActivityRule.getActivity().getString(R.string.menu_create_template))))
+    onView(withText(containsString(getString(R.string.menu_create_template))))
         .check(matches(isDisplayed()));
     onView(withId(R.id.editText))
         .perform(typeText(templateTitle));
@@ -182,8 +173,9 @@ public final class MyExpensesCabTest extends BaseUiTest {
     onView(withId(R.id.action_mode_bar)).check(matches(isDisplayed()));
   }
 
+  @NonNull
   @Override
-  protected ActivityTestRule<? extends ProtectedFragmentActivity> getTestRule() {
-    return mActivityRule;
+  protected ActivityScenario<? extends ProtectedFragmentActivity> getTestScenario() {
+    return Objects.requireNonNull(activityScenario);
   }
 }

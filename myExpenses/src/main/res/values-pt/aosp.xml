@@ -6,6 +6,11 @@
 <resources>
     <string name="drawer_open">"Abrir gaveta de navegação"</string>
     <string name="drawer_close">"Fechar gaveta de navegação"</string>
+    <string name="saving">"Salvando…"</string>
+    <string name="default_action">"Ação padrão"</string>
+    <string name="full_name">"Nome"</string>
+    <string name="postal_country">"Țară"</string>
+    <string name="postal_country">"País"</string>
     <string name="toast_text_copied">"Texto copiado"</string>
     <string name="copy_text">"Copiar para área de transferência"</string>
     <string name="stop">"Parar"</string>
@@ -14,5 +19,7 @@
     <string name="autofill">"Preenchimento automático"</string>
     <string name="discard">"Odrzuć"</string>
     <string name="dialog_dismiss">"Dispensar"</string>
+    <string name="response_yes">"Sim"</string>
+    <string name="response_no">"Não"</string>
 </resources>
 

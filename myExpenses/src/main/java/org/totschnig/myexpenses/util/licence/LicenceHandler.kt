@@ -29,7 +29,6 @@ import org.totschnig.myexpenses.util.crashreporting.CrashHandler
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.collections.HashSet
 
 open class LicenceHandler(protected val context: MyApplication, var licenseStatusPrefs: PreferenceObfuscator, private val crashHandler: CrashHandler, protected val prefHandler: PrefHandler) {
     private var hasOurLicence = false
@@ -89,7 +88,7 @@ open class LicenceHandler(protected val context: MyApplication, var licenseStatu
             this.licenceStatus?.compareTo(licenceStatus) ?: -1 >= 0
 
     val isUpgradeable: Boolean
-        get() = licenceStatus?.isUpgradeable ?: false
+        get() = licenceStatus?.isUpgradeable ?: true
 
     open fun init() {
         this.licenceStatus = licenseStatusPrefs.getString(LICENSE_STATUS_KEY, null)?.let {
@@ -107,7 +106,7 @@ open class LicenceHandler(protected val context: MyApplication, var licenseStatu
         CoroutineScope(Dispatchers.IO).launch {
             Template.updateNewPlanEnabled()
             Account.updateNewAccountEnabled()
-            GenericAccountService.updateAccountsIsSyncable(context, this@LicenceHandler)
+            GenericAccountService.updateAccountsIsSyncable(context, this@LicenceHandler, prefHandler)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
                 ShortcutHelper.configureSplitShortcut(context, isContribEnabled)
             }
@@ -254,15 +253,11 @@ open class LicenceHandler(protected val context: MyApplication, var licenseStatu
         return uri
     }
 
-    val backendUri: String
-        get() =
-            if (isSandbox)
-                if (localBackend)
-                    "http://10.0.2.2:3000/"
-                else
-                    "https://myexpenses-licencedb-staging.herokuapp.com"
-            else
-                "https://licencedb.myexpenses.mobi/"
+    val backendUri = when {
+        localBackend -> "http://10.0.2.2:3000/"
+        isSandbox -> "https://myexpenses-licencedb-staging.herokuapp.com"
+        else -> "https://licencedb.myexpenses.mobi/"
+    }
 
     private val paypalLocale: String
         get() {
@@ -294,8 +289,8 @@ open class LicenceHandler(protected val context: MyApplication, var licenseStatu
     fun handleExpiration() {
         val licenceDuration = validUntilMillis - validSinceMillis
         if (TimeUnit.MILLISECONDS.toDays(licenceDuration) > 240) { // roughly eight months
-            licenceStatus = LicenceStatus.EXTENDED
-            licenseStatusPrefs.putString(LICENSE_STATUS_KEY, LicenceStatus.EXTENDED.name)
+            licenceStatus = LicenceStatus.EXTENDED_FALLBACK
+            licenseStatusPrefs.putString(LICENSE_STATUS_KEY, LicenceStatus.EXTENDED_FALLBACK.name)
             licenseStatusPrefs.remove(LICENSE_VALID_UNTIL_KEY)
             licenseStatusPrefs.commit()
         } else {

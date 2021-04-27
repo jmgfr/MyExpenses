@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">Neues Passwort</string>
     <string name="dialog_password_new_password_confirmation">Neues Passwort (Bestätigung)</string>
     <string name="dialog_remind_later">Später</string>
-    <string name="dialog_remind_no">Nein danke</string>
     <string name="dialog_remind_rate_how_many_stars">Wie viele Sterne würden Sie für {app_name} vergeben?</string>
     <string name="dialog_remind_rate_1">Bitte nehmen Sie sich einen Augenblick Zeit, um {app_name} zu bewerten und zu rezensieren.</string>
     <string name="dialog_remind_rate_2">Ihre Kommentare ermöglichen uns regelmäßige Verbesserungen und Erweiterungen.</string>
@@ -356,7 +355,6 @@
     <string name="progress_dialog_deleting">Objekte werden gelöscht</string>
     <string name="progress_dialog_loading">Buchung wird von Datenbank geladen</string>
     <string name="progress_dialog_printing">Generierung von PDF</string>
-    <string name="progress_dialog_saving">Objekt wird in Datenbank gespeichert</string>
     <string name="qif_parse_result">Gefunden: %1$s Konten, %2$s Kategorien und %3$s parteien.</string>
     <string name="qif_parse_failure_found_multiple_accounts">In der QIF Datei wurden mehrere Konten gefunden.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Diese konten nicht mit einem bestehendes Konto zusammengefügt werden.</string>
@@ -483,13 +481,14 @@
     <string name="comparison_operator_equal">gleich</string>
     <string name="comparison_operator_greater_than">größer als</string>
     <string name="comparison_operator_lesser_than">kleiner als</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">zwischen</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions before a specified date.  -->
     <string name="comparison_operator_date_before">vor</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions after a specified date. -->
     <string name="comparison_operator_date_after">nach</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Einkauf ist gescheitert oder abgebrochen.</string>
     <string name="hint_auto_fill">Sollen Daten automatisch auf Basis der letzten Buchung für denselben Empfänger/Zahler ausgefüllt werden? Sie können dieses Verhalten jederzeit in den Einstellungen ändern.</string>
-    <string name="yes">Ja</string>
-    <string name="no">Nein</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%1$d Konten mit Währung %2$s wurden aktualisiert.</string>
     <string name="learn_more">Mehr erfahren</string>
     <string name="import_source_file">Datei</string>
@@ -509,6 +508,7 @@
     <string name="pref_manage_stale_images_summary">Verwalten Sie Bilder aus gelöschten Buchungen</string>
     <string name="image_deleted">Bild wurde gelöscht</string>
     <string name="transaction_deleted">Buchung wurde gelöscht</string>
+    <string name="account_deleted">Konto wurde gelöscht</string>
     <string name="dialog_export_applied_to_filter">Nur Buchungen, die mit dem aktuellen Suchfilter übereinstimmen, werden berücksichtigt.</string>
     <string name="export_handle_deleted_create_helper">Hilfsbuchung erstellen</string>
     <string name="export_handle_deleted_update_balance">Anfangssaldo aktualisieren</string>
@@ -948,7 +948,6 @@
     <!-- When user opens a template from the transaction form, existing data is discarded. This message appears in a dialgoue to confirm the action -->
     <string name="confirmation_load_template_discard_data">Vorhandene Formulardaten werden verworfen.</string>
     <string name="pref_clone_with_current_date_title">Datum der geklonten Buchungen</string>
-    <string name="default_action">Standardaktion</string>
     <string name="template_default_action_without_amount_hint">Vorlage ohne Betrag sollte mit der Standardaktion \'Bearbeiten\' gespeichert werden.</string>
     <string name="plan_automatic_without_amount_hint">Plan ohne Betrag sollte nicht mit automatischer Ausführung gespeichert werden</string>
     <string name="content_description_edit_plan">Plan in Kalender-App bearbeiten</string>
@@ -975,4 +974,16 @@
     <string name="single_feature_info">Alternativ können Sie uneingeschränkten Zugriff nur auf diese Funktion erwerben.</string>
     <!-- This refers to a plan that recurs every last day of the month. It is shown next to a checkbox allowing user to select this type of recurrence. -->
     <string name="recurrence_last_day_of_month">Letzter Tag</string>
+    <string name="warning_link_transfer">Die beiden ausgewählten Buchungen werden als Umbuchung verknüpft. Informationen zu Empfängern / Zahlern und Kategorien werden gelöscht.</string>
+    <!-- This is the title of an entry on the configuration screen for the account widget. It allows to decide which number should be displayed for each account: the current balance or the total (which included future transactions) -->
+    <string name="account_widget_configuration_sum">Art der angezeigten Summe</string>
+    <string name="account_widget_configuration_sum_total">Zukünftige Buchungen einschließen</string>
+    <!-- Title of dialogue that allows to configure account widget -->
+    <string name="account_widget_configuration">Konfiguration des Konten-Widgets</string>
+    <!-- Title of a menu entry allowing to merge duplicate entries in the parties table (payee/payer) -->
+    <string name="menu_merge">Zusammenführen</string>
+    <!-- When user selects duplicate parties to be merged, he sees this prompt asking him to select which name should be selected for the merged party -->
+    <string name="merge_parties_select">Wählen Sie den Namen der zusammengeführten Partei:</string>
+    <!-- This is the label for a field for accounts. Active tags are automatically added to new transactions when an account is selected. -->
+    <string name="active_tags">Aktive Schlagwörter</string>
 </resources>

@@ -24,7 +24,6 @@ import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
 import org.totschnig.myexpenses.adapter.BudgetAdapter;
 import org.totschnig.myexpenses.databinding.BudgetListBinding;
 import org.totschnig.myexpenses.databinding.BudgetRowBinding;
-import org.totschnig.myexpenses.model.CurrencyUnit;
 import org.totschnig.myexpenses.model.Grouping;
 import org.totschnig.myexpenses.model.Money;
 import org.totschnig.myexpenses.model.Sort;
@@ -34,6 +33,7 @@ import org.totschnig.myexpenses.provider.filter.FilterPersistence;
 import org.totschnig.myexpenses.ui.BudgetSummary;
 import org.totschnig.myexpenses.util.TextUtils;
 import org.totschnig.myexpenses.viewmodel.BudgetViewModel;
+import org.totschnig.myexpenses.viewmodel.data.DistributionAccountInfo;
 import org.totschnig.myexpenses.viewmodel.data.Budget;
 import org.totschnig.myexpenses.viewmodel.data.Category;
 
@@ -128,6 +128,7 @@ public class BudgetFragment extends DistributionBaseFragment<BudgetRowBinding> i
   @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     viewModel = new ViewModelProvider(this).get(BudgetViewModel.class);
+    ((MyApplication) requireActivity().getApplication()).getAppComponent().inject(viewModel);
     viewModel.getBudget().observe(getViewLifecycleOwner(), this::setBudget);
     viewModel.getDatabaseResult().observe(getViewLifecycleOwner(), success -> {
       Activity activity = getActivity();
@@ -140,8 +141,8 @@ public class BudgetFragment extends DistributionBaseFragment<BudgetRowBinding> i
         }
       }
     });
-    final long budgetId = getActivity().getIntent().getLongExtra(KEY_ROWID, 0);
-    loadBudget(budgetId);
+    final long budgetId = requireActivity().getIntent().getLongExtra(KEY_ROWID, 0);
+    viewModel.loadBudget(budgetId, false);
     filterPersistence = new FilterPersistence(prefHandler, BudgetViewModel.Companion.prefNameForCriteria(budgetId), null, false, true);
   }
 
@@ -175,26 +176,26 @@ public class BudgetFragment extends DistributionBaseFragment<BudgetRowBinding> i
   private void showEditBudgetDialog(Category category, Category parentItem) {
     final Money amount, max, min;
     final SimpleFormDialog simpleFormDialog = SimpleFormDialog.build()
-        .title(category == null ? getString(R.string.dialog_title_edit_budget) : category.label)
+        .title(category == null ? getString(R.string.dialog_title_edit_budget) : category.getLabel())
         .neg();
     if (category != null) {
       long allocated = parentItem == null ? getAllocated() :
-          Stream.of(parentItem.getChildren()).mapToLong(category1 -> category1.budget).sum();
-      final long budgetAmount = parentItem == null ? budget.getAmount().getAmountMinor() : parentItem.budget;
+          Stream.of(parentItem.getChildren()).mapToLong(Category::getBudget).sum();
+      final long budgetAmount = parentItem == null ? budget.getAmount().getAmountMinor() : parentItem.getBudget();
       long allocatable = budgetAmount - allocated;
-      final long maxLong = allocatable + category.budget;
+      final long maxLong = allocatable + category.getBudget();
       if (maxLong <= 0) {
-        ((ProtectedFragmentActivity) getActivity()).showSnackbar(TextUtils.concatResStrings(getActivity(), " ",
+        ((ProtectedFragmentActivity) requireActivity()).showSnackbar(TextUtils.concatResStrings(getActivity(), " ",
             parentItem == null ? R.string.budget_exceeded_error_1_2 : R.string.sub_budget_exceeded_error_1_2,
             parentItem == null ? R.string.budget_exceeded_error_2 : R.string.sub_budget_exceeded_error_2));
         return;
       }
       Bundle bundle = new Bundle(1);
-      bundle.putLong(KEY_CATID, category.id);
+      bundle.putLong(KEY_CATID, category.getId());
       simpleFormDialog.extra(bundle);
-      amount = new Money(budget.getCurrency(), category.budget);
+      amount = new Money(budget.getCurrency(), category.getBudget());
       max = new Money(budget.getCurrency(), maxLong);
-      min = parentItem != null ? null : new Money(budget.getCurrency(), Stream.of(category.getChildren()).mapToLong(category1 -> category1.budget).sum());
+      min = parentItem != null ? null : new Money(budget.getCurrency(), Stream.of(category.getChildren()).mapToLong(Category::getBudget).sum());
     } else {
       amount = budget.getAmount();
       max = null;
@@ -246,44 +247,30 @@ public class BudgetFragment extends DistributionBaseFragment<BudgetRowBinding> i
     return false;
   }
 
-  public void loadBudget(long budgetId) {
-    viewModel.loadBudget(budgetId, false);
-  }
-
   private void setBudget(@NonNull Budget budget) {
     this.budget = budget;
     filterPersistence.reloadFromPreferences();
     allocatedOnly = prefHandler.getBoolean(getTemplateForAllocatedOnlyKey(budget),false);
-    setAccountInfo(new AccountInfo() {
-      @Override
-      public long getId() {
-        return budget.getAccountId();
-      }
-
-      @Override
-      public CurrencyUnit getCurrencyUnit() {
-        return budget.getCurrency();
-      }
-    });
-    final ActionBar actionBar = ((ProtectedFragmentActivity) getActivity()).getSupportActionBar();
+    setAccountInfo(new DistributionAccountInfo(budget.getAccountId(), budget.label(requireActivity()), budget.getCurrency(), budget.getColor()));
+    final ActionBar actionBar = ((ProtectedFragmentActivity) requireActivity()).getSupportActionBar();
     actionBar.setTitle(budget.getTitle());
     if (mAdapter == null) {
-      mAdapter = new BudgetAdapter((ProtectedFragmentActivity) getActivity(), currencyFormatter,
+      mAdapter = new BudgetAdapter(getActivity(), currencyFormatter,
           budget.getCurrency(), this);
       getListView().addHeaderView(filterGroup, null, false);
       getListView().addHeaderView(budgetSummary, null, false);
       getListView().setAdapter(mAdapter);
     }
 
-    mGrouping = budget.getGrouping();
-    mGroupingYear = 0;
-    mGroupingSecond = 0;
-    if (mGrouping == Grouping.NONE) {
+    setGrouping(budget.getGrouping());
+    setGroupingYear(0);
+    setGroupingSecond(0);
+    if (getGrouping() == Grouping.NONE) {
       updateSum();
       loadData();
       setSubTitle(budget.durationPrettyPrint());
     } else {
-      updateDateInfo(false);
+      updateDateInfo();
     }
     updateSummary();
     setFilterInfo();
@@ -307,33 +294,6 @@ public class BudgetFragment extends DistributionBaseFragment<BudgetRowBinding> i
   }
 
   @Override
-  protected void onDateInfoReceived() {
-    //we fetch dateInfo from database two times, first to get info about current date,
-    //then we use this info in second run
-    if (mGroupingYear == 0) {
-      mGroupingYear = dateInfo.getThisYear();
-      switch (mGrouping) {
-        case DAY:
-          mGroupingSecond = dateInfo.getThisDay();
-          break;
-        case WEEK:
-          mGroupingYear = dateInfo.getThisYearOfWeekStart();
-          mGroupingSecond = dateInfo.getThisWeek();
-          break;
-        case MONTH:
-          mGroupingYear = dateInfo.getThisYearOfMonthStart();
-          mGroupingSecond = dateInfo.getThisMonth();
-          break;
-      }
-      updateDateInfo(true);
-      updateSum();
-    } else {
-      super.onDateInfoReceived();
-      loadData();
-    }
-  }
-
-  @Override
   protected String buildFilterClause(String tableName) {
     String dateFilter = (budget.getGrouping() == Grouping.NONE) ? budget.durationAsSqlFilter() :
         super.buildFilterClause(tableName);
@@ -350,15 +310,15 @@ public class BudgetFragment extends DistributionBaseFragment<BudgetRowBinding> i
   @Override
   protected void onLoadFinished() {
     super.onLoadFinished();
-    allocated = Stream.of(mAdapter.getMainCategories()).mapToLong(category -> category.budget).sum();
+    allocated = Stream.of(mAdapter.getMainCategories()).mapToLong(Category::getBudget).sum();
     budgetSummary.setAllocated(currencyFormatter.formatCurrency(new Money(budget.getCurrency(),
         allocated)));
   }
 
   @Override
-  void updateIncomeAndExpense(long income, long expense) {
+  protected void updateIncomeAndExpense(long income, long expense) {
     this.spent = expense;
-    if (aggregateTypes) {
+    if (getAggregateTypes()) {
       this.spent -= income;
     }
     updateSummary();
@@ -391,6 +351,7 @@ public class BudgetFragment extends DistributionBaseFragment<BudgetRowBinding> i
     return KEY_BUDGET;
   }
 
+  @NonNull
   @Override
   protected Uri getCategoriesUri() {
     final Uri.Builder builder = super.getCategoriesUri().buildUpon()

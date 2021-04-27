@@ -63,7 +63,8 @@ class CsvImportDataFragment : Fragment() {
             R.string.method to "METHOD",
             R.string.status to "STATUS",
             R.string.reference_number to "NUMBER",
-            R.string.split_transaction to "SPLIT"
+            R.string.split_transaction to "SPLIT",
+            R.string.tags to "TAGS"
     )
 
     private lateinit var fields: List<Pair<Int, String?>>
@@ -227,16 +228,18 @@ class CsvImportDataFragment : Fragment() {
                 }
             } else {
                 if (position == firstSelectedRow()) {
-                    val b = Bundle()
-                    b.putInt(ConfirmationDialogFragment.KEY_TITLE,
-                            R.string.dialog_title_information)
-                    b.putString(
-                            ConfirmationDialogFragment.KEY_MESSAGE,
-                            getString(R.string.cvs_import_set_first_line_as_header))
-                    b.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE,
-                            R.id.SET_HEADER_COMMAND)
-                    b.putInt(KEY_HEADER_LINE_POSITION, position)
-                    ConfirmationDialogFragment.newInstance(b).show(
+                    ConfirmationDialogFragment.newInstance(Bundle().apply {
+                        putInt(ConfirmationDialogFragment.KEY_TITLE,
+                                R.string.dialog_title_information)
+                        putString(
+                                ConfirmationDialogFragment.KEY_MESSAGE,
+                                getString(R.string.cvs_import_set_first_line_as_header))
+                        putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE,
+                                R.id.SET_HEADER_COMMAND)
+                        putInt(KEY_HEADER_LINE_POSITION, position)
+                        putInt(ConfirmationDialogFragment.KEY_POSITIVE_BUTTON_LABEL, R.string.response_yes)
+                        putInt(ConfirmationDialogFragment.KEY_NEGATIVE_BUTTON_LABEL, R.string.response_no)
+                    }).show(
                             parentFragmentManager, "SET_HEADER_CONFIRMATION")
                 }
                 selectedRows.delete(position)

@@ -14,11 +14,9 @@ import org.totschnig.myexpenses.provider.TransactionProvider;
 import org.totschnig.myexpenses.provider.filter.Criteria;
 import org.totschnig.myexpenses.sync.GenericAccountService;
 import org.totschnig.myexpenses.util.ContribUtils;
-import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.PermissionHelper;
 import org.totschnig.myexpenses.util.Utils;
-import org.totschnig.myexpenses.util.licence.BillingListener;
-import org.totschnig.myexpenses.util.licence.BillingManager;
+import org.totschnig.myexpenses.util.distrib.DistributionHelper;
 import org.totschnig.myexpenses.util.licence.LicenceHandler;
 import org.totschnig.myexpenses.util.licence.LicenceStatus;
 import org.totschnig.myexpenses.viewmodel.UpgradeHandlerViewModel;
@@ -47,18 +45,21 @@ import static org.totschnig.myexpenses.preference.PreferenceUtilsKt.enableAutoFi
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ACCOUNTID;
 import static org.totschnig.myexpenses.util.PermissionHelper.PermissionGroup.CALENDAR;
 
-public abstract class LaunchActivity extends ProtectedFragmentActivity implements BillingListener {
+public abstract class LaunchActivity extends IapActivity {
 
-  private BillingManager billingManager;
   private UpgradeHandlerViewModel upgradeHandlerViewModel;
+
+  @Override
+  public boolean getShouldQueryIap() {
+    return true;
+  }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    billingManager = licenceHandler.initBillingManager(this, true);
-
     upgradeHandlerViewModel = new ViewModelProvider(this).get(UpgradeHandlerViewModel.class);
+    ((MyApplication) getApplicationContext()).getAppComponent().inject(upgradeHandlerViewModel);
   }
 
   @Override
@@ -197,7 +198,7 @@ public abstract class LaunchActivity extends ProtectedFragmentActivity implement
         invalidateHomeCurrency();
       }
       if (prev_version < 354) {
-        showImportantUpgradeInfo = GenericAccountService.getAccountsAsArray(this).length > 0;
+        showImportantUpgradeInfo = GenericAccountService.getAccounts(this).length > 0;
       }
 
       showVersionDialog(prev_version, showImportantUpgradeInfo);
@@ -225,15 +226,10 @@ public abstract class LaunchActivity extends ProtectedFragmentActivity implement
     if (requestCode == PermissionHelper.PERMISSIONS_REQUEST_WRITE_CALENDAR) {
       if (!PermissionHelper.allGranted(grantResults)) {
         if (!CALENDAR.shouldShowRequestPermissionRationale(this)) {
-          MyApplication.getInstance().removePlanner();
+          requireApplication().removePlanner();
         }
       }
     }
-  }
-
-  @Override
-  public void onBillingSetupFinished() {
-
   }
 
   @Override
@@ -248,14 +244,5 @@ public abstract class LaunchActivity extends ProtectedFragmentActivity implement
     } else {
       showSnackbar(R.string.licence_validation_failure);
     }
-  }
-
-  @Override
-  protected void onDestroy() {
-    super.onDestroy();
-    if (billingManager != null) {
-      billingManager.destroy();
-    }
-    billingManager = null;
   }
 }

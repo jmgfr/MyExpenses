@@ -7,6 +7,9 @@
 <resources>
     <string name="drawer_open">"Deschideți panoul de navigare"</string>
     <string name="drawer_close">"Închideți panoul de navigare"</string>
+    <string name="saving">"Se salvează…"</string>
+    <string name="default_action">"Acțiune prestabilită"</string>
+    <string name="full_name">"Nume"</string>
     <string name="toast_text_copied">"Text copiat"</string>
     <string name="copy_text">"Copiați în clipboard"</string>
     <string name="stop">"Opriți"</string>
@@ -15,5 +18,7 @@
     <string name="autofill">"Completare automată"</string>
     <string name="discard">"Renunţaţi"</string>
     <string name="dialog_dismiss">"Închideți"</string>
+    <string name="response_yes">"Da"</string>
+    <string name="response_no">"Nu"</string>
 </resources>
 

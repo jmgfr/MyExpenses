@@ -67,7 +67,6 @@
     <string name="dialog_password_new_password">ពាក្យសម្ងាត់ថ្មី</string>
     <string name="dialog_password_new_password_confirmation">ពាក្យសម្ងាត់ថ្មី (ការអះអាង)</string>
     <string name="dialog_remind_later">លើកក្រោយ</string>
-    <string name="dialog_remind_no">ទេ, សូមអរគុណ</string>
     <string name="dialog_remind_rate_1">សូម​យក​ឱកាស​នេះ​ ដើម្បី​​ផ្តល់​ការ​វាយ​តម្លៃ ​និង​មតិដល់ {app_name}។</string>
     <string name="dialog_remind_rate_2">យោបល់​របស់​អ្នក​អនុញ្ញាត​ឲ្យ​ខ្ញុំ​ នៅ​បន្ត​ការ​កែ​លម្អ​បន្ថែម ​និងធ្វើអោយ​ភាព​ប្រសើរ​ឡើង​ទៀត។</string>
     <string name="dialog_remind_rate_yes">វាយតម្លៃឥលូវ</string>
@@ -282,7 +281,6 @@
     <string name="pref_visit_website_title">សូមចូលទស្សនាគេហទំព័រ</string>
     <string name="progress_dialog_deleting">កំពុងលុប​អ្វីផ្សេងៗ</string>
     <string name="progress_dialog_loading">ផ្ទុកវត្ថុពីមូលដ្ឋានទិន្នន័យ</string>
-    <string name="progress_dialog_saving">កំពុង​ផ្ទុក​ទៅមូលដ្ឋាន​ទិន្នន័យ​</string>
     <string name="reference_number">លេខ​យោង</string>
     <string name="restore_db_failure">ការ​ restore មូលដ្ឋានទិន្នន័យមិនបានសំរេច</string>
     <string name="restore_db_success">មូលដ្ឋានទិន្នន័យត្រូវបានស្តារឡើងវិញពីការបម្រុងទុក។</string>
@@ -365,6 +363,7 @@
     <string name="comparison_operator_equal">ស្មើនឹង</string>
     <string name="comparison_operator_greater_than">ច្រើនជាង</string>
     <string name="comparison_operator_lesser_than">តិចជាង</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">រវាង</string>
     <string name="switch_on_text">បើក</string>
     <string name="switch_off_text">បិទ</string>

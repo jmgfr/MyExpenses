@@ -21,7 +21,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
-import org.apache.commons.lang3.text.StrSubstitutor
+import org.apache.commons.text.StringSubstitutor
 import org.threeten.bp.LocalDate
 import org.totschnig.myexpenses.MyApplication
 import org.totschnig.myexpenses.R
@@ -42,14 +42,16 @@ import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PAYEE_NAME
 import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_ROWID
 import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TYPE
 import org.totschnig.myexpenses.provider.TransactionProvider
+import org.totschnig.myexpenses.provider.asSequence
 import org.totschnig.myexpenses.ui.ContextHelper
 import org.totschnig.myexpenses.util.NotificationBuilderWrapper
 import org.totschnig.myexpenses.util.NotificationBuilderWrapper.NOTIFICATION_WEB_UI
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler
 import org.totschnig.myexpenses.util.locale.UserLocaleProvider
+import java.io.IOException
+import java.net.ServerSocket
 import javax.inject.Inject
 
-private const val PORT = 9000
 private const val STOP_CLICK_ACTION = "STOP_CLICK_ACTION"
 
 class WebInputService : Service(), IWebInputService {
@@ -76,6 +78,8 @@ class WebInputService : Service(), IWebInputService {
     private var serverStateObserver: ServerStateObserver? = null
 
     private var count = 0
+
+    private var port: Int = 0
 
     inner class LocalBinder : WebUiBinder() {
         override fun getService() = this@WebInputService
@@ -106,7 +110,7 @@ class WebInputService : Service(), IWebInputService {
     }
 
     private val address: String
-        get() = "http://${(applicationContext.getSystemService(WIFI_SERVICE) as WifiManager).connectionInfo.ipAddress.let { Formatter.formatIpAddress(it) }}:$PORT"
+        get() = "http://${(applicationContext.getSystemService(WIFI_SERVICE) as WifiManager).connectionInfo.ipAddress.let { Formatter.formatIpAddress(it) }}:$port"
 
 
     private fun readFromAssets(fileName: String) = assets.open(fileName).bufferedReader()
@@ -126,8 +130,13 @@ class WebInputService : Service(), IWebInputService {
                 }
             }
             START_ACTION -> {
-                if (server == null) {
-                    server = embeddedServer(CIO, PORT, watchPaths = emptyList()) {
+                if (server == null && try {
+                            (9000..9050).first { isAvailable(it) }
+                        } catch (e: NoSuchElementException) {
+                            serverStateObserver?.postException(IOException("No available port found in range 9000..9050"))
+                            0
+                        }.let { port = it; it != 0 }) {
+                    server = embeddedServer(CIO, port, watchPaths = emptyList()) {
                         install(ContentNegotiation) {
                             gson {
                                 registerTypeAdapter(LocalDate::class.java, localDateJsonDeserializer)
@@ -157,54 +166,47 @@ class WebInputService : Service(), IWebInputService {
                                         "accounts" to contentResolver.query(TransactionProvider.ACCOUNTS_BASE_URI,
                                                 arrayOf(KEY_ROWID, KEY_LABEL, KEY_TYPE),
                                                 DatabaseConstants.KEY_SEALED + " = 0", null, null)?.use {
-                                            generateSequence { if (it.moveToNext()) it else null }
-                                                    .map {
-                                                        mapOf(
-                                                                "id" to it.getLong(0),
-                                                                "label" to it.getString(1),
-                                                                "type" to it.getString(2)
-                                                        )
-                                                    }
-                                                    .toList()
+                                            it.asSequence.map {
+                                                mapOf(
+                                                        "id" to it.getLong(0),
+                                                        "label" to it.getString(1),
+                                                        "type" to it.getString(2)
+                                                )
+                                            }.toList()
                                         },
                                         "payees" to contentResolver.query(TransactionProvider.PAYEES_URI,
                                                 arrayOf(KEY_ROWID, KEY_PAYEE_NAME),
                                                 null, null, null)?.use {
-                                            generateSequence { if (it.moveToNext()) it else null }
-                                                    .map { mapOf("id" to it.getLong(0), "name" to it.getString(1)) }
+                                            it.asSequence.map { mapOf("id" to it.getLong(0), "name" to it.getString(1)) }
                                                     .toList()
                                         },
                                         "categories" to contentResolver.query(TransactionProvider.CATEGORIES_URI,
                                                 arrayOf(KEY_ROWID, KEY_PARENTID, KEY_LABEL),
                                                 null, null, null)?.use {
-                                            generateSequence { if (it.moveToNext()) it else null }
-                                                    .map { mapOf("id" to it.getLong(0), "parent" to it.getLong(1), "label" to it.getString(2)) }
+                                            it.asSequence.map { mapOf("id" to it.getLong(0), "parent" to it.getLong(1), "label" to it.getString(2)) }
                                                     .toList()
                                         },
                                         "tags" to contentResolver.query(TransactionProvider.TAGS_URI,
                                                 arrayOf(KEY_ROWID, KEY_LABEL),
                                                 null, null, null)?.use {
-                                            generateSequence { if (it.moveToNext()) it else null }
-                                                    .map { mapOf("id" to it.getLong(0), "label" to it.getString(1)) }
+                                            it.asSequence.map { mapOf("id" to it.getLong(0), "label" to it.getString(1)) }
                                                     .toList()
                                         },
                                         "methods" to contentResolver.query(TransactionProvider.METHODS_URI,
                                                 arrayOf(KEY_ROWID, KEY_LABEL, KEY_IS_NUMBERED, KEY_TYPE, KEY_ACCOUNT_TPYE_LIST),
                                                 null, null, null)?.use {
-                                            generateSequence { if (it.moveToNext()) it else null }
-                                                    .map {
-                                                        mapOf(
-                                                                "id" to it.getLong(0),
-                                                                "label" to it.getString(1),
-                                                                "isNumbered" to (it.getInt(2) > 0),
-                                                                "type" to it.getInt(3),
-                                                                "accountTypes" to it.getString(4)?.split(',')
-                                                        )
-                                                    }
-                                                    .toList()
+                                            it.asSequence.map {
+                                                mapOf(
+                                                        "id" to it.getLong(0),
+                                                        "label" to it.getString(1),
+                                                        "isNumbered" to (it.getInt(2) > 0),
+                                                        "type" to it.getInt(3),
+                                                        "accountTypes" to it.getString(4)?.split(',')
+                                                )
+                                            }.toList()
                                         },
                                 )
-                                val text = StrSubstitutor.replace(readFromAssets("form.html"), mapOf(
+                                val text = StringSubstitutor.replace(readFromAssets("form.html"), mapOf(
                                         "i18n_title" to "${t(R.string.app_name)} ${getString(R.string.title_webui)}",
                                         "i18n_account" to t(R.string.account),
                                         "i18n_amount" to t(R.string.amount),
@@ -237,6 +239,12 @@ class WebInputService : Service(), IWebInputService {
             }
         }
         return START_NOT_STICKY
+    }
+
+    private fun isAvailable(portNr: Int) = try {
+        ServerSocket(portNr).use { true }
+    } catch (e: IOException) {
+        false
     }
 
     private fun t(@StringRes resId: Int) = wrappedContext.getString(resId)

@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">Yeni parola</string>
     <string name="dialog_password_new_password_confirmation">Yeni parola (teyit)</string>
     <string name="dialog_remind_later">Daha sonra</string>
-    <string name="dialog_remind_no">Hayır teşekkürler</string>
     <string name="dialog_remind_rate_how_many_stars">{app_name}\'a kaç yıldız verirsiniz?</string>
     <string name="dialog_remind_rate_1">{app_name}\'ı yorumlamak ve puan vermek için lütfen bir dakikanızı ayrınız.</string>
     <string name="dialog_remind_rate_2">Yorumlarınız devamlı olarak geliştirme ve iyileştirmeler eklememize imkân vermektedir.</string>
@@ -356,7 +355,6 @@
     <string name="progress_dialog_deleting">Nesneler siliniyor</string>
     <string name="progress_dialog_loading">Veritabanından nesne yükleniyor</string>
     <string name="progress_dialog_printing">PDF oluşturuluyor</string>
-    <string name="progress_dialog_saving">Nesne veritabanına kaydediliyor</string>
     <string name="qif_parse_result">Ayrıştırıldı:  %1$s hesap,  %2$s kategori ve %3$s kişi</string>
     <string name="qif_parse_failure_found_multiple_accounts">QIF dosyasında birden çok hesap bulundu.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Bunlar mevcut bir hesapla birleştirilemez.</string>
@@ -483,13 +481,14 @@
     <string name="comparison_operator_equal">şuna eşit</string>
     <string name="comparison_operator_greater_than">şundan büyük</string>
     <string name="comparison_operator_lesser_than">şundan küçük</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">arasında</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions before a specified date.  -->
     <string name="comparison_operator_date_before">önce</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions after a specified date. -->
     <string name="comparison_operator_date_after">sonra</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Satın alma başarısız oldu veya iptal edildi.</string>
     <string name="hint_auto_fill">Aynı alacaklı/ödeyici için veriler son muameleden doldurulsun mu? Bu davranışı ayarlardan değiştirmeniz mümkündür.</string>
-    <string name="yes">Evet</string>
-    <string name="no">Hayır</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%2$s para birimini kullanan %1$d hesap güncellendi.</string>
     <string name="learn_more">Dahasını öğrenin</string>
     <string name="import_source_file">Dosya</string>
@@ -509,6 +508,7 @@
     <string name="pref_manage_stale_images_summary">Silinmiş muamelelerden kalan resimleri yönet</string>
     <string name="image_deleted">Resim silinmiştir</string>
     <string name="transaction_deleted">Muamele silinmiştir</string>
+    <string name="account_deleted">Hesap silindi</string>
     <string name="dialog_export_applied_to_filter">Sadece güncel filtre ile eşleşen muameleler dikkate alınacaktır.</string>
     <string name="export_handle_deleted_create_helper">Yardımcı muamele oluştur</string>
     <string name="export_handle_deleted_update_balance">Açılış bakiyesini güncelle</string>
@@ -948,7 +948,6 @@
     <!-- When user opens a template from the transaction form, existing data is discarded. This message appears in a dialgoue to confirm the action -->
     <string name="confirmation_load_template_discard_data">Mevcut form verileri silinecektir.</string>
     <string name="pref_clone_with_current_date_title">Klonlanmış muamelelerin tarihi</string>
-    <string name="default_action">Varsayılan eylem</string>
     <string name="template_default_action_without_amount_hint">Meblağı olmayan şablon \'Düzenleme\' varsayılan eylemi ile kaydedilmelidir.</string>
     <string name="plan_automatic_without_amount_hint">Meblağsız planlama otomatik planlama uygulamasıyla kaydedilmemelidir</string>
     <string name="content_description_edit_plan">Planlamayı takvim uygulamasında düzenle</string>
@@ -973,4 +972,18 @@
     <string name="new_balance">Yeni bakiye</string>
     <string name="title_webui">İnternet Kullanıcı Arayüzü</string>
     <string name="single_feature_info">Alternatif olarak sadece bu işlev için sınırsız erişim satın alabilirsiniz.</string>
-    </resources>
+    <!-- This refers to a plan that recurs every last day of the month. It is shown next to a checkbox allowing user to select this type of recurrence. -->
+    <string name="recurrence_last_day_of_month">Son gün</string>
+    <string name="warning_link_transfer">Seçili iki muamele bir transfer olarak ilişkilendirilecektir. Alacaklı/Ödeyen ve kategori bilgileri bırakılacaktır.</string>
+    <!-- This is the title of an entry on the configuration screen for the account widget. It allows to decide which number should be displayed for each account: the current balance or the total (which included future transactions) -->
+    <string name="account_widget_configuration_sum">Görüntülenen toplam türü</string>
+    <string name="account_widget_configuration_sum_total">Gelecek muameleleri dahil et</string>
+    <!-- Title of dialogue that allows to configure account widget -->
+    <string name="account_widget_configuration">Hesap widget\'i yapılandırması</string>
+    <!-- Title of a menu entry allowing to merge duplicate entries in the parties table (payee/payer) -->
+    <string name="menu_merge">Birleştir</string>
+    <!-- When user selects duplicate parties to be merged, he sees this prompt asking him to select which name should be selected for the merged party -->
+    <string name="merge_parties_select">Birleştirilecek tarafın ismini seçin:</string>
+    <!-- This is the label for a field for accounts. Active tags are automatically added to new transactions when an account is selected. -->
+    <string name="active_tags">Etkin Etiketler</string>
+</resources>

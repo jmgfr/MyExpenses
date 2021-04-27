@@ -35,6 +35,7 @@
         </xsl:variable>
         <xsl:variable name="changelog">
             <xsl:for-each select="str:tokenize($version)">
+                <xsl:variable name="entry">
                 <xsl:variable name="special-version-info">
                     <xsl:call-template name="special-version-info">
                         <xsl:with-param name="version" select="." />
@@ -44,7 +45,6 @@
                 </xsl:variable>
                 <xsl:choose>
                     <xsl:when test="$special-version-info != ''">
-                        <xsl-text>•&#032;</xsl-text>
                         <xsl:value-of select="$special-version-info" />
                     </xsl:when>
                     <xsl:otherwise>
@@ -53,6 +53,13 @@
                         </xsl:apply-templates>
                     </xsl:otherwise>
                 </xsl:choose>
+                </xsl:variable>
+                <xsl:if test="$entry != ''">
+                    <xsl:value-of select="$entry" />
+                    <xsl:if test="position() != last()">
+                        <xsl:value-of select="$newline" />
+                    </xsl:if>
+                </xsl:if>
             </xsl:for-each>
         </xsl:variable>
         <xsl:if test="$changelog != ''">

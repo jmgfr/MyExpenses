@@ -29,13 +29,13 @@ import java.io.Serializable;
 
 import icepick.State;
 
+import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_UUID;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_CREATE_SYNC_ACCOUNT;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_REPAIR_SYNC_BACKEND;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_SYNC_LINK_LOCAL;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_SYNC_LINK_REMOTE;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_SYNC_LINK_SAVE;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_SYNC_REMOVE_BACKEND;
-import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_SYNC_UNLINK;
 
 public class ManageSyncBackends extends SyncBackendSetupActivity implements ContribIFace {
 
@@ -47,6 +47,9 @@ public class ManageSyncBackends extends SyncBackendSetupActivity implements Cont
 
   @State
   String dropBoxTokenRequestPendingForAccount = null;
+
+  @State
+  boolean incomingAccountDeleted = false;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -69,8 +72,8 @@ public class ManageSyncBackends extends SyncBackendSetupActivity implements Cont
       final String accessToken = Auth.getOAuth2Token();
       if (accessToken != null) {
         AccountManager.get(this).setAuthToken(
-            GenericAccountService.GetAccount(dropBoxTokenRequestPendingForAccount),
-            GenericAccountService.Authenticator.AUTH_TOKEN_TYPE,
+            GenericAccountService.getAccount(dropBoxTokenRequestPendingForAccount),
+            GenericAccountService.AUTH_TOKEN_TYPE,
             accessToken);
       } else {
         showSnackbar("Dropbox Oauth Token is null");
@@ -114,8 +117,7 @@ public class ManageSyncBackends extends SyncBackendSetupActivity implements Cont
   public void onPositive(Bundle args) {
     int anInt = args.getInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE);
     if (anInt == R.id.SYNC_UNLINK_COMMAND) {
-      startTaskExecution(TASK_SYNC_UNLINK,
-          new String[]{args.getString(DatabaseConstants.KEY_UUID)}, null, 0);
+      getListFragment().syncUnlink(args.getString(DatabaseConstants.KEY_UUID));
       return;
     } else if (anInt == R.id.SYNC_REMOVE_BACKEND_COMMAND) {
       startTaskExecution(TASK_SYNC_REMOVE_BACKEND,
@@ -128,11 +130,38 @@ public class ManageSyncBackends extends SyncBackendSetupActivity implements Cont
       return;
     } else if (anInt == R.id.SYNC_LINK_COMMAND_REMOTE_DO) {
       Account account = (Account) args.getSerializable(KEY_ACCOUNT);
+      if (account.getUuid().equals(getIntent().getStringExtra(KEY_UUID))) {
+        incomingAccountDeleted = true;
+      }
       startTaskExecution(TASK_SYNC_LINK_REMOTE,
           null, account, 0);
       return;
     }
     super.onPositive(args);
+  }
+
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+  private boolean finishWithIncomingAccountDeleted() {
+    if (incomingAccountDeleted) {
+      setResult(RESULT_FIRST_USER);
+      finish();
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  protected void doHome() {
+    if (!finishWithIncomingAccountDeleted()) {
+      super.doHome();
+    }
+  }
+
+  @Override
+  public void onBackPressed() {
+    if (!finishWithIncomingAccountDeleted()) {
+      super.onBackPressed();
+    }
   }
 
   @Override
@@ -203,7 +232,6 @@ public class ManageSyncBackends extends SyncBackendSetupActivity implements Cont
         showDismissibleSnackbar(result.print(this));
         //fall through
       }
-      case TASK_SYNC_UNLINK:
       case TASK_SYNC_LINK_LOCAL:
       case TASK_SYNC_LINK_REMOTE: {
         Result result = (Result) o;

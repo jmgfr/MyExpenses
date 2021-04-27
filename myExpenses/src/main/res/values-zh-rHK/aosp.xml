@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"開啟導覽列"</string>
     <string name="drawer_close">"關閉導覽列"</string>
+    <string name="saving">"正在儲存…"</string>
+    <string name="default_action">"預設動作"</string>
+    <string name="full_name">"姓名"</string>
+    <string name="postal_country">"國家/地區"</string>
     <string name="toast_text_copied">"文字已複製"</string>
     <string name="copy_text">"複製到剪貼簿"</string>
     <string name="stop">"停止"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"自動填入"</string>
     <string name="discard">"丟棄"</string>
     <string name="dialog_dismiss">"關閉"</string>
+    <string name="response_yes">"是"</string>
+    <string name="response_no">"否"</string>
 </resources>
 

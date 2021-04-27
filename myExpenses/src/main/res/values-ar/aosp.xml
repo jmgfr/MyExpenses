@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"فتح ساحب التنقل"</string>
     <string name="drawer_close">"إغلاق ساحب التنقل"</string>
+    <string name="saving">"جارٍ الحفظ…"</string>
+    <string name="default_action">"إجراء افتراضي"</string>
+    <string name="full_name">"الاسم"</string>
+    <string name="postal_country">"البلد"</string>
     <string name="toast_text_copied">"تم نسخ النص"</string>
     <string name="copy_text">"نسخ إلى الحافظة"</string>
     <string name="stop">"إيقاف"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"الملء التلقائي"</string>
     <string name="discard">"إلغاء"</string>
     <string name="dialog_dismiss">"تجاهل"</string>
+    <string name="response_yes">"نعم"</string>
+    <string name="response_no">"لا"</string>
 </resources>
 

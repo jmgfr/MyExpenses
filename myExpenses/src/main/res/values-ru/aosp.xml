@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"Открыть панель навигации"</string>
     <string name="drawer_close">"Закрыть панель навигации"</string>
+    <string name="saving">"Сохранение…"</string>
+    <string name="default_action">"Действие по умолчанию"</string>
+    <string name="full_name">"Полное имя"</string>
+    <string name="postal_country">"Страна"</string>
     <string name="toast_text_copied">"Текст скопирован"</string>
     <string name="copy_text">"Копировать в буфер обмена"</string>
     <string name="stop">"Стоп"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"Автозаполнение"</string>
     <string name="discard">"Отменить"</string>
     <string name="dialog_dismiss">"Закрыть"</string>
+    <string name="response_yes">"Да"</string>
+    <string name="response_no">"Нет"</string>
 </resources>
 

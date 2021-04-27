@@ -70,7 +70,6 @@
     <string name="dialog_password_new_password">Nova lozinka</string>
     <string name="dialog_password_new_password_confirmation">Nova lozinka (potvrdi)</string>
     <string name="dialog_remind_later">Kasnije</string>
-    <string name="dialog_remind_no">Ne, hvala</string>
     <string name="dialog_remind_rate_how_many_stars">Kako biste ocijenili {app_name}?</string>
     <string name="dialog_remind_rate_1">Molimo izdvojite trenutak kako biste ocijenili i opisali {app_name}.</string>
     <string name="dialog_remind_rate_2">Vaši komentari nam omogućuju kontinuirana poboljšanja i unaprjeđenja.</string>
@@ -310,7 +309,6 @@
     <string name="progress_dialog_deleting">Brisanje stavki</string>
     <string name="progress_dialog_loading">Učitavanje stavki iz baze podataka</string>
     <string name="progress_dialog_printing">Generiranje PDF-a</string>
-    <string name="progress_dialog_saving">Spremanje stavki u bazu podataka</string>
     <string name="qif_parse_result">Analizirano: %1$s računa; %2$s kategorija i %3$s stranki</string>
     <string name="qif_parse_failure_found_multiple_accounts">Pronađeno je više računa u QIF datoteci.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Nemoguće spojiti s postojećim računom.</string>
@@ -418,10 +416,9 @@
     <string name="comparison_operator_equal">jednako</string>
     <string name="comparison_operator_greater_than">više od</string>
     <string name="comparison_operator_lesser_than">manje od</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">između</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Kupovina neuspjela ili otkazana.</string>
-    <string name="yes">Da</string>
-    <string name="no">Ne</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%1$d računi sa valutom %2$s su ažurirani.</string>
     <string name="learn_more">Saznaj više</string>
     <string name="import_source_file">Datoteka</string>

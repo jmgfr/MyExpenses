@@ -14,6 +14,7 @@ import android.widget.Button;
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.databinding.EditCurrencyBinding;
+import org.totschnig.myexpenses.di.AppComponent;
 import org.totschnig.myexpenses.model.CurrencyContext;
 import org.totschnig.myexpenses.model.CurrencyUnit;
 import org.totschnig.myexpenses.util.Utils;
@@ -34,7 +35,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_CURRENCY;
-import static org.totschnig.myexpenses.util.Utils.isFrameworkCurrency;
+import static org.totschnig.myexpenses.util.Utils.isKnownCurrency;
 
 public class EditCurrencyDialog extends BaseDialogFragment {
   private EditCurrencyBinding binding;
@@ -57,8 +58,10 @@ public class EditCurrencyDialog extends BaseDialogFragment {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    ((MyApplication) requireActivity().getApplication()).getAppComponent().inject(this);
+    final AppComponent appComponent = ((MyApplication) requireActivity().getApplication()).getAppComponent();
+    appComponent.inject(this);
     editCurrencyViewModel = new ViewModelProvider(this).get(EditCurrencyViewModel.class);
+    appComponent.inject(editCurrencyViewModel);
     editCurrencyViewModel.getUpdateComplete().observe(this, this::dismiss);
     editCurrencyViewModel.getInsertComplete().observe(this, success -> {
       if (success != null && success) {
@@ -92,7 +95,7 @@ public class EditCurrencyDialog extends BaseDialogFragment {
       binding.edtCurrencyCode.setText(currency.getCode());
 
       final String displayName = currency.toString();
-      frameworkCurrency = isFrameworkCurrency(currency.getCode());
+      frameworkCurrency = isKnownCurrency(currency.getCode());
       if (frameworkCurrency) {
         binding.edtCurrencySymbol.requestFocus();
         title = String.format(Locale.ROOT, "%s (%s)", displayName, currency.getCode());
@@ -204,7 +207,7 @@ public class EditCurrencyDialog extends BaseDialogFragment {
         editCurrencyViewModel.newCurrency(readCodeFromUI(), symbol, fractionDigits, label);
         setButtonState(false);
       } else {
-        final boolean frameworkCurrency = isFrameworkCurrency(currency.getCode());
+        final boolean frameworkCurrency = isKnownCurrency(currency.getCode());
         editCurrencyViewModel.save(currency.getCode(), symbol, fractionDigits, frameworkCurrency ? null : label, withUpdate);
         if (!withUpdate && frameworkCurrency) {
           dismiss();

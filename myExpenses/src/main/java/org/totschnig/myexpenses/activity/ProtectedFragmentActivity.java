@@ -114,8 +114,8 @@ import static org.totschnig.myexpenses.preference.PrefKey.UI_FONTSIZE;
 import static org.totschnig.myexpenses.preference.PrefKey.UI_LANGUAGE;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_AMOUNT;
 import static org.totschnig.myexpenses.task.TaskExecutionFragment.TASK_RESTORE;
-import static org.totschnig.myexpenses.util.DistributionHelper.getMarketSelfUri;
-import static org.totschnig.myexpenses.util.DistributionHelper.getVersionInfo;
+import static org.totschnig.myexpenses.util.distrib.DistributionHelper.getMarketSelfUri;
+import static org.totschnig.myexpenses.util.distrib.DistributionHelper.getVersionInfo;
 import static org.totschnig.myexpenses.util.TextUtils.concatResStrings;
 
 public abstract class ProtectedFragmentActivity extends BaseActivity
@@ -165,12 +165,16 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   public ColorStateList getTextColorSecondary() {
     return textColorSecondary;
   }
+  
+  MyApplication requireApplication() {
+    return ((MyApplication) getApplication());
+  }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     Icepick.restoreInstanceState(this, savedInstanceState);
-    if (MyApplication.getInstance().isProtected()) {
+    if (requireApplication().isProtected()) {
       getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
           WindowManager.LayoutParams.FLAG_SECURE);
     }
@@ -190,7 +194,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
       final MyApplication application = MyApplication.getInstance();
       final int customFontScale = application.getAppComponent().prefHandler().getInt(UI_FONTSIZE, 0);
-      if (customFontScale > 0 || !MyApplication.getInstance().getAppComponent().userLocaleProvider().getPreferredLanguage().equals(MyApplication.DEFAULT_LANGUAGE)) {
+      if (customFontScale > 0 || !application.getAppComponent().userLocaleProvider().getPreferredLanguage().equals(MyApplication.DEFAULT_LANGUAGE)) {
         Configuration config = new Configuration();
         config.fontScale = getFontScale(customFontScale, application.getContentResolver());
         applyOverrideConfiguration(config);
@@ -272,7 +276,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   @Override
   protected void onPause() {
     super.onPause();
-    MyApplication app = MyApplication.getInstance();
+    MyApplication app = requireApplication();
     if (app.isLocked() && pwDialog != null) {
       pwDialog.dismiss();
     } else {
@@ -300,7 +304,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
         }
         confirmCredentialResult = Optional.empty();
       } else {
-        MyApplication app = MyApplication.getInstance();
+        MyApplication app = requireApplication();
         if (app.shouldLock(this)) {
           confirmCredentials(CONFIRM_DEVICE_CREDENTIALS_UNLOCK_REQUEST, null, true);
         }
@@ -316,6 +320,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
         if (shouldHideWindow) hideWindow();
         try {
           startActivityForResult(intent, requestCode);
+          requireApplication().setLocked(true);
         } catch (ActivityNotFoundException e) {
           showSnackbar("No activity found for confirming device credentials");
         }
@@ -331,6 +336,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
         pwDialog = DialogUtils.passwordDialog(this, false);
       }
       DialogUtils.showPasswordDialog(this, pwDialog, legacyUnlockCallback);
+      requireApplication().setLocked(true);
     }
   }
 
@@ -379,11 +385,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
     if (command == R.id.RATE_COMMAND) {
       i = new Intent(Intent.ACTION_VIEW);
       i.setData(Uri.parse(getMarketSelfUri()));
-      if (Utils.isIntentAvailable(this, i)) {
-        startActivity(i);
-      } else {
-        showSnackbar(R.string.error_accessing_market);
-      }
+      startActivity(i, R.string.error_accessing_market, null);
       return true;
     } else if (command == R.id.SETTINGS_COMMAND) {
       i = new Intent(this, MyPreferenceActivity.class);
@@ -421,11 +423,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
           licenceInfo);
       Timber.d("Install info: %s", messageBody);
       i.putExtra(Intent.EXTRA_TEXT, messageBody);
-      if (!Utils.isIntentAvailable(this, i)) {
-        showSnackbar(R.string.no_app_handling_email_available);
-      } else {
-        startActivity(i);
-      }
+      startActivity(i, R.string.no_app_handling_email_available, null);
     } else if (command == R.id.CONTRIB_INFO_COMMAND) {
       showContribDialog(null, null);
       return true;
@@ -547,16 +545,12 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   public void onPostExecute(int taskId, @Nullable Object o) {
     removeAsyncTaskFragment(shouldKeepProgress(taskId));
     switch (taskId) {
-      case TaskExecutionFragment.TASK_DELETE_TRANSACTION:
       case TaskExecutionFragment.TASK_DELETE_ACCOUNT:
       case TaskExecutionFragment.TASK_DELETE_PAYMENT_METHODS:
-      case TaskExecutionFragment.TASK_DELETE_CATEGORY:
-      case TaskExecutionFragment.TASK_DELETE_PAYEES:
-      case TaskExecutionFragment.TASK_DELETE_TEMPLATES:
-      case TaskExecutionFragment.TASK_UNDELETE_TRANSACTION: {
+      case TaskExecutionFragment.TASK_DELETE_CATEGORY: {
         Result result = (Result) o;
         if (!result.isSuccess()) {
-          showSnackbar("There was an error deleting the object. Please contact support@myexenses.mobi !");
+          showDeleteFailureFeedback();
         }
         break;
       }
@@ -575,8 +569,11 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
       // is it not enough to set mLastPause to zero, since it would be
       // overwritten by the callings activity onpause
       // hence we need to set isLocked if necessary
-      MyApplication.getInstance().resetLastPause();
-      MyApplication.getInstance().shouldLock(this);
+      final MyApplication myApplication = requireApplication();
+      myApplication.resetLastPause();
+      if (myApplication.shouldLock(this)) {
+        myApplication.setLocked(true);
+      }
     }
   }
 
@@ -674,7 +671,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
   public void startDbWriteTask() {
     getSupportFragmentManager().beginTransaction()
         .add(DbWriteFragment.newInstance(), SAVE_TAG)
-        .add(ProgressDialogFragment.newInstance(getString(R.string.progress_dialog_saving)),
+        .add(ProgressDialogFragment.newInstance(getString(R.string.saving)),
             PROGRESS_TAG)
         .commitAllowingStateLoss();
   }
@@ -717,7 +714,7 @@ public abstract class ProtectedFragmentActivity extends BaseActivity
       if (resultCode == RESULT_OK) {
         confirmCredentialResult = Optional.of(true);
         showWindow();
-        MyApplication.getInstance().setLocked(false);
+        requireApplication().setLocked(false);
       } else {
         confirmCredentialResult = Optional.of(false);
       }

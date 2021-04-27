@@ -53,7 +53,6 @@ import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.viewmodel.data.Category;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.inject.Inject;
 
@@ -188,7 +187,7 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
 
   @Override
   public boolean dispatchCommandMultiple(int command,
-                                         SparseBooleanArray positions, Long[] itemIds) {
+                                         @NonNull SparseBooleanArray positions, @NonNull long[] itemIds) {
     if (super.dispatchCommandMultiple(command, positions, itemIds)) {
       return true;
     }
@@ -211,14 +210,14 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
             c = mAdapter.getGroup(group);
           }
           Bundle extras = ctx.getIntent().getExtras();
-          if ((extras == null || extras.getLong(KEY_ROWID) != c.id)) {
+          if ((extras == null || extras.getLong(KEY_ROWID) != c.getId())) {
             if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP && c.hasChildren()) {
               hasChildrenCount++;
             }
-            if (c.hasMappedBudgets) {
+            if (c.getHasMappedBudgets()) {
               mappedBudgetsCount++;
             }
-            idList.add(c.id);
+            idList.add(c.getId());
           } else {
             ctx.showSnackbar(getResources().getQuantityString(R.plurals.not_deletable_mapped_transactions,
                 1, 1));
@@ -239,9 +238,9 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
           MessageDialogFragment.newInstance(
               getString(R.string.dialog_title_warning_delete_category),
               message,
-              new MessageDialogFragment.Button(android.R.string.yes, R.id.DELETE_COMMAND_DO, objectIds),
+              new MessageDialogFragment.Button(R.string.response_yes, R.id.DELETE_COMMAND_DO, objectIds),
               null,
-              new MessageDialogFragment.Button(android.R.string.no, R.id.CANCEL_CALLBACK_COMMAND, null))
+              new MessageDialogFragment.Button(R.string.response_no, R.id.CANCEL_CALLBACK_COMMAND, null))
               .show(ctx.getSupportFragmentManager(), "DELETE_CATEGORY");
         } else {
           ctx.dispatchCommand(R.id.DELETE_COMMAND_DO, objectIds);
@@ -249,7 +248,7 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
       }
       return true;
     } else if (command == R.id.SELECT_COMMAND_MULTIPLE) {
-      if (itemIds.length == 1 || !Arrays.asList(itemIds).contains(NULL_ITEM_ID)) {
+      if (itemIds.length == 1 || !ArrayUtils.contains(itemIds, NULL_ITEM_ID)) {
         ArrayList<String> labelList = new ArrayList<>();
         for (int i = 0; i < positions.size(); i++) {
           Category c;
@@ -264,11 +263,11 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
             } else {
               c = mAdapter.getGroup(group);
             }
-            labelList.add(c.label);
+            labelList.add(c.getLabel());
           }
         }
         Intent intent = new Intent();
-        intent.putExtra(KEY_CATID, ArrayUtils.toPrimitive(itemIds));
+        intent.putExtra(KEY_CATID, itemIds);
         intent.putExtra(KEY_LABEL, TextUtils.join(",", labelList));
         ctx.setResult(RESULT_FIRST_USER, intent);
         ctx.finish();
@@ -277,7 +276,7 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
       }
       return true;
     } else if (command == R.id.MOVE_COMMAND) {
-      final Long[] excludedIds;
+      final long[] excludedIds;
       final boolean inGroup = expandableListSelectionType == ExpandableListView.PACKED_POSITION_TYPE_GROUP;
       if (inGroup) {
         excludedIds = itemIds;
@@ -288,15 +287,15 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
             int position = positions.keyAt(i);
             long pos = getListView().getExpandableListPosition(position);
             int group = ExpandableListView.getPackedPositionGroup(pos);
-            idList.add(mAdapter.getGroup(group).id);
+            idList.add(mAdapter.getGroup(group).getId());
           }
         }
-        excludedIds = idList.toArray(new Long[0]);
+        excludedIds = ArrayUtils.toPrimitive(idList.toArray(new Long[0]));
       }
       Bundle args = new Bundle(3);
       args.putBoolean(SelectMainCategoryDialogFragment.KEY_WITH_ROOT, !inGroup);
-      args.putLongArray(SelectMainCategoryDialogFragment.KEY_EXCLUDED_ID, ArrayUtils.toPrimitive(excludedIds));
-      args.putLongArray(TaskExecutionFragment.KEY_OBJECT_IDS, ArrayUtils.toPrimitive(itemIds));
+      args.putLongArray(SelectMainCategoryDialogFragment.KEY_EXCLUDED_ID, excludedIds);
+      args.putLongArray(TaskExecutionFragment.KEY_OBJECT_IDS, itemIds);
       SelectMainCategoryDialogFragment.newInstance(args)
           .show(getParentFragmentManager(), "SELECT_TARGET");
       return true;
@@ -324,7 +323,7 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
       category = mAdapter.getGroup(group);
       isMain = true;
     }
-    String label = category.label;
+    String label = category.getLabel();
     if (command == R.id.COLOR_COMMAND) {
       ctx.editCategoryColor(category);
       return true;
@@ -333,9 +332,9 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
       return true;
     } else if (command == R.id.SELECT_COMMAND) {
       if (!isMain && action.equals(ACTION_SELECT_MAPPING)) {
-        label = mAdapter.getGroup(group).label + TransactionList.CATEGORY_SEPARATOR + label;
+        label = mAdapter.getGroup(group).getLabel() + TransactionList.CATEGORY_SEPARATOR + label;
       }
-      doSingleSelection(elcmi.id, label, category.icon, isMain);
+      doSingleSelection(elcmi.id, label, category.getIcon(), isMain);
       finishActionMode();
       return true;
     } else if (command == R.id.CREATE_SUB_COMMAND) {
@@ -377,9 +376,9 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
     }
     String label = ((TextView) v.findViewById(R.id.label)).getText().toString();
     if (action.equals(ACTION_SELECT_MAPPING)) {
-      label = mAdapter.getGroup(groupPosition).label + TransactionList.CATEGORY_SEPARATOR + label;
+      label = mAdapter.getGroup(groupPosition).getLabel() + TransactionList.CATEGORY_SEPARATOR + label;
     }
-    doSingleSelection(id, label, mAdapter.getChild(groupPosition, childPosition).icon, false);
+    doSingleSelection(id, label, mAdapter.getChild(groupPosition, childPosition).getIcon(), false);
     return true;
   }
 
@@ -396,11 +395,11 @@ public abstract class AbstractCategoryList<ROW_BINDING extends ViewBinding> exte
       return false;
     }
     String label = ((TextView) v.findViewById(R.id.label)).getText().toString();
-    doSingleSelection(id, label, mAdapter.getGroup(groupPosition).icon, true);
+    doSingleSelection(id, label, mAdapter.getGroup(groupPosition).getIcon(), true);
     return true;
   }
 
-  protected void doSingleSelection(long cat_id, String label, String icon, boolean isMain) {
+  protected void doSingleSelection(long cat_id, String label, @Nullable String icon, boolean isMain) {
     Activity ctx = requireActivity();
     Intent intent = new Intent();
     intent.putExtra(KEY_CATID, cat_id);

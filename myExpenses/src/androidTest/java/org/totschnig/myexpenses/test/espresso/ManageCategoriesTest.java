@@ -12,7 +12,9 @@ import org.totschnig.myexpenses.testutils.BaseUiTest;
 
 import java.util.concurrent.TimeoutException;
 
-import androidx.test.rule.ActivityTestRule;
+import androidx.annotation.NonNull;
+import androidx.test.core.app.ActivityScenario;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -23,8 +25,8 @@ import static org.totschnig.myexpenses.testutils.Espresso.openActionBarOverflowM
 public class ManageCategoriesTest extends BaseUiTest {
 
   @Rule
-  public ActivityTestRule<ManageCategories> mActivityRule =
-      new ActivityTestRule<>(ManageCategories.class);
+  public ActivityScenarioRule<ManageCategories> scenarioRule =
+      new ActivityScenarioRule<>(ManageCategories.class);
 
   @AfterClass
   public static void tearDown() {
@@ -39,8 +41,9 @@ public class ManageCategoriesTest extends BaseUiTest {
     assertThat(waitForAdapter().getCount()).isGreaterThan(0);
   }
 
+  @NonNull
   @Override
-  protected ActivityTestRule<? extends ProtectedFragmentActivity> getTestRule() {
-    return mActivityRule;
+  protected ActivityScenario<? extends ProtectedFragmentActivity> getTestScenario() {
+    return scenarioRule.getScenario();
   }
 }

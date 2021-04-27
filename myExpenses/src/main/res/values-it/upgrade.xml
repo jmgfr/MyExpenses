@@ -15,6 +15,14 @@
   along with My Expenses.  If not, see <http://www.gnu.org/licenses/>.
  -->
 <resources>
+    <string-array name="whats_new_329">
+        <item>Le parti duplicate possono essere raggruppate.</item>
+        <item>L\'importo rimanente nelle transazioni frazionate può essere copiato negli appunti.</item>
+    </string-array>
+    <string-array name="whats_new_328">
+        <item>Il widget del conto può essere configurato per visualizzare un solo account e per tenere conto delle transazioni future.</item>
+        <item>Mostra l\'importo totale delle transazioni selezionate.</item>
+    </string-array>
     <string-array name="whats_new_327">
         <item>Due transazioni esistenti possono essere collegate come trasferimento.</item>
     </string-array>
@@ -59,42 +67,10 @@
         <item>Lo stato dei gruppi, espanso o collassato, all\'interno dell\'elenco delle transazioni viene memorizzato</item>
     </string-array>
     <string-array name="whats_new_311">
-        <item>L\'elenco delle parti (pagatori e beneficiari) è ricercabile</item>
+        <item>L\'elenco delle parti (paganti e beneficiari) è ricercabile</item>
     </string-array>
     <string-array name="whats_new_310">
         <item>Le transazioni possono essere associate a più tag</item>
-    </string-array>
-    <string-array name="whats_new_308">
-        <item>É ora possibile esportare più account in un unico file</item>
-        <item>I metadati del conto sono ora sincronizzati</item>
-        <item>Migliorati i widget della schermata principale</item>
-    </string-array>
-    <string-array name="whats_new_307">
-        <item>Modifica in blocco</item>
-    </string-array>
-    <string-array name="whats_new_306">
-        <item>Bilancio 2.0</item>
-    </string-array>
-    <string-array name="whats_new_305">
-        <item>Nuova implementazione per la sincronizzazione tramite Dropbox e Drive</item>
-    </string-array>
-    <string-array name="whats_new_304">
-        <item>Download dei tassi di cambio</item>
-    </string-array>
-    <string-array name="whats_new_303">
-        <item>Traduzione Tamil</item>
-        <item>Pulsante \"Sincronizza ora\" nel menù principale</item>
-        <item>La sincronizzazione immediata dopo aver effettuato modifiche in locale può essere disabilitata</item>
-    </string-array>
-    <string-array name="whats_new_302">
-        <item>Icone per le categorie</item>
-    </string-array>
-    <string-array name="whats_new_301">
-        <item>I conti possono essere chiusi e/o nascosti</item>
-    </string-array>
-    <string-array name="whats_new_300">
-        <item>Traduzione ucraina</item>
-        <item>Esportazione CSV: reso personalizzabile il delimitatore</item>
     </string-array>
     <string name="ui_refinement">Miglioramento dell\'interfaccia utente</string>
     <string name="bug_fixes">Correzione di bug</string>

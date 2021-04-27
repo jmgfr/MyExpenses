@@ -58,6 +58,10 @@ class TransactionListDialogFragment : BaseDialogFragment(), LoaderManager.Loader
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[TransactionListViewModel::class.java]
+        with((requireActivity().applicationContext as MyApplication).appComponent) {
+            inject(this@TransactionListDialogFragment)
+            inject(viewModel)
+        }
         with(requireArguments()) {
             viewModel.account(getLong(DatabaseConstants.KEY_ACCOUNTID)).observe(this@TransactionListDialogFragment, {
                 mAccount = it
@@ -66,7 +70,6 @@ class TransactionListDialogFragment : BaseDialogFragment(), LoaderManager.Loader
             isMain = getBoolean(KEY_IS_MAIN)
             catId = getLong(DatabaseConstants.KEY_CATID)
         }
-        (requireActivity().applicationContext as MyApplication).appComponent.inject(this)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {

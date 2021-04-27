@@ -12,12 +12,10 @@ import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.dialog.ContribDialogFragment;
 import org.totschnig.myexpenses.dialog.DonateDialogFragment;
 import org.totschnig.myexpenses.model.ContribFeature;
-import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.ShortcutHelper;
 import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
-import org.totschnig.myexpenses.util.licence.BillingListener;
-import org.totschnig.myexpenses.util.licence.BillingManager;
+import org.totschnig.myexpenses.util.distrib.DistributionHelper;
 import org.totschnig.myexpenses.util.licence.Package;
 import org.totschnig.myexpenses.util.tracking.Tracker;
 
@@ -39,16 +37,12 @@ import static org.totschnig.myexpenses.activity.ConstantsKt.PAYPAL_REQUEST;
  * if user canceled or has usages left. If called from shortcut, this activity will launch the intent
  * for the premium feature directly
  */
-public class ContribInfoDialogActivity extends ProtectedFragmentActivity
-    implements BillingListener {
+public class ContribInfoDialogActivity extends IapActivity {
   public final static String KEY_FEATURE = "feature";
   private final static String KEY_PACKAGE = "package";
   public static final String KEY_TAG = "tag";
   private static final String KEY_SHOULD_REPLACE_EXISTING = "shouldReplaceExisting";
   private boolean doFinishAfterMessageDismiss = true;
-
-  @Nullable
-  private BillingManager billingManager;
 
   public static Intent getIntentFor(Context context, @Nullable ContribFeature feature) {
     Intent intent = new Intent(context, ContribInfoDialogActivity.class);
@@ -84,7 +78,6 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
         }
       }
     }
-    billingManager = licenceHandler.initBillingManager(this, false);
   }
 
   private Package packageFromExtra() {
@@ -108,9 +101,7 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
       case PLAY:
       case AMAZON:
         try {
-          if (billingManager != null) {
-            licenceHandler.launchPurchase(aPackage, getIntent().getBooleanExtra(KEY_SHOULD_REPLACE_EXISTING, false), billingManager);
-          }
+          licenceHandler.launchPurchase(aPackage, getIntent().getBooleanExtra(KEY_SHOULD_REPLACE_EXISTING, false), getBillingManager());
         } catch (IllegalStateException e) {
           CrashHandler.report(e);
           showMessage(e.getMessage() != null ? e.getMessage() : "ERROR");
@@ -150,17 +141,16 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
       intent.putExtra(Intent.EXTRA_EMAIL, new String[]{MyApplication.INVOICES_EMAIL});
       String packageLabel = licenceHandler.getButtonLabel(aPackage);
       intent.putExtra(Intent.EXTRA_SUBJECT,
-          "[" + getString(R.string.app_name) + "] " + getString(R.string.donate_button_invoice));
+          "[" + getString(R.string.app_name) + "] " + getString(R.string.request_for_invoice));
       String userCountry = Utils.getCountryFromTelephonyManager(this);
       String messageBody = String.format(
-          "Please send an invoice for %s to:\nName: (optional)\nCountry: %s (required)",
-          packageLabel, userCountry != null ? userCountry : "");
+          "%s: %s\n%s:\n%s: %s",
+          getString(R.string.licence_key), packageLabel,
+          getString(R.string.full_name),
+          getString(R.string.postal_country),
+          userCountry != null ? userCountry : "");
       intent.putExtra(Intent.EXTRA_TEXT, messageBody);
-      if (!Utils.isIntentAvailable(this, intent)) {
-        complain(getString(R.string.no_app_handling_email_available));
-      } else {
-        startActivityForResult(intent, INVOICE_REQUEST);
-      }
+      startActivity(intent, R.string.no_app_handling_email_available, INVOICE_REQUEST);
     }
   }
 
@@ -234,15 +224,6 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
   }
 
   @Override
-  protected void onDestroy() {
-    super.onDestroy();
-    if (billingManager != null) {
-      billingManager.destroy();
-    }
-    billingManager = null;
-  }
-
-  @Override
   public void onBillingSetupFinished() {
     Package packageFromExtra = packageFromExtra();
     if (packageFromExtra != null) {
@@ -264,5 +245,10 @@ public class ContribInfoDialogActivity extends ProtectedFragmentActivity
     if (requestCode == PAYPAL_REQUEST || requestCode == INVOICE_REQUEST) {
       finish(false);
     }
+  }
+
+  @Override
+  public boolean getShouldQueryIap() {
+    return false;
   }
 }

@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"Obre el tauler de navegació"</string>
     <string name="drawer_close">"Tanca el tauler de navegació"</string>
+    <string name="saving">"S\'està desant…"</string>
+    <string name="default_action">"Acció predeterminada"</string>
+    <string name="full_name">"Nom"</string>
+    <string name="postal_country">"País"</string>
     <string name="toast_text_copied">"Text copiat"</string>
     <string name="copy_text">"Copia al porta-retalls"</string>
     <string name="stop">"Atura"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"Emplenament automàtic"</string>
     <string name="discard">"Descarta"</string>
     <string name="dialog_dismiss">"Ignora"</string>
+    <string name="response_yes">"Sí"</string>
+    <string name="response_no">"No"</string>
 </resources>
 

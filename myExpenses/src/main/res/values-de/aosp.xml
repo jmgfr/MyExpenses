@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"Navigationsleiste öffnen"</string>
     <string name="drawer_close">"Navigationsleiste schließen"</string>
+    <string name="saving">"Speichern…"</string>
+    <string name="default_action">"Standardaktion"</string>
+    <string name="full_name">"Name"</string>
+    <string name="postal_country">"Land"</string>
     <string name="toast_text_copied">"Text kopiert"</string>
     <string name="copy_text">"In Zwischenablage kopieren"</string>
     <string name="stop">"Anhalten"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"AutoFill"</string>
     <string name="discard">"Verwerfen"</string>
     <string name="dialog_dismiss">"Schließen"</string>
+    <string name="response_yes">"Ja"</string>
+    <string name="response_no">"Nein"</string>
 </resources>
 

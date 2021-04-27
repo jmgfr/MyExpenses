@@ -7,6 +7,10 @@
 <resources>
     <string name="drawer_open">"פתח את חלונית ההזזה לניווט"</string>
     <string name="drawer_close">"סגור את חלונית ההזזה לניווט"</string>
+    <string name="saving">"שומר…"</string>
+    <string name="default_action">"פעולת ברירת מחדל"</string>
+    <string name="full_name">"שם"</string>
+    <string name="postal_country">"ארץ"</string>
     <string name="toast_text_copied">"טקסט שהועתק"</string>
     <string name="copy_text">"העתקה ללוח"</string>
     <string name="stop">"עצור"</string>
@@ -15,5 +19,7 @@
     <string name="autofill">"מילוי אוטומטי"</string>
     <string name="discard">"מחק"</string>
     <string name="dialog_dismiss">"סגור"</string>
+    <string name="response_yes">"כן"</string>
+    <string name="response_no">"לא"</string>
 </resources>
 

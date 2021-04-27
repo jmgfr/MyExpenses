@@ -14,7 +14,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.threeten.bp.LocalDate;
-import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.activity.ExpenseEdit;
 import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
@@ -35,9 +34,10 @@ import org.totschnig.myexpenses.ui.AmountInput;
 
 import java.text.DecimalFormat;
 import java.util.Currency;
+import java.util.Objects;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
+import androidx.annotation.NonNull;
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.rule.GrantPermissionRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -67,9 +67,7 @@ import static org.totschnig.myexpenses.testutils.MoreMatchersKt.toolbarTitle;
 
 public class ExpenseEditLoadDataTest extends BaseUiTest {
   private static CurrencyUnit currency, foreignCurrency;
-  @Rule
-  public ActivityTestRule<ExpenseEdit> mActivityRule =
-      new ActivityTestRule<>(ExpenseEdit.class, false, false);
+  private ActivityScenario<ExpenseEdit> activityScenario = null;
   @Rule
   public GrantPermissionRule grantPermissionRule = GrantPermissionRule.grant(
       Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR);
@@ -108,12 +106,13 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
   public void tearDown() throws RemoteException, OperationApplicationException {
     Account.delete(account1.getId());
     Account.delete(account2.getId());
+    activityScenario.close();
     //IdlingRegistry.getInstance().unregister(getIdlingResource());
   }
 
   @Test
   public void shouldPopulateWithTransactionAndPrepareForm() {
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_ROWID, transaction.getId());
     launchAndWait(i);
     checkEffectiveVisible(R.id.DateTimeRow, R.id.AmountRow, R.id.CommentRow, R.id.CategoryRow,
@@ -123,7 +122,7 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
 
   @Test
   public void shouldKeepStatusAndUuidAfterSave() {
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_ROWID, transaction.getId());
     String uuid = transaction.getUuid();
     int status = transaction.getStatus();
@@ -141,7 +140,7 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
     Transfer foreignTransfer = Transfer.getNewInstance(account1.getId(), foreignAccount.getId());
     foreignTransfer.setAmountAndTransferAmount(new Money(currency, 100L), new Money(foreignCurrency, 200L));
     foreignTransfer.save();
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_ROWID, foreignTransfer.getId());
     launchAndWait(i);
     onView(withIdAndParent(R.id.AmountEditText, R.id.Amount)).check(matches(withText("1")));
@@ -156,12 +155,12 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
   }
 
   private void launchAndWait(Intent i) {
-    mActivityRule.launchActivity(i);
+    activityScenario = ActivityScenario.launch(i);
   }
 
   @Test
   public void shouldPopulateWithTransferAndPrepareForm() {
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_ROWID, transfer.getId());
     launchAndWait(i);
     checkEffectiveVisible(R.id.DateTimeRow, R.id.AmountRow, R.id.CommentRow, R.id.AccountRow,
@@ -171,21 +170,25 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
 
   @Test
   public void shouldSwitchAccountViewsForReceivingTransferPart() {
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_ROWID, transfer.getId());
     launchAndWait(i);
-    assertThat(((AmountInput) mActivityRule.getActivity().findViewById(R.id.Amount)).getType()).isTrue();
-    assertThat(((ViewGroup) mActivityRule.getActivity().findViewById(R.id.AccountRow)).getChildAt(1).getId()).isEqualTo(R.id.TransferAccount);
+    activityScenario.onActivity(activity -> {
+      assertThat(((AmountInput) activity.findViewById(R.id.Amount)).getType()).isTrue();
+      assertThat(((ViewGroup) activity.findViewById(R.id.AccountRow)).getChildAt(1).getId()).isEqualTo(R.id.TransferAccount);
+    });
     onView(withIdAndParent(R.id.AmountEditText, R.id.Amount)).check(matches(withText("6")));
   }
 
   @Test
   public void shouldKeepAccountViewsForGivingTransferPart() {
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_ROWID, transfer.getTransferPeer());
     launchAndWait(i);
-    assertThat(((AmountInput) mActivityRule.getActivity().findViewById(R.id.Amount)).getType()).isFalse();
-    assertThat(((ViewGroup) mActivityRule.getActivity().findViewById(R.id.AccountRow)).getChildAt(1).getId()).isEqualTo(R.id.Account);
+    activityScenario.onActivity(activity -> {
+      assertThat(((AmountInput) activity.findViewById(R.id.Amount)).getType()).isFalse();
+      assertThat(((ViewGroup) activity.findViewById(R.id.AccountRow)).getChildAt(1).getId()).isEqualTo(R.id.Account);
+    });
     onView(withIdAndParent(R.id.AmountEditText, R.id.Amount)).check(matches(withText("6")));
   }
 
@@ -194,7 +197,7 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
     Transaction splitTransaction = SplitTransaction.getNewInstance(account1.getId());
     splitTransaction.setStatus(DatabaseConstants.STATUS_NONE);
     splitTransaction.save(true);
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_ROWID, splitTransaction.getId());
     launchAndWait(i);
     checkEffectiveVisible(R.id.DateTimeRow, R.id.AmountRow, R.id.CommentRow, R.id.SplitContainer,
@@ -203,10 +206,10 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
 
   @Test
   public void shouldPopulateWithSplitTemplateAndLoadParts() {
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_TEMPLATEID, buildSplitTemplate());
     launchAndWait(i);
-    assertThat(mActivityRule.getActivity().isTemplate).isTrue();
+    activityScenario.onActivity(activity -> assertThat(activity.isTemplate).isTrue());
     toolbarTitle().check(matches(withSubstring(getString(R.string.menu_edit_template))));
     checkEffectiveVisible(R.id.SplitContainer);
     onView(withId(R.id.list)).check(matches(withListSize(1)));
@@ -214,11 +217,11 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
 
   @Test
   public void shouldPopulateFromSplitTemplateAndLoadParts() {
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_TEMPLATEID, buildSplitTemplate());
     i.putExtra(KEY_INSTANCEID, -1L);
     launchAndWait(i);
-    assertThat(mActivityRule.getActivity().isTemplate).isFalse();
+    activityScenario.onActivity(activity -> assertThat(activity.isTemplate).isFalse());
     onView(withId(R.id.OperationType)).check(matches(withSpinnerText(R.string.menu_create_split)));
     checkEffectiveVisible(R.id.SplitContainer);
     onView(withId(R.id.list)).check(matches(withListSize(1)));
@@ -237,15 +240,15 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
     Template plan = Template.getTypedNewInstance(TYPE_TRANSACTION, account1.getId(), false, null);
     plan.setTitle("Daily plan");
     plan.setAmount(new Money(currency, 700L));
-    plan.setPlan(new Plan(LocalDate.now(), Plan.Recurrence.DAILY, "Daily", plan.compileDescription(MyApplication.getInstance())));
+    plan.setPlan(new Plan(LocalDate.now(), Plan.Recurrence.DAILY, "Daily", plan.compileDescription(getApp())));
     plan.save();
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_TEMPLATEID, plan.getId());
     launchAndWait(i);
     checkEffectiveVisible(R.id.TitleRow, R.id.AmountRow, R.id.CommentRow, R.id.CategoryRow,
         R.id.PayeeRow, R.id.AccountRow, R.id.PB);
     checkEffectiveGone(R.id.Recurrence);
-    assertThat(mActivityRule.getActivity().isTemplate).isTrue();
+    activityScenario.onActivity(activity -> assertThat(activity.isTemplate).isTrue());
     onView(withIdAndParent(R.id.AmountEditText, R.id.Amount)).check(matches(withText("7")));
     onView(withId(R.id.Title)).check(matches(withText("Daily plan")));
   }
@@ -256,20 +259,20 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
     template.setTitle("Nothing but a plan");
     template.setAmount(new Money(currency, 800L));
     template.save();
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_TEMPLATEID, template.getId());
     i.putExtra(KEY_INSTANCEID, -1L);
     launchAndWait(i);
     checkEffectiveVisible(R.id.DateTimeRow, R.id.AmountRow, R.id.CommentRow, R.id.CategoryRow,
         R.id.PayeeRow, R.id.AccountRow);
     checkEffectiveGone(R.id.PB, R.id.TitleRow);
-    assertThat(mActivityRule.getActivity().isTemplate).isFalse();
+    activityScenario.onActivity(activity -> assertThat(activity.isTemplate).isFalse());
     onView(withIdAndParent(R.id.AmountEditText, R.id.Amount)).check(matches(withText("8")));
   }
 
   @Test
   public void shouldPopulateFromIntent() {
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.setAction(Intent.ACTION_INSERT);
     i.putExtra(ACCOUNT_LABEL, account1.getLabel());
     i.putExtra(AMOUNT_MICROS, 1230000L);
@@ -294,16 +297,17 @@ public class ExpenseEditLoadDataTest extends BaseUiTest {
     sealed.save();
     ContentValues values = new ContentValues(1);
     values.put(KEY_SEALED, true);
-    MyApplication.getInstance().getContentResolver().update(ContentUris.withAppendedId(TransactionProvider.ACCOUNTS_URI, sealedAccount.getId()), values, null, null);
-    Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), ExpenseEdit.class);
+    getApp().getContentResolver().update(ContentUris.withAppendedId(TransactionProvider.ACCOUNTS_URI, sealedAccount.getId()), values, null, null);
+    Intent i = new Intent(getTargetContext(), ExpenseEdit.class);
     i.putExtra(KEY_ROWID, sealed.getId());
-    mActivityRule.launchActivity(i);
-    assertThat(mActivityRule.getActivity().isFinishing()).isTrue();
+    activityScenario = ActivityScenario.launch(i);
+    assertCanceled();
     Account.delete(sealedAccount.getId());
   }
 
+  @NonNull
   @Override
-  protected ActivityTestRule<? extends ProtectedFragmentActivity> getTestRule() {
-    return mActivityRule;
+  protected ActivityScenario<? extends ProtectedFragmentActivity> getTestScenario() {
+    return Objects.requireNonNull(activityScenario);
   }
 }

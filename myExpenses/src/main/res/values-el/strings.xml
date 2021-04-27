@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">Νέος κωδικός πρόσβασης</string>
     <string name="dialog_password_new_password_confirmation">Νέος κωδικός πρόσβασης (επιβεβαίωση)</string>
     <string name="dialog_remind_later">Αργότερα</string>
-    <string name="dialog_remind_no">Όχι, ευχαριστώ</string>
     <string name="dialog_remind_rate_how_many_stars">Πόσα αστέρια θα δίνατε στο \"{app_name}\".</string>
     <string name="dialog_remind_rate_1">Αφιερώστε λίγο χρόνο για την αξιολόγηση και κριτική του \"{app_name}\".</string>
     <string name="dialog_remind_rate_2">Τα σχόλιά σας θα μας επιτρέψουν να το βελτιώνω συνεχώς και να το εμπλουτίζω.</string>
@@ -354,7 +353,6 @@
     <string name="progress_dialog_deleting">Διαγραφή αντικειμένων</string>
     <string name="progress_dialog_loading">Φόρτωση αντικειμένου από τη βάση δεδομένων</string>
     <string name="progress_dialog_printing">Δημιουργία PDF</string>
-    <string name="progress_dialog_saving">Αποθήκευση αντικειμένου στη βάση δεδομένων</string>
     <string name="qif_parse_result">Εγγράφηκαν: %1$s λογαριασμοί· %2$s κατηγορίες και %3$s μέρη</string>
     <string name="qif_parse_failure_found_multiple_accounts">Πολλαπλοί λογαριασμοί βρέθηκαν στο αρχείο QIF.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Δεν είναι δυνατή η συγχώνευσή τους σε υπάρχοντα λογαριασμό.</string>
@@ -480,13 +478,14 @@
     <string name="comparison_operator_equal">ίσο με</string>
     <string name="comparison_operator_greater_than">μεγαλύτερο από</string>
     <string name="comparison_operator_lesser_than">μικρότερο από</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">μεταξύ</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions before a specified date.  -->
     <string name="comparison_operator_date_before">πριν από</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions after a specified date. -->
     <string name="comparison_operator_date_after">μετά από</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Η αγορά απέτυχε ή ακυρώθηκε.</string>
     <string name="hint_auto_fill">Θα πρέπει τα δεδομένα να συμπληρώνονται αυτόματα από την τελευταία συναλλαγή για τον ίδιο δικαιούχο/πληρωτή; Μπορείτε πάντα να αλλάξετε αυτήν τη συμπεριφορά από τις ρυθμίσεις.</string>
-    <string name="yes">Ναι</string>
-    <string name="no">Όχι</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%1$d λογαριασμοί με νόμισμα %2$s έχουν ενημερωθεί.</string>
     <string name="learn_more">Μάθετε περισσότερα</string>
     <string name="import_source_file">Αρχείο</string>

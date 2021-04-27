@@ -15,6 +15,14 @@
   along with My Expenses.  If not, see <http://www.gnu.org/licenses/>.
  -->
 <resources>
+    <string-array name="whats_new_329">
+        <item>Les tiers en double peuvent être fusionnés.</item>
+        <item>Le montant restant des opérations ventilées peut être copié dans le presse-papiers.</item>
+    </string-array>
+    <string-array name="whats_new_328">
+        <item>Le widget \"Mes comptes\" peut être configuré pour afficher un seul compte et pour prendre en compte les futures transactions.</item>
+        <item>Afficher le montant total des transactions sélectionnées.</item>
+    </string-array>
     <string-array name="whats_new_327">
         <item>Deux transactions existantes peuvent être liées en tant que transfert.</item>
     </string-array>
@@ -63,38 +71,6 @@
     </string-array>
     <string-array name="whats_new_310">
         <item>Les opérations peuvent être mises en correspondance avec plusieurs étiquettes</item>
-    </string-array>
-    <string-array name="whats_new_308">
-        <item>Plusieurs comptes peuvent désormais être exportés dans un seul fichier</item>
-        <item>Les métadonnées du compte sont maintenant synchronisées</item>
-        <item>Amélioration des widgets de l\'écran d\'accueil</item>
-    </string-array>
-    <string-array name="whats_new_307">
-        <item>Édition en masse</item>
-    </string-array>
-    <string-array name="whats_new_306">
-        <item>Budgétisation 2.0</item>
-    </string-array>
-    <string-array name="whats_new_305">
-        <item>Nouvelle implémentation pour la synchronisation via Dropbox et Drive</item>
-    </string-array>
-    <string-array name="whats_new_304">
-        <item>Télécharger les taux de change</item>
-    </string-array>
-    <string-array name="whats_new_303">
-        <item>Traduction en tamoul</item>
-        <item>Bouton Synchroniser maintenant dans le menu principal</item>
-        <item>La synchronisation immédiate suite aux modifications locales peut être désactivée</item>
-    </string-array>
-    <string-array name="whats_new_302">
-        <item>Icônes pour les catégories</item>
-    </string-array>
-    <string-array name="whats_new_301">
-        <item>Les comptes peuvent être fermés et / ou cachés</item>
-    </string-array>
-    <string-array name="whats_new_300">
-        <item>Traduction ukrainienne</item>
-        <item>Exportation CSV: séparateur de champ configurable</item>
     </string-array>
     <string name="ui_refinement">Raffinement de l\'interface utilisateur</string>
     <string name="bug_fixes">Corrections des erreurs</string>

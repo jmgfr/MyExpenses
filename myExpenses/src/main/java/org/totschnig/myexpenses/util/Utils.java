@@ -49,6 +49,7 @@ import org.totschnig.myexpenses.model.AggregateAccount;
 import org.totschnig.myexpenses.model.Category;
 import org.totschnig.myexpenses.model.ContribFeature;
 import org.totschnig.myexpenses.model.CurrencyContext;
+import org.totschnig.myexpenses.model.CurrencyEnum;
 import org.totschnig.myexpenses.model.CurrencyUnit;
 import org.totschnig.myexpenses.model.Grouping;
 import org.totschnig.myexpenses.model.Payee;
@@ -58,6 +59,7 @@ import org.totschnig.myexpenses.provider.TransactionDatabase;
 import org.totschnig.myexpenses.provider.filter.WhereFilter;
 import org.totschnig.myexpenses.task.GrisbiImportTask;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
+import org.totschnig.myexpenses.util.distrib.DistributionHelper;
 import org.totschnig.myexpenses.util.licence.LicenceStatus;
 import org.xml.sax.SAXException;
 import org.xmlpull.v1.XmlPullParser;
@@ -773,10 +775,10 @@ public class Utils {
     return result;
   }
 
-  public static boolean isFrameworkCurrency(String currencyCode) {
+  public static boolean isKnownCurrency(String currencyCode) {
     try {
-      final java.util.Currency instance = java.util.Currency.getInstance(currencyCode);
-      return Build.VERSION.SDK_INT < Build.VERSION_CODES.N || instance.getNumericCode() != 0;
+      CurrencyEnum.valueOf(currencyCode);
+      return true;
     } catch (IllegalArgumentException e) {
       return false;
     }

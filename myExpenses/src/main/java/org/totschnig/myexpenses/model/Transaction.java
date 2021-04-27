@@ -30,6 +30,8 @@ import org.threeten.bp.LocalDate;
 import org.threeten.bp.ZonedDateTime;
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
+import org.totschnig.myexpenses.exception.ExternalStorageNotAvailableException;
+import org.totschnig.myexpenses.exception.UnknownPictureSaveException;
 import org.totschnig.myexpenses.provider.DatabaseConstants;
 import org.totschnig.myexpenses.provider.DbUtils;
 import org.totschnig.myexpenses.provider.TransactionProvider;
@@ -135,6 +137,7 @@ import static org.totschnig.myexpenses.provider.DatabaseConstants.getWeekStart;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.getYearOfMonthStart;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.getYearOfWeekStart;
 import static org.totschnig.myexpenses.provider.DbUtils.getLongOrNull;
+import static org.totschnig.myexpenses.provider.TransactionProvider.TRANSACTIONS_TAGS_URI;
 import static org.totschnig.myexpenses.provider.TransactionProvider.UNCOMMITTED_URI;
 
 /**
@@ -142,7 +145,7 @@ import static org.totschnig.myexpenses.provider.TransactionProvider.UNCOMMITTED_
  *
  * @author Michael Totschnig
  */
-public class Transaction extends AbstractTransaction {
+public class Transaction extends Model implements ITransaction {
   private String comment = "";
   private String payee = "";
   private String referenceNumber = "";
@@ -546,11 +549,13 @@ public class Transaction extends AbstractTransaction {
     return t;
   }
 
+  @Nullable
   public static kotlin.Pair<Transaction, List<Tag>> getInstanceFromDbWithTags(long id) {
     Transaction t = getInstanceFromDb(id);
     return t == null ? null : new kotlin.Pair<>(t, t.loadTags());
   }
 
+  @Nullable
   public static kotlin.Pair<Transaction, List<Tag>> getInstanceFromTemplateWithTags(long id) {
     Template te = Template.getInstanceFromDb(id);
     return te == null ? null : getInstanceFromTemplateWithTags(te);
@@ -628,23 +633,18 @@ public class Transaction extends AbstractTransaction {
     return new kotlin.Pair<>(getInstanceFromTemplate(te), te.loadTags());
   }
 
-  protected List<Tag> loadTags() {
-    List<Tag> tags;
+  @Nullable
+  public List<Tag> loadTags() {
     if (getParentId() == null) {
-      tags = new ArrayList<>();
-      Cursor c = cr().query(linkedTagsUri(), null, linkColumn() + " = ?", new String[]{String.valueOf(getId())}, null);
-      if (c != null) {
-        c.moveToFirst();
-        while (!c.isAfterLast()) {
-          tags.add(new Tag(c.getLong(c.getColumnIndex(DatabaseConstants.KEY_ROWID)), c.getString(c.getColumnIndex(DatabaseConstants.KEY_LABEL)), true, 0));
-          c.moveToNext();
-        }
-        c.close();
-      }
+      return ModelWithLinkedTagsKt.loadTags(linkedTagsUri(), linkColumn(), getId());
     } else {
-      tags = null;
+      return null;
     }
-    return tags;
+  }
+
+  @Override
+  public boolean saveTags(@Nullable List<Tag> tags) {
+    return ModelWithLinkedTagsKt.saveTags(linkedTagsUri(), linkColumn(), tags, getId());
   }
 
   /**
@@ -1047,10 +1047,6 @@ public class Transaction extends AbstractTransaction {
     return save();
   }
 
-  /**
-   * @param whichTransactionId
-   * @param whereAccountId
-   */
   public static void move(long whichTransactionId, long whereAccountId) {
     ContentValues args = new ContentValues();
     args.put(KEY_ACCOUNTID, whereAccountId);
@@ -1271,17 +1267,14 @@ public class Transaction extends AbstractTransaction {
     this.pictureUri = pictureUriIn;
   }
 
-  public static class ExternalStorageNotAvailableException extends IllegalStateException {
+  @NonNull
+  public Uri linkedTagsUri() {
+    return TRANSACTIONS_TAGS_URI;
   }
 
-  public static class UnknownPictureSaveException extends IllegalStateException {
-    public Uri pictureUri, homeUri;
-
-    public UnknownPictureSaveException(Uri pictureUri, Uri homeUri, IOException e) {
-      super(e);
-      this.pictureUri = pictureUri;
-      this.homeUri = homeUri;
-    }
+  @NonNull
+  public String linkColumn() {
+    return KEY_TRANSACTIONID;
   }
 
   public static long findByAccountAndUuid(long accountId, String uuid) {

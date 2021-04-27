@@ -14,19 +14,20 @@ import org.totschnig.myexpenses.activity.MyExpenses;
 import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
 import org.totschnig.myexpenses.preference.PrefKey;
 import org.totschnig.myexpenses.testutils.BaseUiTest;
-import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.Utils;
+import org.totschnig.myexpenses.util.distrib.DistributionHelper;
 
 import java.util.Locale;
+import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.Espresso;
 import androidx.test.espresso.NoMatchingViewException;
 import androidx.test.espresso.ViewAction;
 import androidx.test.espresso.contrib.DrawerActions;
 import androidx.test.espresso.contrib.RecyclerViewActions;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
 import androidx.test.rule.GrantPermissionRule;
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
@@ -48,8 +49,7 @@ import static org.totschnig.myexpenses.testutils.Matchers.first;
 public class TestMain extends BaseUiTest {
   @ClassRule
   public static final LocaleTestRule localeTestRule = new LocaleTestRule();
-  @Rule
-  public final ActivityTestRule<MyExpenses> activityRule = new ActivityTestRule<>(MyExpenses.class, false, false);
+  private ActivityScenario<MyExpenses> activityScenario = null;
   @Rule
   public final GrantPermissionRule grantPermissionRule = GrantPermissionRule.grant(
       Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR);
@@ -118,7 +118,7 @@ public class TestMain extends BaseUiTest {
         takeScreenshot("distribution");
         Espresso.pressBack();
 
-        onView(first(withText(containsString(InstrumentationRegistry.getInstrumentation().getContext().getString(org.totschnig.myexpenses.debug.test.R.string.testData_transaction1SubCat))))).perform(click());
+        onView(first(withText(containsString(getTestContext().getString(org.totschnig.myexpenses.debug.test.R.string.testData_transaction1SubCat))))).perform(click());
         onView(withId(android.R.id.button1)).perform(click());
         Espresso.pressBack();//close keyboard
         onView(withId(R.id.PictureContainer)).perform(click());
@@ -132,27 +132,27 @@ public class TestMain extends BaseUiTest {
 
   }
 
-  private void loadFixture(boolean withPicture) {
+  private void loadFixture(@SuppressWarnings("SameParameterValue") boolean withPicture) {
     //LocaleTestRule only configure for app context, fixture loads resources from instrumentation context
     final Locale testLocale = LocaleUtil.getTestLocale();
     if (testLocale != null) {//if run from Android Studio and not via Screengrab
       configureLocale(testLocale);
     }
-    SharedPreferences pref = app.getSettings();
+    SharedPreferences pref = getApp().getSettings();
     if (pref == null)
       Assert.fail("Could not find prefs");
     pref.edit().putString(PrefKey.HOME_CURRENCY.getKey(), Utils.getSaveDefault().getCurrencyCode()).apply();
-    app.getLicenceHandler().setLockState(false);
+    getApp().getLicenceHandler().setLockState(false);
 
-    app.fixture.setup(withPicture);
+    getApp().fixture.setup(withPicture);
     int current_version = DistributionHelper.getVersionNumber();
     pref.edit()
-        .putLong(PrefKey.CURRENT_ACCOUNT.getKey(), app.fixture.getAccount1().getId())
+        .putLong(PrefKey.CURRENT_ACCOUNT.getKey(), getApp().fixture.getAccount1().getId())
         .putInt(PrefKey.CURRENT_VERSION.getKey(), current_version)
         .putInt(PrefKey.FIRST_INSTALL_VERSION.getKey(), current_version)
         .apply();
-    final Intent startIntent = new Intent(app, MyExpenses.class);
-    activityRule.launchActivity(startIntent);
+    final Intent startIntent = new Intent(getApp(), MyExpenses.class);
+    activityScenario = ActivityScenario.launch(startIntent);
   }
 
   private void sleep() {
@@ -168,8 +168,9 @@ public class TestMain extends BaseUiTest {
     Screengrab.screenshot(fileName);
   }
 
+  @NonNull
   @Override
-  protected ActivityTestRule<? extends ProtectedFragmentActivity> getTestRule() {
-    return activityRule;
+  protected ActivityScenario<? extends ProtectedFragmentActivity> getTestScenario() {
+    return Objects.requireNonNull(activityScenario);
   }
 }

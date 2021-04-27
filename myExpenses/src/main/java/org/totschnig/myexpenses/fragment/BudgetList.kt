@@ -65,6 +65,7 @@ class BudgetList : Fragment(), SimpleDialog.OnDialogResultListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val adapter = requireActivity().let {
             viewModel = ViewModelProvider(it)[BudgetViewModel::class.java]
+            (requireActivity().application as MyApplication).appComponent.inject(viewModel)
             BudgetsAdapter(it)
         }
         with(binding.recyclerView) {
@@ -129,18 +130,18 @@ class BudgetList : Fragment(), SimpleDialog.OnDialogResultListener {
                 with(holder.binding) {
                     Title.text = budget.titleComplete(context)
                     val spent = position2Spent?.get(position) ?: run {
-                        viewModel.loadBudgetSpend(position, budget, prefHandler)
+                        viewModel.loadBudgetSpend(position, budget)
                         0L
                     }
                     budgetSummary.bind(budget, -spent, currencyFormatter)
                     budgetSummary.setOnBudgetClickListener {
-                        val bundle = Bundle(2)
-                        bundle.putSerializable(KEY_CURRENCY, budget.currency)
-                        bundle.putLong(KEY_ROWID, budget.id)
                         SimpleFormDialog.build()
                                 .title(getString(R.string.dialog_title_edit_budget))
                                 .neg()
-                                .extra(bundle)
+                                .extra(Bundle(2).apply {
+                                    putSerializable(KEY_CURRENCY, budget.currency)
+                                    putLong(KEY_ROWID, budget.id)
+                                })
                                 .fields(buildAmountField(budget.amount, context))
                                 .show(this@BudgetList, EDIT_BUDGET_DIALOG)
                     }

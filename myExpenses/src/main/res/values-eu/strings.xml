@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">Pasahitz berria</string>
     <string name="dialog_password_new_password_confirmation">Pasahitz berria (berretsi)</string>
     <string name="dialog_remind_later">Geroago</string>
-    <string name="dialog_remind_no">Ez, eskerrik asko</string>
     <string name="dialog_remind_rate_how_many_stars">Zenbat izar emango zenizkioke {app_name} aplikazioari?</string>
     <string name="dialog_remind_rate_1">Mesedez hartu unetxo bat {app_name} baloratzeko eta iruzkin bat egiteko.</string>
     <string name="dialog_remind_rate_2">Zure iruzkinek zuzenketak eta hobekuntzak etengabe gehitzea ahalbidetzen digute.</string>
@@ -354,7 +353,6 @@
     <string name="progress_dialog_deleting">Objektuak ezabatzen</string>
     <string name="progress_dialog_loading">Objektua datu-basetik kargatzen</string>
     <string name="progress_dialog_printing">PDFa sortzen</string>
-    <string name="progress_dialog_saving">Objektua datu-basera gordetzen</string>
     <string name="qif_parse_result">Aztertuta: %1$s kontu; %2$s kategoria eta %3$s onuradun/ordaintzaile</string>
     <string name="qif_parse_failure_found_multiple_accounts">Hainbat kontu aurkitu dira QIF fitxategian.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Ezin dira uneko kontuan bateratu</string>
@@ -480,12 +478,13 @@
     <string name="comparison_operator_equal">=</string>
     <string name="comparison_operator_greater_than">&gt;</string>
     <string name="comparison_operator_lesser_than">&lt;</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">&gt; x &lt;</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions before a specified date.  -->
     <string name="comparison_operator_date_before">lehenago</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions after a specified date. -->
     <string name="comparison_operator_date_after">beranduago</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Erosketak huts egin du eta bertan behera utzi da.</string>
-    <string name="yes">Bai</string>
-    <string name="no">Ez</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%2$s monetako %1$d kontu eguneratu dira.</string>
     <string name="learn_more">Ikasi gehiago</string>
     <string name="import_source_file">Fitxategia</string>

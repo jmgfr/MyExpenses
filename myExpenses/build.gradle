@@ -126,6 +126,13 @@ android {
                 java.srcDirs += 'src/conscriptDebug/java'
             }
         }
+        test {
+            java.srcDirs += "src/testShared/java"
+        }
+
+        androidTest {
+            java.srcDirs += "src/testShared/java"
+        }
     }
 
     lintOptions {
@@ -203,10 +210,9 @@ dependencies {
     implementation 'com.itextpdf:itextpdf:5.5.13.1'
     implementation "ch.acra:acra-mail:$acraVersion"
     implementation "ch.acra:acra-dialog:$acraVersion"
-    //at the moment, we need to stick with the last version that supports java 6
-    //noinspection GradleDependency
     implementation "org.apache.commons:commons-lang3:$commonsLang"
     implementation 'org.apache.commons:commons-csv:1.8'
+    implementation "org.apache.commons:commons-text:$commonsText"
     implementation "com.squareup.picasso:picasso:$picassoVersion"
     implementation 'com.github.mtotschnig:MPAndroidChart:6fcf34d9d4'
     implementation 'com.github.mtotschnig:Caldroid:d217ebc306'
@@ -286,9 +292,13 @@ dependencies {
     testImplementation "org.assertj:assertj-core:$assertjVersion"
     //noinspection GradleDependency
     androidTestImplementation "org.assertj:assertj-core:$assertjVersionAndroid"
+    androidTestImplementation "com.google.truth:truth:1.1.2"
     implementation "androidx.core:core-ktx:$ktxVersion"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
+    testImplementation "androidx.test:rules:$androidSupportTestVersion"
+    testImplementation "androidx.test.ext:junit:$androidxTextExtJunit"
 
     // Room components
     implementation "androidx.room:room-runtime:$roomVersion"
@@ -313,7 +323,7 @@ dependencies {
     internImplementation "com.google.android.gms:play-services-base:17.6.0"
 
     //noinspection GradleDependency
-    implementation 'com.github.mtotschnig:Android-Image-Cropper:b3ca5b9877'
+    implementation 'com.github.mtotschnig:Android-Image-Cropper:cbea979d2a'
 }
 
 static def getDate() {

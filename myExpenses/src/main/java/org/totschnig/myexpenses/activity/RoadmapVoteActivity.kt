@@ -16,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar
 import eltos.simpledialogfragment.SimpleDialog.OnDialogResultListener
 import eltos.simpledialogfragment.form.Input
 import eltos.simpledialogfragment.form.SimpleFormDialog
+import org.totschnig.myexpenses.MyApplication
 import org.totschnig.myexpenses.R
 import org.totschnig.myexpenses.databinding.RoadmapBinding
 import org.totschnig.myexpenses.model.ContribFeature
@@ -56,6 +57,7 @@ class RoadmapVoteActivity : ProtectedFragmentActivity(), OnDialogResultListener 
         isPro = licenceHandler.hasAccessTo(ContribFeature.ROADMAP_VOTING)
         showIsLoading()
         roadmapViewModel = ViewModelProvider(this).get(RoadmapViewModel::class.java)
+        (applicationContext as MyApplication).appComponent.inject(roadmapViewModel)
         voteWeights = roadmapViewModel.restoreWeights()
         roadmapViewModel.getData().observe(this, { data: List<Issue>? ->
             dataSet = data?.also {
@@ -106,7 +108,7 @@ class RoadmapVoteActivity : ProtectedFragmentActivity(), OnDialogResultListener 
 
     private fun validateWeights() {
         dataSet?.takeIf { voteWeights.isNotEmpty() }?.let { dataSet ->
-            voteWeights =  voteWeights.filter { entry -> dataSet.any { it.number == entry.key } }.toMutableMap()
+            voteWeights = voteWeights.filter { entry -> dataSet.any { it.number == entry.key } }.toMutableMap()
         }
     }
 
@@ -213,9 +215,6 @@ class RoadmapVoteActivity : ProtectedFragmentActivity(), OnDialogResultListener 
             startActionView("https://github.com/mtotschnig/MyExpenses/issues/" + info.id)
             return true
         } else if (itemId == R.id.ROADMAP_ISSUE_VOTE_COMMAND) {
-            val extra = Bundle(1)
-            extra.putInt(DatabaseConstants.KEY_ROWID, info.id.toInt())
-            extra.putInt(KEY_POSITION, info.position)
             val value = voteWeights[info.id.toInt()]
             var available = totalAvailableWeight - currentTotalWeight
             if (value != null) {
@@ -225,7 +224,10 @@ class RoadmapVoteActivity : ProtectedFragmentActivity(), OnDialogResultListener 
                 val dialog = SimpleSeekBarDialog.build()
                         .title(dataSetFiltered!![info.position].title)
                         .max(available)
-                        .extra(extra)
+                        .extra(Bundle(2).apply {
+                            putInt(DatabaseConstants.KEY_ROWID, info.id.toInt())
+                            putInt(KEY_POSITION, info.position)
+                        })
                 if (value != null) {
                     dialog.value(value)
                 }
@@ -256,11 +258,16 @@ class RoadmapVoteActivity : ProtectedFragmentActivity(), OnDialogResultListener 
                 DIALOG_TAG_SUBMIT_VOTE -> {
                     showSnackbar("Submitting vote ...", Snackbar.LENGTH_INDEFINITE)
                     isLoading = true
-                    roadmapViewModel.submitVote(Vote(lastVote?.key ?: licenceHandler.buildRoadmapVoteKey(),
+                    val vote = Vote(
+                            lastVote?.key ?: licenceHandler.buildRoadmapVoteKey(),
                             HashMap(voteWeights),
                             isPro,
-                            email ?: extras.getString(KEY_EMAIL)!!, versionFromPref)).observe(this,
-                            { result -> publishResult(getString(result)) })
+                            email ?: extras.getString(KEY_EMAIL)!!, versionFromPref)
+                    roadmapViewModel.submitVote(vote
+                    ).observe(this, { result ->
+                        lastVote = vote
+                        publishResult(getString(result))
+                    })
                     return true
                 }
             }

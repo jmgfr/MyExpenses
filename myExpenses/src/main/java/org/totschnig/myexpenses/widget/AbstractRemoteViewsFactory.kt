@@ -1,6 +1,5 @@
 package org.totschnig.myexpenses.widget
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
@@ -18,11 +17,7 @@ abstract class AbstractRemoteViewsFactory(
         intent: Intent
 ) : RemoteViewsService.RemoteViewsFactory {
     protected var cursor: Cursor? = null
-    protected val width: Int
-
-    init {
-        width = intent.getIntExtra(KEY_WIDTH, 0).takeIf { it > 0 } ?: Int.MAX_VALUE
-    }
+    protected val width: Int = intent.getIntExtra(KEY_WIDTH, 0).takeIf { it > 0 } ?: Int.MAX_VALUE
 
     override fun onCreate() {}
 
@@ -60,21 +55,20 @@ abstract class AbstractRemoteViewsFactory(
     abstract fun buildCursor(): Cursor?
 
     override fun getViewAt(position: Int) = RemoteViews(context.packageName, R.layout.widget_row).apply {
-        cursor?.let {
-            it.moveToPosition(position)
+        cursor?.takeIf { it.moveToPosition(position) }?.let {
             populate(it)
         }
     }
 
-    protected fun RemoteViews.setBackgroundColorSave(res: Int, color: Int) {
-        setInt(res, "setBackgroundColor", color)
-    }
-
-    //http://stackoverflow.com/a/35633411/1199911
-    protected fun RemoteViews.setImageViewVectorDrawable(viewId: Int, resId: Int) {
-        setImageViewBitmap(viewId, UiUtils.getTintedBitmapForTheme(context, resId,
-                R.style.DarkBackground))
-    }
-
     abstract fun RemoteViews.populate(cursor: Cursor)
+}
+
+//http://stackoverflow.com/a/35633411/1199911
+fun RemoteViews.setImageViewVectorDrawable(context: Context, viewId: Int, resId: Int) {
+    setImageViewBitmap(viewId, UiUtils.getTintedBitmapForTheme(context, resId,
+            R.style.DarkBackground))
+}
+
+fun RemoteViews.setBackgroundColorSave(res: Int, color: Int) {
+    setInt(res, "setBackgroundColor", color)
 }

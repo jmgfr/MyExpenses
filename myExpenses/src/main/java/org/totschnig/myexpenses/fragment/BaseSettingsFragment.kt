@@ -6,15 +6,17 @@ import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
 import android.text.TextUtils.isEmpty
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.preference.ListPreference
 import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import com.google.android.material.snackbar.Snackbar
 import org.totschnig.myexpenses.MyApplication
 import org.totschnig.myexpenses.R
 import org.totschnig.myexpenses.activity.MyPreferenceActivity
+import org.totschnig.myexpenses.exception.ExternalStorageNotAvailableException
 import org.totschnig.myexpenses.feature.Feature
 import org.totschnig.myexpenses.feature.FeatureManager
 import org.totschnig.myexpenses.model.ContribFeature
@@ -25,10 +27,11 @@ import org.totschnig.myexpenses.provider.TransactionProvider
 import org.totschnig.myexpenses.service.DailyScheduler
 import org.totschnig.myexpenses.sync.GenericAccountService
 import org.totschnig.myexpenses.util.TextUtils
-import org.totschnig.myexpenses.util.Utils
 import org.totschnig.myexpenses.util.licence.LicenceHandler
 import org.totschnig.myexpenses.util.locale.UserLocaleProvider
 import org.totschnig.myexpenses.util.setNightMode
+import org.totschnig.myexpenses.viewmodel.CurrencyViewModel
+import org.totschnig.myexpenses.viewmodel.SettingsViewModel
 import org.totschnig.myexpenses.viewmodel.WebUiViewModel
 import org.totschnig.myexpenses.widget.AccountWidget
 import org.totschnig.myexpenses.widget.TemplateWidget
@@ -55,17 +58,57 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat(), OnValidationEr
     @Inject
     lateinit var licenceHandler: LicenceHandler
 
-    private lateinit var webUiViewModel: WebUiViewModel
+    private val webUiViewModel: WebUiViewModel by viewModels()
+    val currencyViewModel: CurrencyViewModel by viewModels()
+    val viewModel: SettingsViewModel by viewModels()
+
+    //TODO: these settings need to be authoritatively stored in Database, instead of just mirrored
+    val storeInDatabaseChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
+        (activity as? MyPreferenceActivity)?.let { activity ->
+            activity.showSnackbar(R.string.saving, Snackbar.LENGTH_INDEFINITE)
+            viewModel.storeSetting(preference.getKey(), newValue.toString()).observe(this@BaseSettingsFragment, { result ->
+                activity.dismissSnackbar()
+                if ((!result)) activity.showSnackbar("ERROR")
+            })
+            true
+        } ?: false
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        (activity().application as MyApplication).appComponent.inject(this)
-        webUiViewModel = ViewModelProvider(this)[WebUiViewModel::class.java]
-        webUiViewModel.getServiceState().observe(this) { serverAddress ->
+        with((requireActivity().application as MyApplication).appComponent) {
+            inject(currencyViewModel)
+            inject(viewModel)
+            super.onCreate(savedInstanceState)
+            inject(this@BaseSettingsFragment)
+        }
+        viewModel.appDirInfo.observe(this) { result ->
+            val pref = requirePreference<Preference>(PrefKey.APP_DIR)
+            result.onSuccess { appDirInfo ->
+                pref.summary = if (appDirInfo.second) {
+                    appDirInfo.first
+                } else {
+                    getString(R.string.app_dir_not_accessible, appDirInfo.first)
+                }
+            }.onFailure {
+                pref.setSummary(when (it) {
+                    is ExternalStorageNotAvailableException -> R.string.external_storage_unavailable
+                    else -> {
+                        pref.isEnabled = false
+                        R.string.io_error_appdir_null
+                    }
+                })
+            }
+        }
+        webUiViewModel.getServiceState().observe(this) { result ->
             findPreference<SwitchPreferenceCompat>(PrefKey.UI_WEB)?.let { preference ->
-                serverAddress?.let { preference.summaryOn = it }
-                if (preference.isChecked && serverAddress == null) {
-                    preference.isChecked = false
+                result.onSuccess { serverAddress ->
+                    serverAddress?.let { preference.summaryOn = it }
+                    if (preference.isChecked && serverAddress == null) {
+                        preference.isChecked = false
+                    }
+                }.onFailure {
+                    if (preference.isChecked) preference.isChecked = false
+                    activity().showSnackbar(it.message ?: "ERROR")
                 }
             }
         }
@@ -220,7 +263,7 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat(), OnValidationEr
         } else if (key == getKey(PrefKey.AUTO_BACKUP_TIME)) {
             DailyScheduler.updateAutoBackupAlarms(activity())
         } else if (key == getKey(PrefKey.SYNC_FREQUCENCY)) {
-            for (account in GenericAccountService.getAccountsAsArray(activity())) {
+            for (account in GenericAccountService.getAccounts(activity())) {
                 ContentResolver.addPeriodicSync(account, TransactionProvider.AUTHORITY, Bundle.EMPTY,
                         prefHandler.getInt(PrefKey.SYNC_FREQUCENCY, GenericAccountService.DEFAULT_SYNC_FREQUENCY_HOURS).toLong() * GenericAccountService.HOUR_IN_SECONDS)
             }
@@ -283,18 +326,18 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat(), OnValidationEr
         } else {
             licenceKeyPref?.isVisible = false
         }
-        val contribPurchaseTitle: String = licenceHandler.prettyPrintStatus(requireContext()) ?:
-        getString(R.string.pref_contrib_purchase_title) + (if (licenceHandler.doesUseIAP)
-            " (${getString(R.string.pref_contrib_purchase_title_in_app)})" else "")
+        val contribPurchaseTitle: String = licenceHandler.prettyPrintStatus(requireContext())
+                ?: getString(R.string.pref_contrib_purchase_title) + (if (licenceHandler.doesUseIAP)
+                    " (${getString(R.string.pref_contrib_purchase_title_in_app)})" else "")
         var contribPurchaseSummary: String
         val licenceStatus = licenceHandler.licenceStatus
         if (licenceStatus == null && licenceHandler.addOnFeatures.isEmpty()) {
             contribPurchaseSummary = getString(R.string.pref_contrib_purchase_summary)
         } else {
-            if (licenceStatus?.isUpgradeable != false) {
-                contribPurchaseSummary = getString(R.string.pref_contrib_purchase_title_upgrade)
+            contribPurchaseSummary = if (licenceStatus?.isUpgradeable != false) {
+                getString(R.string.pref_contrib_purchase_title_upgrade)
             } else {
-                contribPurchaseSummary = licenceHandler.getProLicenceAction(requireContext())
+                licenceHandler.getProLicenceAction(requireContext())
             }
             if (!isEmpty(contribPurchaseSummary)) {
                 contribPurchaseSummary += "\n"
@@ -303,5 +346,26 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat(), OnValidationEr
         }
         contribPurchasePref.summary = contribPurchaseSummary
         contribPurchasePref.title = contribPurchaseTitle
+    }
+
+    fun updateHomeCurrency(currencyCode: String) {
+        (activity as? MyPreferenceActivity)?.let { activity ->
+            findPreference<ListPreference>(PrefKey.HOME_CURRENCY)?.let {
+                it.value = currencyCode
+            } ?: run {
+                prefHandler.putString(PrefKey.HOME_CURRENCY, currencyCode)
+            }
+            activity.invalidateHomeCurrency()
+            activity.showSnackbar(R.string.saving, Snackbar.LENGTH_INDEFINITE)
+            viewModel.resetEquivalentAmounts().observe(this, { integer ->
+                activity.dismissSnackbar()
+                if (integer != null) {
+                    activity.showSnackbar(String.format(getResources().getConfiguration().locale,
+                            "%s (%d)", getString(R.string.reset_equivalent_amounts_success), integer))
+                } else {
+                    activity.showSnackbar("Equivalent amount reset failed")
+                }
+            })
+        }
     }
 }

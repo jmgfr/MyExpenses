@@ -17,7 +17,6 @@ package org.totschnig.myexpenses.activity
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.app.NotificationManager
-import android.content.ActivityNotFoundException
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
@@ -128,7 +127,7 @@ import org.totschnig.myexpenses.viewmodel.data.Template as DataTemplate
  *
  * @author Michael Totschnig
  */
-open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?>, ContribIFace, ConfirmationDialogListener, ButtonWithDialog.Host, ExchangeRateEdit.Host {
+open class ExpenseEdit : AmountActivity<TransactionEditViewModel>(), LoaderManager.LoaderCallbacks<Cursor?>, ContribIFace, ConfirmationDialogListener, ButtonWithDialog.Host, ExchangeRateEdit.Host {
     private lateinit var rootBinding: OneExpenseBinding
     private lateinit var dateEditBinding: DateEditBinding
     private lateinit var methodRowBinding: MethodRowBinding
@@ -182,7 +181,6 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
     private var accountsLoaded = false
     private var shouldRecordAttachPictureFeature = false
     private var pObserver: ContentObserver? = null
-    private lateinit var viewModel: TransactionEditViewModel
     private lateinit var currencyViewModel: CurrencyViewModel
     override fun getDate(): LocalDate {
         return dateEditBinding.Date2Button.date
@@ -246,13 +244,19 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         super.onCreate(savedInstanceState)
         setHelpVariant(HelpVariant.transaction)
         rootBinding = OneExpenseBinding.inflate(LayoutInflater.from(this))
+        rootBinding.TagRow.TagLabel.setText(R.string.tags)
         dateEditBinding = DateEditBinding.bind(rootBinding.root)
         methodRowBinding = MethodRowBinding.bind(rootBinding.root)
         setContentView(rootBinding.root)
         setupToolbar()
         mManager = LoaderManager.getInstance(this)
-        viewModel = ViewModelProvider(this).get(TransactionEditViewModel::class.java)
-        currencyViewModel = ViewModelProvider(this).get(CurrencyViewModel::class.java)
+        val viewModelProvider = ViewModelProvider(this)
+        viewModel = viewModelProvider.get(TransactionEditViewModel::class.java)
+        currencyViewModel = viewModelProvider.get(CurrencyViewModel::class.java)
+        with((applicationContext as MyApplication).appComponent) {
+            inject(viewModel)
+            inject(currencyViewModel)
+        }
         //we enable it only after accountCursor has been loaded, preventing NPE when user clicks on it early
         amountInput.setTypeEnabled(false)
 
@@ -383,6 +387,20 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         loadAccounts(fromSavedState)
         loadTemplates()
         linkInputsWithLabels()
+        loadTags()
+    }
+
+    private fun loadTags() {
+        if (!isSplitPart) {
+            viewModel.getTags().observe(this, { tags ->
+                if (::delegate.isInitialized) {
+                    delegate.showTags(tags) { tag ->
+                        viewModel.removeTag(tag)
+                        setDirty()
+                    }
+                }
+            })
+        }
     }
 
     private fun loadTemplates() {
@@ -397,7 +415,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
     }
 
     private fun loadAccounts(fromSavedState: Boolean) {
-        viewModel.getAccounts().observe(this, { accounts ->
+        viewModel.getAccounts().observe(this) { accounts ->
             if (accounts.isEmpty()) {
                 abortWithMessage(getString(R.string.warning_no_account))
             } else if (accounts.size == 1 && operationType == TYPE_TRANSFER) {
@@ -409,7 +427,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
                     if (mIsResumed) setupListeners()
                 }
             }
-        })
+        }
     }
 
     private fun loadCurrencies() {
@@ -534,16 +552,6 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         setTitle()
         operationType = transaction.operationType()
         shouldShowCreateTemplate = transaction.originTemplateId == null
-        if (!isSplitPart) {
-            viewModel.getTags().observe(this, { tags ->
-                if (::delegate.isInitialized) {
-                    delegate.showTags(tags) { tag ->
-                        viewModel.removeTag(tag)
-                        setDirty()
-                    }
-                }
-            })
-        }
         if (!isTemplate) {
             createNew = mNewInstance && prefHandler.getBoolean(saveAndNewPrefKey, false)
             updateFab()
@@ -868,18 +876,6 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
             EDIT_REQUEST -> if (resultCode == RESULT_OK) {
                 setDirty()
             }
-            SELECT_TAGS_REQUEST -> intent?.also {
-                if (resultCode == RESULT_OK) {
-                    (intent.getParcelableArrayListExtra<Tag>(KEY_TAG_LIST))?.let {
-                        viewModel.updateTags(it)
-                        setDirty()
-                    }
-                } else if (resultCode == RESULT_CANCELED) {
-                    intent.getLongArrayExtra(KEY_DELETED_IDS)?.let {
-                        viewModel.removeTags(it)
-                    }
-                }
-            }
         }
     }
 
@@ -1087,20 +1083,7 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         //intent.putExtra(CalendarContractCompat.EXTRA_EVENT_BEGIN_TIME, mPlan!!.dtstart)
         //intent.putExtra(CalendarContractCompat.EXTRA_EVENT_END_TIME, mPlan!!.dtstart)
         intent.data = ContentUris.withAppendedId(CalendarContractCompat.Events.CONTENT_URI, planId)
-        if (Utils.isIntentAvailable(this, intent)) {
-            try {
-                if (forResult) {
-                    startActivityForResult(intent, PLAN_REQUEST)
-                } else {
-                    startActivity(intent)
-                }
-                return
-            } catch (e: ActivityNotFoundException) {
-                Timber.w("Component: %s", intent.resolveActivity(packageManager))
-                CrashHandler.report(e)
-            }
-        }
-        showSnackbar(R.string.no_calendar_app_installed, Snackbar.LENGTH_SHORT)
+        startActivity(intent, R.string.no_calendar_app_installed, if (forResult) PLAN_REQUEST else null)
     }
 
     override fun onLoaderReset(loader: Loader<Cursor?>) { //should not be necessary to empty the autoCompleteTextView
@@ -1300,14 +1283,19 @@ open class ExpenseEdit : AmountActivity(), LoaderManager.LoaderCallbacks<Cursor?
         const val KEY_INCOME = "income"
     }
 
-    fun startTagSelection(@Suppress("UNUSED_PARAMETER") view: View) {
-        val i = Intent(this, ManageTags::class.java).apply {
-            putParcelableArrayListExtra(KEY_TAG_LIST, viewModel.getTags().value?.let { ArrayList(it) })
+    fun loadActiveTags(id: Long) {
+        if (withAutoFill) {
+            viewModel.loadActiveTags(id)
         }
-        startActivityForResult(i, SELECT_TAGS_REQUEST)
     }
 
-    fun editPlan(view: View) {
+    fun editPlan(@Suppress("UNUSED_PARAMETER") view: View) {
         delegate.planId?.let { launchPlanView(false, it) }
+    }
+
+    fun copyUnsplitAmount(@Suppress("UNUSED_PARAMETER") view: View) {
+        findSplitPartList()?.unsplitAmountFormatted()?.let {
+            copyToClipboard(it)
+        }
     }
 }

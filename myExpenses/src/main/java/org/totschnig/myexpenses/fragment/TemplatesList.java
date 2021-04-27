@@ -45,12 +45,13 @@ import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.R;
+import org.totschnig.myexpenses.activity.BaseActivity;
 import org.totschnig.myexpenses.activity.ExpenseEdit;
 import org.totschnig.myexpenses.activity.ManageTemplates;
 import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
+import org.totschnig.myexpenses.di.AppComponent;
 import org.totschnig.myexpenses.dialog.MessageDialogFragment;
 import org.totschnig.myexpenses.model.Account;
 import org.totschnig.myexpenses.model.Category;
@@ -155,8 +156,10 @@ public class TemplatesList extends SortableListFragment
     super.onCreate(savedInstanceState);
     setHasOptionsMenu(true);
     Icepick.restoreInstanceState(this, savedInstanceState);
-    ((MyApplication) requireActivity().getApplication()).getAppComponent().inject(this);
+    final AppComponent appComponent = ((MyApplication) requireActivity().getApplication()).getAppComponent();
+    appComponent.inject(this);
     viewModel = new ViewModelProvider(this).get(TemplatesListViewModel.class);
+    appComponent.inject(viewModel);
   }
 
   @Override
@@ -206,9 +209,9 @@ public class TemplatesList extends SortableListFragment
             }
             if (defaultAction == Template.Action.SAVE) {
               if (splitAtPosition) {
-                requestSplitTransaction(new Long[]{id});
+                requestSplitTransaction(new long[]{id});
               } else {
-                dispatchCreateInstanceSaveDo(new Long[]{id}, null);
+                dispatchCreateInstanceSaveDo(new long[]{id}, null);
               }
             } else {
               if (splitAtPosition) {
@@ -242,13 +245,13 @@ public class TemplatesList extends SortableListFragment
     return CALENDAR.hasPermission(getContext());
   }
 
-  private void bulkUpdateDefaultAction(Long[] itemIds, Template.Action action, int resultFeedBack) {
-    viewModel.updateDefaultAction(ArrayUtils.toPrimitive(itemIds), action).observe(getViewLifecycleOwner(), result -> showSnackbar(result ? getString(resultFeedBack) : "Error while setting default action for template click"));
+  private void bulkUpdateDefaultAction(long[] itemIds, Template.Action action, int resultFeedBack) {
+    viewModel.updateDefaultAction(itemIds, action).observe(getViewLifecycleOwner(), result -> showSnackbar(result ? getString(resultFeedBack) : "Error while setting default action for template click"));
   }
 
   @Override
   public boolean dispatchCommandMultiple(int command,
-                                         SparseBooleanArray positions, Long[] itemIds) {
+                                         @NonNull SparseBooleanArray positions, @NonNull long[] itemIds) {
     if (super.dispatchCommandMultiple(command, positions, itemIds)) {
       return true;
     }
@@ -267,7 +270,7 @@ public class TemplatesList extends SortableListFragment
               R.id.DELETE_COMMAND_DO,
               itemIds),
           null,
-          new MessageDialogFragment.Button(android.R.string.no, R.id.CANCEL_CALLBACK_COMMAND, null))
+          new MessageDialogFragment.Button(R.string.response_no, R.id.CANCEL_CALLBACK_COMMAND, null))
           .show(getActivity().getSupportFragmentManager(), "DELETE_TEMPLATE");
       return true;
     } else if (command == R.id.CREATE_INSTANCE_SAVE_COMMAND) {
@@ -350,8 +353,10 @@ public class TemplatesList extends SortableListFragment
     ((ProtectedFragmentActivity) getActivity()).contribFeatureRequested(ContribFeature.SPLIT_TRANSACTION, tag);
   }
 
-  public void dispatchCreateInstanceSaveDo(Long[] itemIds, Long[][] extra) {
-    dispatchTask(TaskExecutionFragment.TASK_NEW_FROM_TEMPLATE, itemIds, extra);
+  public void dispatchCreateInstanceSaveDo(long[] itemIds, Long[][] extraInfo) {
+    viewModel.newFromTemplate(itemIds, extraInfo).observe(getViewLifecycleOwner(), successCount ->
+        showSnackbar(successCount == 0 ? getString(R.string.save_transaction_error) :
+            getResources().getQuantityString(R.plurals.save_transaction_from_template_success, successCount, successCount)));
   }
 
   public void dispatchTask(int taskId, Long[] itemIds, Long[][] extra) {
@@ -506,6 +511,18 @@ public class TemplatesList extends SortableListFragment
       }
       Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
     }
+  }
+
+  public void dispatchDeleteDo(long[] tag) {
+    showSnackbar(getString(R.string.progress_dialog_deleting));
+    viewModel.deleteTemplates((long[]) tag, CALENDAR.hasPermission(requireContext())).observe(getViewLifecycleOwner(), result -> {
+      final BaseActivity activity = (BaseActivity) requireActivity();
+      if (result > 0) {
+        activity.showSnackbar(activity.getResources().getQuantityString(R.plurals.delete_success, result, result));
+      } else {
+        activity.showDeleteFailureFeedback();
+      }
+    });
   }
 
   private static class RepairHandler extends Handler {

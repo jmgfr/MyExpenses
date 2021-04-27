@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">Nouveau mot de passe</string>
     <string name="dialog_password_new_password_confirmation">Nouveau mot de passe (confirmation)</string>
     <string name="dialog_remind_later">Plus tard</string>
-    <string name="dialog_remind_no">Non merci</string>
     <string name="dialog_remind_rate_how_many_stars">Combien d\'étoiles donneriez-vous à {app_name} ?</string>
     <string name="dialog_remind_rate_1">S\'il vous plaît prenez le temps d\'évaluer et de noter {app_name}.</string>
     <string name="dialog_remind_rate_2">Vos commentaires nous permettent d\'ajouter constamment des améliorations et perfectionnements.</string>
@@ -356,7 +355,6 @@
     <string name="progress_dialog_deleting">Les objets sont effacés</string>
     <string name="progress_dialog_loading">Chargement</string>
     <string name="progress_dialog_printing">Génération du PDF</string>
-    <string name="progress_dialog_saving">Enregistrement dans la base de données</string>
     <string name="qif_parse_result">Analysé : %1$s comptes, %2$s catégories et %3$s tiers</string>
     <string name="qif_parse_failure_found_multiple_accounts">Plusieurs comptes trouvés dans le fichier QIF.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Impossible de fusionner avec le compte existant.</string>
@@ -483,13 +481,14 @@
     <string name="comparison_operator_equal">égal à</string>
     <string name="comparison_operator_greater_than">supérieur à</string>
     <string name="comparison_operator_lesser_than">inférieur à</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">entre</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions before a specified date.  -->
     <string name="comparison_operator_date_before">avant</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions after a specified date. -->
     <string name="comparison_operator_date_after">après</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Échec ou annulation de l\'achat.</string>
     <string name="hint_auto_fill">Voulez-vous remplir automatiquement les données à partir de la dernière opération de ce tiers ? Vous pouvez toujours modifier cette option dans les paramètres.</string>
-    <string name="yes">Oui</string>
-    <string name="no">Non</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%1$d comptes en devise %2$s ont été mis à jour.</string>
     <string name="learn_more">En apprendre plus</string>
     <string name="import_source_file">Fichier</string>
@@ -509,6 +508,7 @@
     <string name="pref_manage_stale_images_summary">Gérer les photos ayant fait partie des transactions supprimées</string>
     <string name="image_deleted">La photo a été supprimée</string>
     <string name="transaction_deleted">L\'opération a été supprimée</string>
+    <string name="account_deleted">Le compte a été supprimé</string>
     <string name="dialog_export_applied_to_filter">Seules les transactions qui correspondent au filtre actuel seront pris en considération.</string>
     <string name="export_handle_deleted_create_helper">Créer une opération annexe</string>
     <string name="export_handle_deleted_update_balance">Mise à jour du solde initial</string>
@@ -948,7 +948,6 @@
     <!-- When user opens a template from the transaction form, existing data is discarded. This message appears in a dialgoue to confirm the action -->
     <string name="confirmation_load_template_discard_data">Les données existantes seront supprimées du formulaire.</string>
     <string name="pref_clone_with_current_date_title">Date des transactions clonées</string>
-    <string name="default_action">Action par défaut</string>
     <string name="template_default_action_without_amount_hint">Le modèle sans montant doit être enregistré avec l\'action par défaut \'Éditer\'</string>
     <string name="plan_automatic_without_amount_hint">Une échéance sans montant ne peut pas être sauvegardée avec exécution automatique</string>
     <string name="content_description_edit_plan">Modifier le plan dans l\'application de calendrier</string>
@@ -975,4 +974,16 @@
     <string name="single_feature_info">Vous pouvez également acheter un accès illimité à cette fonctionnalité uniquement.</string>
     <!-- This refers to a plan that recurs every last day of the month. It is shown next to a checkbox allowing user to select this type of recurrence. -->
     <string name="recurrence_last_day_of_month">Dernier jour</string>
+    <string name="warning_link_transfer">Les deux opérations sélectionnées seront liées en tant que transfert. Les informations sur le tiers et la catégorie seront supprimées.</string>
+    <!-- This is the title of an entry on the configuration screen for the account widget. It allows to decide which number should be displayed for each account: the current balance or the total (which included future transactions) -->
+    <string name="account_widget_configuration_sum">Type de somme affichée</string>
+    <string name="account_widget_configuration_sum_total">Inclure les transactions futures</string>
+    <!-- Title of dialogue that allows to configure account widget -->
+    <string name="account_widget_configuration">Configuration du widget \"Mes comptes\"</string>
+    <!-- Title of a menu entry allowing to merge duplicate entries in the parties table (payee/payer) -->
+    <string name="menu_merge">Fusionner</string>
+    <!-- When user selects duplicate parties to be merged, he sees this prompt asking him to select which name should be selected for the merged party -->
+    <string name="merge_parties_select">Sélectionnez le nom du tiers fusionné:</string>
+    <!-- This is the label for a field for accounts. Active tags are automatically added to new transactions when an account is selected. -->
+    <string name="active_tags">Étiquettes actives</string>
 </resources>

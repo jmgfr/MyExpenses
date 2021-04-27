@@ -10,8 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import org.threeten.bp.LocalDate;
 import org.totschnig.myexpenses.MyApplication;
 import org.totschnig.myexpenses.activity.BaseActivity;
+import org.totschnig.myexpenses.activity.BaseMyExpenses;
 import org.totschnig.myexpenses.activity.ExpenseEdit;
-import org.totschnig.myexpenses.activity.MyExpenses;
 import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
 import org.totschnig.myexpenses.db2.Repository;
 import org.totschnig.myexpenses.dialog.AmountFilterDialog;
@@ -60,21 +60,18 @@ import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
 import org.totschnig.myexpenses.util.licence.LicenceHandler;
 import org.totschnig.myexpenses.util.locale.UserLocaleProvider;
 import org.totschnig.myexpenses.util.tracking.Tracker;
-import org.totschnig.myexpenses.viewmodel.BudgetEditViewModel;
 import org.totschnig.myexpenses.viewmodel.BudgetViewModel;
 import org.totschnig.myexpenses.viewmodel.ContentResolvingAndroidViewModel;
 import org.totschnig.myexpenses.viewmodel.CurrencyViewModel;
 import org.totschnig.myexpenses.viewmodel.EditCurrencyViewModel;
 import org.totschnig.myexpenses.viewmodel.ExchangeRateViewModel;
 import org.totschnig.myexpenses.viewmodel.FeatureViewModel;
-import org.totschnig.myexpenses.viewmodel.MyExpensesViewModel;
 import org.totschnig.myexpenses.viewmodel.OcrViewModel;
 import org.totschnig.myexpenses.viewmodel.RoadmapViewModel;
-import org.totschnig.myexpenses.viewmodel.TransactionDetailViewModel;
 import org.totschnig.myexpenses.viewmodel.TransactionViewModel;
 import org.totschnig.myexpenses.viewmodel.UpgradeHandlerViewModel;
 import org.totschnig.myexpenses.widget.AbstractWidget;
-import org.totschnig.myexpenses.widget.TemplatetRemoteViewsFactory;
+import org.totschnig.myexpenses.widget.TemplateRemoteViewsFactory;
 
 import java.util.Locale;
 
@@ -154,7 +151,7 @@ public interface AppComponent {
 
   void inject(ExpenseEdit expenseEdit);
 
-  void inject(MyExpenses myExpenses);
+  void inject(BaseMyExpenses myExpenses);
 
   void inject(ProtectedFragmentActivity protectedFragmentActivity);
 
@@ -192,7 +189,7 @@ public interface AppComponent {
 
   void inject(HistoryChart historyChart);
 
-  void inject(TransactionViewModel transactionEditViewModel);
+  void inject(TransactionViewModel transactionViewModel);
 
   void inject(DonateDialogFragment donateDialogFragment);
 
@@ -216,13 +213,9 @@ public interface AppComponent {
 
   void inject(BudgetViewModel budgetViewModel);
 
-  void inject(BudgetEditViewModel budgetEditViewModel);
-
   void inject(ContentResolvingAndroidViewModel contentResolvingAndroidViewModel);
 
   void inject(CurrencyViewModel contentResolvingAndroidViewModel);
-
-  void inject(MyExpensesViewModel myExpensesViewModel);
 
   void inject(UpgradeHandlerViewModel upgradeHandlerViewModel);
 
@@ -234,11 +227,9 @@ public interface AppComponent {
 
   void inject(RemindRateDialogFragment remindRateDialogFragment);
 
-  void inject(TemplatetRemoteViewsFactory templatetRemoteViewsFactory);
+  void inject(TemplateRemoteViewsFactory templateRemoteViewsFactory);
 
   void inject(AbstractWidget abstractWidget);
-
-  void inject(TransactionDetailViewModel transactionDetailViewModel);
 
   void inject(ExchangeRateViewModel exchangeRateViewModel);
 

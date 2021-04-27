@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -28,10 +27,8 @@ import org.totschnig.myexpenses.fragment.AbstractCategoryList;
 import org.totschnig.myexpenses.model.Account;
 import org.totschnig.myexpenses.model.Category;
 import org.totschnig.myexpenses.model.ExportFormat;
-import org.totschnig.myexpenses.model.Payee;
 import org.totschnig.myexpenses.model.PaymentMethod;
 import org.totschnig.myexpenses.model.Plan;
-import org.totschnig.myexpenses.model.Template;
 import org.totschnig.myexpenses.model.Transaction;
 import org.totschnig.myexpenses.preference.PrefKey;
 import org.totschnig.myexpenses.provider.DatabaseConstants;
@@ -49,11 +46,8 @@ import org.totschnig.myexpenses.util.AppDirHelper;
 import org.totschnig.myexpenses.util.BackupUtils;
 import org.totschnig.myexpenses.util.Result;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
-import org.totschnig.myexpenses.util.io.FileCopyUtils;
 import org.totschnig.myexpenses.util.io.FileUtils;
-import org.totschnig.myexpenses.viewmodel.data.Tag;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
@@ -63,7 +57,6 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.documentfile.provider.DocumentFile;
-import timber.log.Timber;
 
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_INSTANCEID;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_LABEL;
@@ -74,12 +67,10 @@ import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_STATUS;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TEMPLATEID;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_TRANSACTIONID;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.KEY_UUID;
-import static org.totschnig.myexpenses.provider.DatabaseConstants.STATUS_NONE;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.STATUS_UNCOMMITTED;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_CATEGORIES;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_TEMPLATES;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.TABLE_TRANSACTIONS;
-import static org.totschnig.myexpenses.util.TextUtils.concatResStrings;
 import static org.totschnig.myexpenses.util.TextUtils.formatQifCategory;
 
 /**
@@ -122,47 +113,8 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
     Cursor c;
     int successCount = 0, failureCount = 0;
     switch (mTaskId) {
-      case TaskExecutionFragment.TASK_NEW_FROM_TEMPLATE:
-        for (int i = 0; i < ids.length; i++) {
-          kotlin.Pair<Transaction, List<Tag>> pair = Transaction.getInstanceFromTemplateWithTags((Long) ids[i]);
-          Transaction t = pair.getFirst();
-          if (t != null) {
-            if (mExtra != null) {
-              extraInfo2d = (Long[][]) mExtra;
-              final long date = extraInfo2d[i][1] / 1000;
-              t.setDate(date);
-              t.setValueDate(date);
-              t.setOriginPlanInstanceId(extraInfo2d[i][0]);
-            }
-            t.setStatus(STATUS_NONE);
-            if (t.save(true) != null && t.saveTags(pair.getSecond(), cr)) {
-              successCount++;
-            }
-          }
-        }
-        return successCount;
       case TaskExecutionFragment.TASK_INSTANTIATE_PLAN:
         return Plan.getInstanceFromDb((Long) ids[0]);
-      case TaskExecutionFragment.TASK_DELETE_TRANSACTION:
-        try {
-          for (long id : (Long[]) ids) {
-            Transaction.delete(id, (boolean) mExtra);
-          }
-        } catch (SQLiteConstraintException e) {
-          CrashHandler.reportWithDbSchema(e);
-          return Result.FAILURE;
-        }
-        return Result.SUCCESS;
-      case TaskExecutionFragment.TASK_UNDELETE_TRANSACTION:
-        try {
-          for (long id : (Long[]) ids) {
-            Transaction.undelete(id);
-          }
-        } catch (SQLiteConstraintException e) {
-          CrashHandler.reportWithDbSchema(e);
-          return Result.FAILURE;
-        }
-        return Result.SUCCESS;
       case TaskExecutionFragment.TASK_DELETE_ACCOUNT: {
         boolean success = true;
         for (long id : (Long[]) ids) {
@@ -174,16 +126,6 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
         try {
           for (long id : (Long[]) ids) {
             PaymentMethod.delete(id);
-          }
-        } catch (SQLiteConstraintException e) {
-          CrashHandler.reportWithDbSchema(e);
-          return Result.FAILURE;
-        }
-        return Result.SUCCESS;
-      case TaskExecutionFragment.TASK_DELETE_PAYEES:
-        try {
-          for (long id : (Long[]) ids) {
-            Payee.delete(id);
           }
         } catch (SQLiteConstraintException e) {
           CrashHandler.reportWithDbSchema(e);
@@ -239,16 +181,6 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
           CrashHandler.reportWithDbSchema(e);
           return Result.ofFailure(e.getMessage());
         }
-      case TaskExecutionFragment.TASK_DELETE_TEMPLATES:
-        try {
-          for (long id : (Long[]) ids) {
-            Template.delete(id, ((Boolean) mExtra));
-          }
-        } catch (SQLiteConstraintException e) {
-          CrashHandler.reportWithDbSchema(e);
-          return Result.FAILURE;
-        }
-        return Result.SUCCESS;
       case TaskExecutionFragment.TASK_TOGGLE_CRSTATUS:
         cr.update(
             TransactionProvider.TRANSACTIONS_URI
@@ -334,84 +266,6 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
         return updateBooleanAccountFieldFromExtra(cr, (Long[]) ids, DatabaseConstants.KEY_SEALED) ? Result.SUCCESS : Result.FAILURE;
       case TaskExecutionFragment.TASK_SET_ACCOUNT_HIDDEN:
         return updateBooleanAccountFieldFromExtra(cr, (Long[]) ids, DatabaseConstants.KEY_HIDDEN) ? Result.SUCCESS : Result.FAILURE;
-      case TaskExecutionFragment.TASK_DELETE_IMAGES: {
-        for (long id : (Long[]) ids) {
-          Uri staleImageUri = TransactionProvider.STALE_IMAGES_URI.buildUpon().appendPath(String.valueOf(id)).build();
-          c = cr.query(
-              staleImageUri,
-              null,
-              null, null, null);
-          if (c == null)
-            continue;
-          if (c.moveToFirst()) {
-            Uri imageFileUri = Uri.parse(c.getString(0));
-            if (checkImagePath(imageFileUri.getLastPathSegment())) {
-              boolean success;
-              if (imageFileUri.getScheme().equals("file")) {
-                success = new File(imageFileUri.getPath()).delete();
-              } else {
-                success = cr.delete(imageFileUri, null, null) > 0;
-              }
-              if (success) {
-                Timber.d("Successfully deleted file %s", imageFileUri.toString());
-              } else {
-                CrashHandler.reportWithFormat("Unable to delete file %s ", imageFileUri.toString());
-              }
-            } else {
-              Timber.d("%s not deleted since it might still be in use", imageFileUri.toString());
-            }
-            cr.delete(staleImageUri, null, null);
-          }
-          c.close();
-        }
-        return null;
-      }
-      case TaskExecutionFragment.TASK_SAVE_IMAGES: {
-        File staleFileDir = new File(context.getExternalFilesDir(null), "images.old");
-        staleFileDir.mkdir();
-        if (!staleFileDir.isDirectory()) {
-          return null;
-        }
-        for (long id : (Long[]) ids) {
-          Uri staleImageUri = TransactionProvider.STALE_IMAGES_URI.buildUpon().appendPath(String.valueOf(id)).build();
-          c = cr.query(
-              staleImageUri,
-              null,
-              null, null, null);
-          if (c == null)
-            continue;
-          if (c.moveToFirst()) {
-            boolean success = false;
-            Uri imageFileUri = Uri.parse(c.getString(0));
-            if (checkImagePath(imageFileUri.getLastPathSegment())) {
-              if (imageFileUri.getScheme().equals("file")) {
-                File staleFile = new File(imageFileUri.getPath());
-                success = staleFile.renameTo(new File(staleFileDir, staleFile.getName()));
-              } else {
-                try {
-                  FileCopyUtils.copy(imageFileUri, Uri.fromFile(new File(staleFileDir, imageFileUri.getLastPathSegment())));
-                  success = cr.delete(imageFileUri, null, null) > 0;
-                } catch (IOException e) {
-                  Timber.e(e);
-                }
-              }
-              if (success) {
-                Timber.d("Successfully moved file %s", imageFileUri.toString());
-              }
-            } else {
-              success = true; //we do not move the file but remove its uri from the table
-              Timber.d("%s not moved since it might still be in use", imageFileUri.toString());
-            }
-            if (success) {
-              cr.delete(staleImageUri, null, null);
-            } else {
-              CrashHandler.reportWithFormat("Unable to move file %s", imageFileUri.toString());
-            }
-          }
-          c.close();
-        }
-        return null;
-      }
       case TaskExecutionFragment.TASK_EXPORT_CATEGORIES:
         DocumentFile appDir = AppDirHelper.getAppDir(context);
         if (appDir == null) {
@@ -515,31 +369,6 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
           }
         }
         return true;
-      case TaskExecutionFragment.TASK_SYNC_UNLINK: {
-        String uuid = (String) ids[0];
-        if (TextUtils.isEmpty(uuid)) {
-          return Result.FAILURE;
-        }
-        final long id = Account.findByUuid(uuid);
-        if (id == -1) {
-          return Result.FAILURE;
-        }
-        Account account = Account.getInstanceFromDb(id);
-        if (account == null) {
-          return Result.FAILURE;
-        }
-        final String syncAccountName = account.getSyncAccountName();
-        if (syncAccountName == null) {
-          return Result.FAILURE;
-        }
-        AccountManager accountManager = AccountManager.get(context);
-        android.accounts.Account syncAccount = GenericAccountService.GetAccount(syncAccountName);
-        accountManager.setUserData(syncAccount, SyncAdapter.KEY_LAST_SYNCED_LOCAL(account.getId()), null);
-        accountManager.setUserData(syncAccount, SyncAdapter.KEY_LAST_SYNCED_REMOTE(account.getId()), null);
-        account.setSyncAccountName(null);
-        account.save();
-        return Result.SUCCESS;
-      }
       case TaskExecutionFragment.TASK_SYNC_LINK_LOCAL: {
         Account account = Account.getInstanceFromDb(Account.findByUuid((String) ids[0]));
         if (account.isSealed()) {
@@ -552,7 +381,7 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putString(KEY_UUID, account.getUuid());
         bundle.putBoolean(SyncAdapter.KEY_RESET_REMOTE_ACCOUNT, true);
-        ContentResolver.requestSync(GenericAccountService.GetAccount(syncAccountName),
+        ContentResolver.requestSync(GenericAccountService.getAccount(syncAccountName),
             TransactionProvider.AUTHORITY, bundle);
         account.save();
         return Result.SUCCESS;
@@ -567,7 +396,7 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
       }
       case TaskExecutionFragment.TASK_SYNC_REMOVE_BACKEND: {
         AccountManagerFuture<Boolean> accountManagerFuture = AccountManager.get(context).removeAccount(
-            GenericAccountService.GetAccount((String) ids[0]), null, null);
+            GenericAccountService.getAccount((String) ids[0]), null, null);
         try {
           return accountManagerFuture.getResult() ? Result.SUCCESS : Result.FAILURE;
         } catch (OperationCanceledException | AuthenticatorException | IOException e) {
@@ -630,29 +459,6 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
         }
         return requested == result ? Result.ofSuccess(message) : Result.ofFailure(message);
       }
-      case TaskExecutionFragment.TASK_SYNC_CHECK: {
-        String accountUuid = (String) ids[0];
-        Exceptional<SyncBackendProvider> syncBackendProvider = getSyncBackendProviderFromExtra();
-        if (!syncBackendProvider.isPresent()) {
-          return Result.ofFailure(syncBackendProvider.getException().getMessage());
-        }
-        try {
-          if (syncBackendProvider.get().getRemoteAccountList()
-              .filter(Exceptional::isPresent)
-              .map(Exceptional::get)
-              .anyMatch(metadata -> metadata.uuid().equals(accountUuid))) {
-            return Result.ofFailure(concatResStrings(context, " ",
-                R.string.link_account_failure_2, R.string.link_account_failure_3)
-                + "(" + concatResStrings(context, ", ", R.string.menu_settings,
-                R.string.pref_manage_sync_backends_title) + ")");
-          }
-          return Result.SUCCESS;
-        } catch (IOException e) {
-          return Result.ofFailure(e.getMessage());
-        } finally {
-          syncBackendProvider.get().tearDown();
-        }
-      }
       case TaskExecutionFragment.TASK_SETUP_FROM_SYNC_ACCOUNTS: {
         String syncAccountName = (String) mExtra;
         Exceptional<SyncBackendProvider> syncBackendProvider = getSyncBackendProviderFromExtra();
@@ -677,7 +483,7 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
             Bundle bundle = new Bundle();
             bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
             bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-            ContentResolver.requestSync(GenericAccountService.GetAccount(syncAccountName),
+            ContentResolver.requestSync(GenericAccountService.getAccount(syncAccountName),
                 TransactionProvider.AUTHORITY, bundle);
             return Result.SUCCESS;
           }
@@ -695,10 +501,6 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
         } else {
           return Result.FAILURE;
         }
-      }
-      case TaskExecutionFragment.TASK_STORE_SETTING: {
-        DbUtils.storeSetting(cr, (String) ids[0], (String) mExtra);
-        return null;
       }
       case TaskExecutionFragment.TASK_CATEGORY_COLOR: {
         return Category.updateColor((Long) ids[0], (Integer) mExtra) ? Result.SUCCESS :
@@ -720,16 +522,7 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
 
   @NonNull
   private Exceptional<SyncBackendProvider> getSyncBackendProviderFromExtra() {
-    String syncAccountName = ((String) mExtra);
-    try {
-      final android.accounts.Account account = GenericAccountService.GetAccount(syncAccountName);
-      final Context context = MyApplication.getInstance();
-      return Exceptional.of(() -> SyncBackendProviderFactory.get(context, account, false).getOrThrow());
-    } catch (Throwable throwable) {
-      CrashHandler.report(new Exception(String.format("Unable to get sync backend provider for %s",
-          syncAccountName), throwable));
-      return Exceptional.of(throwable);
-    }
+    return GenericAccountService.Companion.getSyncBackendProvider(MyApplication.getInstance(), (String) mExtra);
   }
 
   private boolean deleteAccount(Long anId) {
@@ -740,21 +533,6 @@ public class GenericTask<T> extends AsyncTask<T, Void, Object> {
       return false;
     }
     return true;
-  }
-
-  private boolean checkImagePath(String lastPathSegment) {
-    boolean result = false;
-    Cursor c = MyApplication.getInstance().getContentResolver().query(
-        TransactionProvider.TRANSACTIONS_URI,
-        new String[]{"count(*)"},
-        DatabaseConstants.KEY_PICTURE_URI + " LIKE '%" + lastPathSegment + "'", null, null);
-    if (c != null) {
-      if (c.moveToFirst() && c.getInt(0) == 0) {
-        result = true;
-      }
-      c.close();
-    }
-    return result;
   }
 
   @Override

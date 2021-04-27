@@ -25,9 +25,11 @@ import org.totschnig.myexpenses.testutils.Matchers;
 import java.util.Currency;
 import java.util.concurrent.TimeoutException;
 
+import androidx.annotation.NonNull;
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.matcher.CursorMatchers;
 import androidx.test.espresso.matcher.ViewMatchers;
-import androidx.test.rule.ActivityTestRule;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
@@ -44,8 +46,8 @@ import static org.totschnig.myexpenses.testutils.Matchers.withCategoryLabel;
 public final class MyExpensesCategorySearchFilterTest extends BaseUiTest {
 
   @Rule
-  public ActivityTestRule<MyExpenses> mActivityRule =
-      new ActivityTestRule<>(MyExpenses.class);
+  public ActivityScenarioRule<MyExpenses> scenarioRule =
+      new ActivityScenarioRule<>(MyExpenses.class);
   private static String catLabel1;
   private static String catLabel2;
   private static String catLabel1Sub;
@@ -143,8 +145,9 @@ public final class MyExpensesCategorySearchFilterTest extends BaseUiTest {
             CursorMatchers.withRowLong(DatabaseConstants.KEY_ROWID, id)))));
   }
 
+  @NonNull
   @Override
-  protected ActivityTestRule<? extends ProtectedFragmentActivity> getTestRule() {
-    return mActivityRule;
+  protected ActivityScenario<? extends ProtectedFragmentActivity> getTestScenario() {
+    return scenarioRule.getScenario();
   }
 }

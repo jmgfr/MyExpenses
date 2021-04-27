@@ -36,6 +36,7 @@
   <string name="help_ManageParties_select_mapping_info">Wählen Sie eine Partei aus, indem Sie darauf tippen.</string>
   <string name="help_ManageParties_select_filter_info">Tippen Sie auf eine Partei, um die Buchungsliste zu filtern. Langes Tippen ermöglicht die Auswahl mehrerer Parteien.</string>
   <string name="help_ManageParties_floating_action_button">Verwenden Sie die schwebende Aktionsschaltfläche um einen Eintrag hinzuzufügen.</string>
+  <string name="cab_merge_help_text">Wenn dieselbe Partei mehrmals in der Liste mit unterschiedlichen Rechtschreibvarianten angezeigt wird, können Sie diese zusammenführen. Sie werden aufgefordert, die beizubehaltende Variante auszuwählen.</string>
   <!--ManageTemplates title is in keys-->
   <string name="help_ManageTemplates_plans_title">Plan-Kalender Ansicht</string>
   <string name="help_ManageTemplates_planner_title">Bevorstehende Wiederholungen</string>
@@ -125,6 +126,7 @@
   <string name="form_color_help_text">Auf der Buchungsliste für ein Konto wird dessen Farbe als primäre Farbe für die Benutzer-Schnittstelle verwendet.</string>
   <string name="form_synchronization_help_text_select">Wählen Sie ein Backend für die  Cloud-Synchronisierung.</string>
   <string name="form_synchronization_help_text_add">Backends können über die Einstellungen hinzugefügt werden.</string>
+  <string name="form_AccountEdit_active_tags_help_text">Sie können jedem Konto ein oder mehrere aktive Schlagwörter zuordnen. Wenn Sie eine neue Buchung erstellen, wird sie basierend auf dem ausgewählten Konto automatisch mit diesen gekennzeichnet.</string>
   <string name="menu_exclude_from_totals_help_text">Wenn Sie diese Option aktivieren, wird dieses Konto in der Gesamtdarstellung pro Währung nicht berücksichtigt.</string>
   <!--MethodEdit-->
   <string name="help_MethodEdit_title">Formular für Zahlungsweisen</string>

@@ -44,9 +44,11 @@ import org.totschnig.myexpenses.util.Result;
 import org.totschnig.myexpenses.util.ShortcutHelper;
 import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.util.licence.LicenceHandler;
+import org.totschnig.myexpenses.viewmodel.data.Tag;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -96,6 +98,7 @@ import static org.totschnig.myexpenses.provider.DatabaseConstants.WHERE_EXPENSE;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.WHERE_INCOME;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.WHERE_NOT_SPLIT_PART;
 import static org.totschnig.myexpenses.provider.DatabaseConstants.WHERE_TRANSFER;
+import static org.totschnig.myexpenses.provider.TransactionProvider.ACCOUNTS_TAGS_URI;
 
 /**
  * Account represents an account stored in the database.
@@ -109,6 +112,8 @@ public class Account extends Model {
   public static final int EXPORT_HANDLE_DELETED_UPDATE_BALANCE = 0;
   public static final int EXPORT_HANDLE_DELETED_CREATE_HELPER = 1;
   public final static long HOME_AGGREGATE_ID = Integer.MIN_VALUE;
+  private final static Uri LINKED_TAGS_URI = ACCOUNTS_TAGS_URI;
+  private final static String LINKED_TAGS_COLUMN = KEY_ACCOUNTID;
 
   private String label;
 
@@ -262,6 +267,20 @@ public class Account extends Model {
     return account;
   }
 
+  public static kotlin.Pair<Account, List<Tag>> getInstanceFromDbWithTags(long id) {
+    Account t = getInstanceFromDb(id);
+    return t == null ? null : new kotlin.Pair<>(t, loadTags(id));
+  }
+
+  @Nullable
+  public static List<Tag> loadTags(long id) {
+    return ModelWithLinkedTagsKt.loadTags(LINKED_TAGS_URI, LINKED_TAGS_COLUMN, id);
+  }
+
+  public boolean saveTags(@Nullable List<Tag> tags) {
+    return ModelWithLinkedTagsKt.saveTags(LINKED_TAGS_URI, LINKED_TAGS_COLUMN, tags, getId());
+  }
+
   private Uri buildExchangeRateUri() {
     return ContentUris.appendId(TransactionProvider.ACCOUNT_EXCHANGE_RATE_URI.buildUpon(), getId())
         .appendEncodedPath(currencyUnit.getCode())
@@ -295,9 +314,7 @@ public class Account extends Model {
   }
 
   public static void checkSyncAccounts(Context context) {
-    String[] validAccounts = GenericAccountService.getAccountsAsStream(context)
-        .map(account -> account.name)
-        .toArray(size -> new String[size]);
+    String[] validAccounts = GenericAccountService.getAccountNames(context);
     ContentValues values = new ContentValues(1);
     values.putNull(KEY_SYNC_ACCOUNT_NAME);
     String where = validAccounts.length > 0 ?
@@ -314,7 +331,7 @@ public class Account extends Model {
     }
     if (account.getSyncAccountName() != null) {
       AccountManager accountManager = AccountManager.get(MyApplication.getInstance());
-      android.accounts.Account syncAccount = GenericAccountService.GetAccount(account.getSyncAccountName());
+      android.accounts.Account syncAccount = GenericAccountService.getAccount(account.getSyncAccountName());
       accountManager.setUserData(syncAccount, SyncAdapter.KEY_LAST_SYNCED_LOCAL(account.getId()), null);
       accountManager.setUserData(syncAccount, SyncAdapter.KEY_LAST_SYNCED_REMOTE(account.getId()), null);
     }
@@ -637,6 +654,7 @@ public class Account extends Model {
     initialValues.put(KEY_COLOR, color);
     initialValues.put(KEY_SYNC_ACCOUNT_NAME, syncAccountName);
     initialValues.put(KEY_UUID, requireUuid());
+    initialValues.put(KEY_EXCLUDE_FROM_TOTALS, excludeFromTotals);
     if (criterion != null) {
       initialValues.put(KEY_CRITERION, criterion.getAmountMinor());
     } else {
@@ -653,7 +671,7 @@ public class Account extends Model {
       setId(ContentUris.parseId(uri));
     } else {
       uri = ContentUris.withAppendedId(CONTENT_URI, getId());
-      cr().update(uri, initialValues, null, null);
+      if (cr().update(uri, initialValues, null, null) == 0) return null;
     }
     if (hasForeignCurrency()) {
       storeExchangeRate();
@@ -772,7 +790,7 @@ public class Account extends Model {
       }
       return Result.SUCCESS;
     } catch (Exception e) {
-     return Result.ofFailure(e.getMessage());
+      return Result.ofFailure(e.getMessage());
     }
   }
 
@@ -869,7 +887,7 @@ public class Account extends Model {
       bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
       bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
       bundle.putString(DatabaseConstants.KEY_UUID, getUuid());
-      ContentResolver.requestSync(GenericAccountService.GetAccount(syncAccountName),
+      ContentResolver.requestSync(GenericAccountService.getAccount(syncAccountName),
           TransactionProvider.AUTHORITY, bundle);
     }
   }
@@ -897,20 +915,26 @@ public class Account extends Model {
    * @param withType true means, that the query is for either positive (income) or negative (expense) transactions
    *                 in that case, the merge transfer restriction must be skipped, since it is based on only
    *                 selecting the negative part of a transfer
-   * @return
    */
   public Uri getExtendedUriForTransactionList(boolean withType) {
     return Transaction.EXTENDED_URI;
   }
 
   public boolean isHomeAggregate() {
-    return getId() == HOME_AGGREGATE_ID;
+    return isHomeAggregate(getId());
+  }
+
+  public static boolean isHomeAggregate(long id) {
+    return id == HOME_AGGREGATE_ID;
   }
 
   public boolean isAggregate() {
-    return getId() < 0;
+    return isAggregate(getId());
   }
 
+  public static boolean isAggregate(long id) {
+    return id < 0;
+  }
 
   public String[] getExtendedProjectionForTransactionList() {
     return Transaction.PROJECTION_EXTENDED;
@@ -992,4 +1016,5 @@ public class Account extends Model {
   public boolean isSealed() {
     return sealed;
   }
+
 }

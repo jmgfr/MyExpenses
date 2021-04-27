@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"Ouvrir le panneau de navigation"</string>
     <string name="drawer_close">"Fermer le panneau de navigation"</string>
+    <string name="saving">"Enregistrement…"</string>
+    <string name="default_action">"Action par défaut"</string>
+    <string name="full_name">"Nom"</string>
+    <string name="postal_country">"Pays"</string>
     <string name="toast_text_copied">"Texte copié"</string>
     <string name="copy_text">"Copier dans le presse-papiers"</string>
     <string name="stop">"Arrêter"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"Saisie automatique"</string>
     <string name="discard">"Supprimer"</string>
     <string name="dialog_dismiss">"Supprimer"</string>
+    <string name="response_yes">"Oui"</string>
+    <string name="response_no">"Non"</string>
 </resources>
 

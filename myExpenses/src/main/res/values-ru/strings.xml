@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">Новый пароль</string>
     <string name="dialog_password_new_password_confirmation">Новый пароль (подтверждение)</string>
     <string name="dialog_remind_later">Позже</string>
-    <string name="dialog_remind_no">Нет, спасибо</string>
     <string name="dialog_remind_rate_how_many_stars">Какую оценку вы бы поставили приложению {app_name}?</string>
     <string name="dialog_remind_rate_1">Пожалуйста, найдите минутку, чтобы оценить и написать обзор на {app_name}.</string>
     <string name="dialog_remind_rate_2">Ваши комментарии позволяют нам постоянно улучшать и совершенствовать программу.</string>
@@ -361,7 +360,6 @@
     <string name="progress_dialog_deleting">Удалить объекты</string>
     <string name="progress_dialog_loading">Загрузка объекта из базы данных</string>
     <string name="progress_dialog_printing">Создание PDF</string>
-    <string name="progress_dialog_saving">Сохранение объекта в базу данных</string>
     <string name="qif_parse_result">Проанализированно: %1$s счетов; %2$s категорий и %3$s участников</string>
     <string name="qif_parse_failure_found_multiple_accounts">Найдено несколько счетов в QIF-файле.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Не удается объединить в существующий счёт.</string>
@@ -500,13 +498,14 @@
     <string name="comparison_operator_equal">равняется</string>
     <string name="comparison_operator_greater_than">больше чем</string>
     <string name="comparison_operator_lesser_than">меньше чем</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">между</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions before a specified date.  -->
     <string name="comparison_operator_date_before">до</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions after a specified date. -->
     <string name="comparison_operator_date_after">после</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Покупка была прервана или отменена.</string>
     <string name="hint_auto_fill">Позволить автозаполнение на основе последней транзакции для того же получателя/плательщика? Вы всегда можете изменить это поведение в настройках.</string>
-    <string name="yes">Да</string>
-    <string name="no">Нет</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%1$d счетов с валютой %2$s было обновлено.</string>
     <string name="learn_more">Узнать больше</string>
     <string name="import_source_file">Файл</string>

@@ -40,7 +40,7 @@ import org.totschnig.myexpenses.fragment.SettingsFragment
 import org.totschnig.myexpenses.model.ContribFeature
 import org.totschnig.myexpenses.preference.PrefKey
 import org.totschnig.myexpenses.task.TaskExecutionFragment
-import org.totschnig.myexpenses.util.DistributionHelper.getVersionInfo
+import org.totschnig.myexpenses.util.distrib.DistributionHelper.getVersionInfo
 import org.totschnig.myexpenses.util.PermissionHelper
 import org.totschnig.myexpenses.util.Result
 import org.totschnig.myexpenses.util.UiUtils
@@ -249,14 +249,6 @@ class MyPreferenceActivity : ProtectedFragmentActivity(), ContribIFace, Preferen
                     fragment.configureContribPrefs()
                 }
             }
-            TaskExecutionFragment.TASK_RESET_EQUIVALENT_AMOUNTS -> {
-                val r = o as Result<Int>
-                if (r.isSuccess) {
-                    showSnackbar(String.format(resources.configuration.locale, "%s (%d)", getString(R.string.reset_equivalent_amounts_success), r.extra))
-                } else {
-                    showSnackbar("Equivalent amount reset failed")
-                }
-            }
         }
     }
 
@@ -282,7 +274,7 @@ class MyPreferenceActivity : ProtectedFragmentActivity(), ContribIFace, Preferen
             return true
         }
         if (command == R.id.CHANGE_COMMAND) {
-            fragment.updateHomeCurrency(tag as String?)
+            fragment.updateHomeCurrency(tag as String)
             return true
         }
         return false

@@ -6,11 +6,9 @@ import android.app.KeyguardManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.icu.text.ListFormatter;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -26,6 +24,7 @@ import org.totschnig.myexpenses.R;
 import org.totschnig.myexpenses.activity.ContribInfoDialogActivity;
 import org.totschnig.myexpenses.activity.FolderBrowser;
 import org.totschnig.myexpenses.activity.MyPreferenceActivity;
+import org.totschnig.myexpenses.di.AppComponent;
 import org.totschnig.myexpenses.dialog.ConfirmationDialogFragment;
 import org.totschnig.myexpenses.dialog.MessageDialogFragment;
 import org.totschnig.myexpenses.feature.Feature;
@@ -42,26 +41,22 @@ import org.totschnig.myexpenses.preference.SimplePasswordDialogFragmentCompat;
 import org.totschnig.myexpenses.preference.SimplePasswordPreference;
 import org.totschnig.myexpenses.preference.TimePreference;
 import org.totschnig.myexpenses.preference.TimePreferenceDialogFragmentCompat;
-import org.totschnig.myexpenses.provider.TransactionProvider;
 import org.totschnig.myexpenses.sync.ServiceLoader;
 import org.totschnig.myexpenses.sync.SyncBackendProviderFactory;
-import org.totschnig.myexpenses.task.TaskExecutionFragment;
 import org.totschnig.myexpenses.util.AppDirHelper;
 import org.totschnig.myexpenses.util.CurrencyFormatter;
-import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.ShareUtils;
 import org.totschnig.myexpenses.util.ShortcutHelper;
 import org.totschnig.myexpenses.util.UiUtils;
 import org.totschnig.myexpenses.util.Utils;
 import org.totschnig.myexpenses.util.ads.AdHandlerFactory;
 import org.totschnig.myexpenses.util.crashreporting.CrashHandler;
-import org.totschnig.myexpenses.util.io.FileUtils;
+import org.totschnig.myexpenses.util.distrib.DistributionHelper;
 import org.totschnig.myexpenses.util.io.NetworkUtilsKt;
 import org.totschnig.myexpenses.util.licence.LicenceHandler;
 import org.totschnig.myexpenses.util.licence.Package;
 import org.totschnig.myexpenses.util.licence.ProfessionalPackage;
 import org.totschnig.myexpenses.util.tracking.Tracker;
-import org.totschnig.myexpenses.viewmodel.CurrencyViewModel;
 import org.totschnig.myexpenses.viewmodel.data.Currency;
 import org.totschnig.myexpenses.widget.AbstractWidgetKt;
 
@@ -78,7 +73,6 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -180,12 +174,10 @@ public class SettingsFragment extends BaseSettingsFragment implements
   @Inject
   CurrencyFormatter currencyFormatter;
 
-  private CurrencyViewModel currencyViewModel;
-
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    requireApplication().getAppComponent().inject(this);
-    currencyViewModel = new ViewModelProvider(this).get(CurrencyViewModel.class);
+    final AppComponent appComponent = requireApplication().getAppComponent();
+    appComponent.inject(this);
     super.onCreate(savedInstanceState);
     prefHandler.preparePreferenceFragment(this);
   }
@@ -221,14 +213,6 @@ public class SettingsFragment extends BaseSettingsFragment implements
           return true;
         }
         return false;
-      };
-
-  //TODO: these settings need to be authoritatively stored in Database, instead of just mirrored
-  private final Preference.OnPreferenceChangeListener storeInDatabaseChangeListener =
-      (preference, newValue) -> {
-        activity().startTaskExecution(TaskExecutionFragment.TASK_STORE_SETTING,
-            new String[]{preference.getKey()}, newValue.toString(), R.string.progress_dialog_saving);
-        return true;
       };
 
   private void trackPreferenceClick(Preference preference) {
@@ -285,7 +269,7 @@ public class SettingsFragment extends BaseSettingsFragment implements
 
       this.<LocalizedFormatEditTextPreference>requirePreference(CUSTOM_DATE_FORMAT).setOnValidationErrorListener(this);
 
-      setAppDirSummary();
+      loadAppDirSummary();
 
       Preference qifPref = requirePreference(IMPORT_QIF);
       qifPref.setSummary(getString(R.string.pref_import_summary, "QIF"));
@@ -294,29 +278,8 @@ public class SettingsFragment extends BaseSettingsFragment implements
       csvPref.setSummary(getString(R.string.pref_import_summary, "CSV"));
       csvPref.setTitle(getString(R.string.pref_import_title, "CSV"));
 
-      new AsyncTask<Void, Void, Boolean>() {
-        @Override
-        protected Boolean doInBackground(Void... params) {
-          if (getActivity() == null) return false;
-          Cursor c = getActivity().getContentResolver().query(
-              TransactionProvider.STALE_IMAGES_URI,
-              new String[]{"count(*)"},
-              null, null, null);
-          if (c == null)
-            return false;
-          boolean hasImages = false;
-          if (c.moveToFirst() && c.getInt(0) > 0)
-            hasImages = true;
-          c.close();
-          return hasImages;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-          if (getActivity() != null && !getActivity().isFinishing() && result)
-            requirePreference(MANAGE_STALE_IMAGES).setVisible(true);
-        }
-      }.execute();
+      getViewModel().getHasStaleImages().observe(this,
+          result -> requirePreference(MANAGE_STALE_IMAGES).setVisible(result));
 
       final PreferenceCategory privacyCategory = requirePreference(CATEGORY_PRIVACY);
       if (!DistributionHelper.getDistribution().getSupportsTrackingAndCrashReporting()) {
@@ -337,7 +300,7 @@ public class SettingsFragment extends BaseSettingsFragment implements
         languagePref.setVisible(false);
       }
 
-      currencyViewModel.getCurrencies().observe(this, currencies -> {
+      getCurrencyViewModel().getCurrencies().observe(this, currencies -> {
         ListPreference homeCurrencyPref = requirePreference(PrefKey.HOME_CURRENCY);
         homeCurrencyPref.setEntries(Stream.of(currencies).map(Currency::toString).toArray(CharSequence[]::new));
         homeCurrencyPref.setEntryValues(Stream.of(currencies).map(Currency::getCode).toArray(CharSequence[]::new));
@@ -349,7 +312,6 @@ public class SettingsFragment extends BaseSettingsFragment implements
         String[] translatorsArray = getResources().getStringArray(translatorsArrayResId);
         final String translators;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-          //noinspection RedundantCast
           translators = ListFormatter.getInstance().format((Object[]) translatorsArray);
         } else {
           translators = TextUtils.join(", ", translatorsArray);
@@ -402,7 +364,7 @@ public class SettingsFragment extends BaseSettingsFragment implements
     else if (rootKey.equals(getKey(AUTO_BACKUP))) {
       requirePreference(AUTO_BACKUP_INFO).setSummary(getString(R.string.pref_auto_backup_summary) + " " +
           ContribFeature.AUTO_BACKUP.buildRequiresString(requireActivity()));
-      requirePreference(AUTO_BACKUP_CLOUD).setOnPreferenceChangeListener(storeInDatabaseChangeListener);
+      requirePreference(AUTO_BACKUP_CLOUD).setOnPreferenceChangeListener(getStoreInDatabaseChangeListener());
     }
     //GROUP start screen
     else if (rootKey.equals(getKey(GROUPING_START_SCREEN))) {
@@ -464,8 +426,8 @@ public class SettingsFragment extends BaseSettingsFragment implements
                   .map(SyncBackendProviderFactory::getLabel)
                   .collect(Collectors.joining(", "))) +
               " " + ContribFeature.SYNCHRONIZATION.buildRequiresString(requireActivity()));
-      requirePreference(SYNC_NOTIFICATION).setOnPreferenceChangeListener(storeInDatabaseChangeListener);
-      requirePreference(SYNC_WIFI_ONLY).setOnPreferenceChangeListener(storeInDatabaseChangeListener);
+      requirePreference(SYNC_NOTIFICATION).setOnPreferenceChangeListener(getStoreInDatabaseChangeListener());
+      requirePreference(SYNC_WIFI_ONLY).setOnPreferenceChangeListener(getStoreInDatabaseChangeListener());
     } else if (rootKey.equals(getKey(FEATURE_UNINSTALL))) {
       configureUninstallPrefs();
     } else if (rootKey.equals(getKey(EXCHANGE_RATES))) {
@@ -657,8 +619,7 @@ public class SettingsFragment extends BaseSettingsFragment implements
         }
       }
       return true;
-    }
-    else if (matches(pref, UI_WEB)) {
+    } else if (matches(pref, UI_WEB)) {
       if ((Boolean) value) {
         if (!NetworkUtilsKt.isNetworkConnected(requireContext())) {
           activity().showSnackbar(R.string.no_network);
@@ -726,25 +687,19 @@ public class SettingsFragment extends BaseSettingsFragment implements
       return true;
     }
     if (matches(preference, APP_DIR)) {
-      DocumentFile appDir = AppDirHelper.getAppDir(getActivity());
-      if (appDir == null) {
-        preference.setSummary(R.string.external_storage_unavailable);
-        preference.setEnabled(false);
-      } else {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-          //noinspection InlinedApi
-          Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-          try {
-            pickFolderRequestStart = System.currentTimeMillis();
-            startActivityForResult(intent, PICK_FOLDER_REQUEST);
-            return true;
-          } catch (ActivityNotFoundException e) {
-            CrashHandler.report(e);
-            //fallback to FolderBrowser
-          }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        //noinspection InlinedApi
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        try {
+          pickFolderRequestStart = System.currentTimeMillis();
+          startActivityForResult(intent, PICK_FOLDER_REQUEST);
+          return true;
+        } catch (ActivityNotFoundException e) {
+          CrashHandler.report(e);
+          //fallback to FolderBrowser
         }
-        startLegacyFolderRequest(appDir);
       }
+      startLegacyFolderRequest(AppDirHelper.getAppDir(getActivity()));
       return true;
     }
     if (handleContrib(IMPORT_CSV, CSV_IMPORT, preference)) return true;
@@ -798,24 +753,8 @@ public class SettingsFragment extends BaseSettingsFragment implements
     startActivityForResult(intent, PICK_FOLDER_REQUEST_LEGACY);
   }
 
-  private void setAppDirSummary() {
-    Preference pref = requirePreference(APP_DIR);
-    if (AppDirHelper.isExternalStorageAvailable()) {
-      DocumentFile appDir = AppDirHelper.getAppDir(getActivity());
-      if (appDir != null) {
-        if (AppDirHelper.isWritableDirectory(appDir)) {
-          pref.setSummary(FileUtils.getPath(getActivity(), appDir.getUri()));
-        } else {
-          pref.setSummary(getString(R.string.app_dir_not_accessible,
-              FileUtils.getPath(requireApplication(), appDir.getUri())));
-        }
-      } else {
-        pref.setSummary(R.string.io_error_appdir_null);
-      }
-    } else {
-      pref.setSummary(R.string.external_storage_unavailable);
-      pref.setEnabled(false);
-    }
+  private void loadAppDirSummary() {
+    getViewModel().loadAppDirInfo();
   }
 
   private Bitmap getBitmapForShortcut(int iconIdLegacy, int iconIdLollipop) {
@@ -899,7 +838,7 @@ public class SettingsFragment extends BaseSettingsFragment implements
         requireActivity().getContentResolver().takePersistableUriPermission(dir,
             Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         prefHandler.putString(APP_DIR, dir.toString());
-        setAppDirSummary();
+        loadAppDirSummary();
       } else {
         //we try to determine if we get here due to abnormal failure (observed on Xiaomi) of request, or if user canceled
         long pickFolderRequestDuration = System.currentTimeMillis() - pickFolderRequestStart;
@@ -913,7 +852,7 @@ public class SettingsFragment extends BaseSettingsFragment implements
         }
       }
     } else if (requestCode == PICK_FOLDER_REQUEST_LEGACY && resultCode == Activity.RESULT_OK) {
-      setAppDirSummary();
+      loadAppDirSummary();
     }
   }
 
@@ -945,18 +884,4 @@ public class SettingsFragment extends BaseSettingsFragment implements
     return true;
   }
 
-  public void updateHomeCurrency(String currencyCode) {
-    final MyPreferenceActivity activity = ((MyPreferenceActivity) getActivity());
-    if (activity != null) {
-      final ListPreference preference = findPreference(HOME_CURRENCY);
-      if (preference != null) {
-        preference.setValue(currencyCode);
-      } else {
-        prefHandler.putString(HOME_CURRENCY, currencyCode);
-      }
-      activity.invalidateHomeCurrency();
-      activity.startTaskExecution(TaskExecutionFragment.TASK_RESET_EQUIVALENT_AMOUNTS,
-          null, null, R.string.progress_dialog_saving);
-    }
-  }
 }

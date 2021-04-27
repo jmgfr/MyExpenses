@@ -7,6 +7,11 @@
     <!-- packages/apps/UnifiedEmail/res/values/strings.xml -->
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
+    <string name="saving">Saving&#8230;</string>
+    <string name="default_action">"Default action"</string>
+    <!-- packages/apps/ContactsCommon/res/values/strings.xml -->
+    <string name="full_name">Name</string>
+    <string name="postal_country">Country</string>
     <!-- packages/apps/Contacts/res/values/strings.xml -->
     <string name="toast_text_copied">Text copied</string>
     <string name="copy_text">Copy to clipboard</string>
@@ -22,5 +27,8 @@
     <string name="discard">Discard</string>
     <!--  packages/apps/Camera2/res/values/strings.xml-->
     <string name="dialog_dismiss">Dismiss</string>
+    <!--  packages/apps/Calendar/res/values/strings.xml-->
+    <string name="response_yes">Yes</string>
+    <string name="response_no">No</string>
 </resources>
 

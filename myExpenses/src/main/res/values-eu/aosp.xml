@@ -7,6 +7,10 @@
 <resources>
     <string name="drawer_open">"Ireki nabigazio-panel lerrakorra"</string>
     <string name="drawer_close">"Itxi nabigazio-panel lerrakorra"</string>
+    <string name="saving">"Gordetzen…"</string>
+    <string name="default_action">"Ekintza lehenetsia"</string>
+    <string name="full_name">"Izena"</string>
+    <string name="postal_country">"Herrialdea"</string>
     <string name="toast_text_copied">"Testua kopiatu da"</string>
     <string name="copy_text">"Kopiatu arbelean"</string>
     <string name="stop">"Gelditu"</string>
@@ -15,5 +19,7 @@
     <string name="autofill">"Betetze automatikoa"</string>
     <string name="discard">"Baztertu"</string>
     <string name="dialog_dismiss">"Baztertu"</string>
+    <string name="response_yes">"Bai"</string>
+    <string name="response_no">"Ez"</string>
 </resources>
 

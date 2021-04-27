@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.RecyclerView
 import icepick.Icepick
@@ -28,7 +29,6 @@ import org.totschnig.myexpenses.model.Money
 import org.totschnig.myexpenses.provider.TransactionProvider
 import org.totschnig.myexpenses.task.TaskExecutionFragment
 import org.totschnig.myexpenses.util.CurrencyFormatter
-import org.totschnig.myexpenses.util.UiUtils
 import org.totschnig.myexpenses.util.getDateTimeFormatter
 import org.totschnig.myexpenses.viewmodel.PlannerViewModel
 import org.totschnig.myexpenses.viewmodel.data.EventObserver
@@ -65,7 +65,7 @@ class PlannerFragment : BaseDialogFragment() {
     // This property is only valid between onCreateDialog and onDestroyView.
     private val binding get() = _binding!!
 
-    val model: PlannerViewModel by viewModels()
+    val viewModel: PlannerViewModel by viewModels()
 
     @State
     @JvmField
@@ -91,10 +91,11 @@ class PlannerFragment : BaseDialogFragment() {
                         intArrayOf()
                 ),
                 intArrayOf(
-                        UiUtils.getColor(requireContext(), R.attr.colorControlActivated),
-                        resources.getColor(R.color.cardBackground)
+                        ResourcesCompat.getColor(resources, R.color.activatedBackground, null),
+                        ResourcesCompat.getColor(resources, R.color.cardBackground, null)
                 )
         )
+        (requireActivity().application as MyApplication).appComponent.inject(viewModel)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -121,7 +122,7 @@ class PlannerFragment : BaseDialogFragment() {
         val plannerAdapter = PlannerAdapter()
         binding.recyclerView.adapter = plannerAdapter
         binding.Title.movementMethod = LinkMovementMethod.getInstance()
-        model.getInstances().observe(this, EventObserver { list ->
+        viewModel.getInstances().observe(this, EventObserver { list ->
             val previousCount = plannerAdapter.itemCount
             plannerAdapter.addData(list)
             val itemCount = plannerAdapter.itemCount
@@ -129,19 +130,19 @@ class PlannerFragment : BaseDialogFragment() {
                 binding.recyclerView.layoutManager?.scrollToPosition(if (list.first) itemCount - 1 else 0)
             }
         })
-        model.getTitle().observe(this, { title ->
+        viewModel.getTitle().observe(this, { title ->
             binding.Title.text = title
         })
-        model.getUpdates().observe(this, { update ->
+        viewModel.getUpdates().observe(this, { update ->
             //Timber.d("Update posted")
             plannerAdapter.postUpdate(update)
         })
-        model.getBulkCompleted().observe(this, EventObserver { list ->
+        viewModel.getBulkCompleted().observe(this, EventObserver { list ->
             list.forEach { planInstance ->
-                model.getUpdateFor(TransactionProvider.PLAN_INSTANCE_SINGLE_URI(planInstance.templateId, planInstance.instanceId))
+                viewModel.getUpdateFor(TransactionProvider.PLAN_INSTANCE_SINGLE_URI(planInstance.templateId, planInstance.instanceId))
             }
         })
-        model.loadInstances()
+        viewModel.loadInstances()
         val alertDialog = builder
                 .setPositiveButton(android.R.string.ok, null)
                 .setNeutralButton(R.string.menu_create_instance_save, null)
@@ -164,21 +165,21 @@ class PlannerFragment : BaseDialogFragment() {
     }
 
     private fun onBulkApply() {
-        model.applyBulk(selectedInstances.toList())
+        viewModel.applyBulk(selectedInstances.toList())
         selectedInstances.clear()
         configureBulkApplyButton()
     }
 
     fun onEditRequestOk() {
         instanceUriToUpdate?.let {
-            model.getUpdateFor(it)
+            viewModel.getUpdateFor(it)
         }
     }
 
     inner class StateObserver : ContentObserver(Handler()) {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
             Timber.d("received state change for uri: %s", uri)
-            uri?.let { model.getUpdateFor(it) }
+            uri?.let { viewModel.getUpdateFor(it) }
         }
     }
 
@@ -239,8 +240,8 @@ class PlannerFragment : BaseDialogFragment() {
                 })
                 colorAccount.setBackgroundColor(planInstance.color)
                 amount.text = currencyFormatter.formatCurrency(planInstance.amount)
-                amount.setTextColor((root.context.resources.getColor(
-                        if (planInstance.amount.amountMinor < 0) R.color.colorExpense else R.color.colorIncome)))
+                amount.setTextColor(ResourcesCompat.getColor(resources,
+                        if (planInstance.amount.amountMinor < 0) R.color.colorExpense else R.color.colorIncome, null))
                 val templatesList = parentFragment as? TemplatesList
                 root.setOnLongClickListener {
                     return@setOnLongClickListener if (planInstance.sealed) {
@@ -270,7 +271,7 @@ class PlannerFragment : BaseDialogFragment() {
                                 true
                             }
                             R.id.CREATE_PLAN_INSTANCE_SAVE_COMMAND -> {
-                                model.applyBulk(listOf(planInstance))
+                                viewModel.applyBulk(listOf(planInstance))
                                 true
 
                             }

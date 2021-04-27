@@ -1,7 +1,5 @@
 package org.totschnig.myexpenses.activity
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Intent
 import android.database.Cursor
@@ -13,7 +11,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.ViewModelProvider
 import eltos.simpledialogfragment.SimpleDialog.OnDialogResultListener
@@ -24,6 +21,7 @@ import eltos.simpledialogfragment.form.Spinner
 import icepick.State
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalTime
+import org.totschnig.myexpenses.MyApplication
 import org.totschnig.myexpenses.R
 import org.totschnig.myexpenses.activity.ExpenseEdit.Companion.KEY_OCR_RESULT
 import org.totschnig.myexpenses.contract.TransactionsContract.Transactions
@@ -44,6 +42,7 @@ import org.totschnig.myexpenses.provider.DatabaseConstants.KEY_PAYEE_NAME
 import org.totschnig.myexpenses.ui.DiscoveryHelper
 import org.totschnig.myexpenses.ui.IDiscoveryHelper
 import org.totschnig.myexpenses.util.TextUtils
+import org.totschnig.myexpenses.util.distrib.ReviewManager
 import org.totschnig.myexpenses.viewmodel.MyExpensesViewModel
 import timber.log.Timber
 import java.io.File
@@ -71,6 +70,9 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
 
     @Inject
     lateinit var discoveryHelper: IDiscoveryHelper
+    @Inject
+    lateinit var reviewManager: ReviewManager
+
     var accountsCursor: Cursor? = null
     lateinit var toolbar: Toolbar
 
@@ -96,6 +98,11 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[MyExpensesViewModel::class.java]
+        (applicationContext as MyApplication).appComponent.inject(viewModel)
+    }
+
+    override fun injectDependencies() {
+        (applicationContext as MyApplication).appComponent.inject(this)
     }
 
     override fun onFeatureAvailable(feature: Feature) {
@@ -321,12 +328,7 @@ abstract class BaseMyExpenses : LaunchActivity(), OcrHost, OnDialogResultListene
     }
 
     private fun copyToClipBoard() {
-        try {
-            ContextCompat.getSystemService(this, ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(null, currentBalance))
-            showSnackbar(R.string.toast_text_copied)
-        } catch (e: RuntimeException) {
-            Timber.e(e)
-        }
+        currentBalance?.let { copyToClipboard(it) }
     }
 
     fun updateFab() {

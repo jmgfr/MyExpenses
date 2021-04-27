@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">New password</string>
     <string name="dialog_password_new_password_confirmation">New password (confirmation)</string>
     <string name="dialog_remind_later">Later</string>
-    <string name="dialog_remind_no">No thanks</string>
     <string name="dialog_remind_rate_how_many_stars">How many stars would you give to {app_name}?</string>
     <string name="dialog_remind_rate_1">Please take a moment to rate and review {app_name}.</string>
     <string name="dialog_remind_rate_2">Your comments allow us to continually add improvements and enhancements.</string>
@@ -356,7 +355,6 @@
     <string name="progress_dialog_deleting">Deleting objects</string>
     <string name="progress_dialog_loading">Loading object from database</string>
     <string name="progress_dialog_printing">Generating PDF</string>
-    <string name="progress_dialog_saving">Saving object to database</string>
     <string name="qif_parse_result">Parsed: %1$s accounts; %2$s categories and %3$s parties</string>
     <string name="qif_parse_failure_found_multiple_accounts">Multiple accounts found in QIF file.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Cannot merge them into existing account.</string>
@@ -491,8 +489,6 @@
     <string name="comparison_operator_date_after">after</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">Purchasing failed or cancelled.</string>
     <string name="hint_auto_fill">Should data be filled in automatically from last transaction for same payee/payer? You can always change this behaviour from the settings.</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%1$d accounts with currency %2$s have been updated.</string>
     <string name="learn_more">Learn more</string>
     <string name="import_source_file">File</string>
@@ -512,6 +508,7 @@
     <string name="pref_manage_stale_images_summary">Manage pictures left over from deleted transactions</string>
     <string name="image_deleted">Picture has been deleted</string>
     <string name="transaction_deleted">Transaction has been deleted</string>
+    <string name="account_deleted">Account has been deleted</string>
     <string name="dialog_export_applied_to_filter">Only transactions matched by the current filter will be considered.</string>
     <string name="export_handle_deleted_create_helper">Create helper transaction</string>
     <string name="export_handle_deleted_update_balance">Update opening balance</string>
@@ -951,7 +948,6 @@
     <!-- When user opens a template from the transaction form, existing data is discarded. This message appears in a dialgoue to confirm the action -->
     <string name="confirmation_load_template_discard_data">Existing form data will be discarded.</string>
     <string name="pref_clone_with_current_date_title">Date of cloned transactions</string>
-    <string name="default_action">Default action</string>
     <string name="template_default_action_without_amount_hint">Template without amount should be saved with default action \'Edit\'</string>
     <string name="plan_automatic_without_amount_hint">Plan without amount should not be saved with automatic plan execution</string>
     <string name="content_description_edit_plan">Edit plan in calendar app</string>
@@ -979,4 +975,17 @@
     <!-- This refers to a plan that recurs every last day of the month. It is shown next to a checkbox allowing user to select this type of recurrence. -->
     <string name="recurrence_last_day_of_month">Last day</string>
     <string name="warning_link_transfer">The two selected transactions will be linked as transfer. Payee/Payer and category information will be dropped.</string>
+    <!-- This is the title of an entry on the configuration screen for the account widget. It allows to decide which number should be displayed for each account: the current balance or the total (which included future transactions) -->
+    <string name="account_widget_configuration_sum">Type of displayed sum</string>
+    <string name="account_widget_configuration_sum_total">Include future transactions</string>
+    <!-- Title of dialogue that allows to configure account widget -->
+    <string name="account_widget_configuration">Account widget configuration</string>
+    <!-- Title of a menu entry allowing to merge duplicate entries in the parties table (payee/payer) -->
+    <string name="menu_merge">Merge</string>
+    <!-- When user selects duplicate parties to be merged, he sees this prompt asking him to select which name should be selected for the merged party -->
+    <string name="merge_parties_select">Select name of merged party:</string>
+    <!-- This is the label for a field for accounts. Active tags are automatically added to new transactions when an account is selected. -->
+    <string name="active_tags">Active Tags</string>
+    <!-- This is used in the title of the email by which user requests an invoice for payment via bank transfer -->
+    <string name="request_for_invoice">Request for Invoice</string>
 </resources>

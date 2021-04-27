@@ -12,7 +12,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.totschnig.myexpenses.R;
-import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
 import org.totschnig.myexpenses.model.CurrencyUnit;
 import org.totschnig.myexpenses.provider.DbUtils;
 import org.totschnig.myexpenses.util.CurrencyFormatter;
@@ -49,7 +48,7 @@ public abstract class CategoryTreeBaseAdapter<ROWBINDING extends ViewBinding> ex
   private final boolean withNullCategory;
   public static final long NULL_ITEM_ID = -1L;
 
-  public CategoryTreeBaseAdapter(ProtectedFragmentActivity ctx, CurrencyFormatter currencyFormatter,
+  public CategoryTreeBaseAdapter(Context ctx, CurrencyFormatter currencyFormatter,
                                  CurrencyUnit currency, boolean withMainColors, boolean withSubColors, boolean withNullCategory) {
     this.context = ctx;
     inflater = LayoutInflater.from(ctx);
@@ -91,14 +90,14 @@ public abstract class CategoryTreeBaseAdapter<ROWBINDING extends ViewBinding> ex
   @Override
   public long getGroupId(int groupPosition) {
     if (groupPosition >= getGroupCount()) return 0;
-    return getGroup(groupPosition).id;
+    return getGroup(groupPosition).getId();
   }
 
   @Override
   public long getChildId(int groupPosition, int childPosition) {
     if (groupPosition > getGroupCount() || childPosition >= getChildrenCount(groupPosition))
       return 0;
-    return getChild(groupPosition, childPosition).id;
+    return getChild(groupPosition, childPosition).getId();
   }
 
   @Override
@@ -109,7 +108,7 @@ public abstract class CategoryTreeBaseAdapter<ROWBINDING extends ViewBinding> ex
   @Override
   public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
     final Category item = getGroup(groupPosition);
-    final View view = getView(item, null, convertView, parent, withMainColors ? item.color : 0, item.icon);
+    final View view = getView(item, null, convertView, parent, withMainColors ? item.getColor() : 0, item.getIcon());
     ImageView indicator = groupIndicator((ViewHolder) view.getTag());
     if (getChildrenCount(groupPosition) == 0) {
       indicator.setImageResource(R.drawable.expander_empty);
@@ -128,10 +127,10 @@ public abstract class CategoryTreeBaseAdapter<ROWBINDING extends ViewBinding> ex
     final Category item = getChild(groupPosition, childPosition);
     int color = 0;
     if (withSubColors) {
-      final List<Integer> subColors = getSubColors(parentCat.color);
+      final List<Integer> subColors = getSubColors(parentCat.getColor());
       color = subColors.get(childPosition % subColors.size());
     }
-    final View view = getView(item, parentCat, convertView, parent, color, item.icon);
+    final View view = getView(item, parentCat, convertView, parent, color, item.getIcon());
     groupIndicator((ViewHolder) view.getTag()).setVisibility(View.INVISIBLE);
     return view;
   }
@@ -147,10 +146,10 @@ public abstract class CategoryTreeBaseAdapter<ROWBINDING extends ViewBinding> ex
       holder = (ViewHolder) convertView.getTag();
     }
     TextView label = label(holder);
-    label.setText(item.label);
+    label.setText(item.getLabel());
     label.setTypeface(label.getTypeface(), parentItem == null ? Typeface.BOLD : Typeface.NORMAL);
-    if (item.sum != null && currency != null) {
-      amount(holder).setText(currencyFormatter.convAmount(item.sum, currency));
+    if (item.getSum() != null && currency != null) {
+      amount(holder).setText(currencyFormatter.convAmount(item.getSum(), currency));
     }
     icon(holder).setImageResource(icon != null ? context.getResources().getIdentifier(icon, "drawable", context.getPackageName()) : 0);
     return convertView;

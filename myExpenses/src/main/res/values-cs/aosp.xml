@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"Otevřít navigační složku"</string>
     <string name="drawer_close">"Zavřít navigační složku"</string>
+    <string name="saving">"Ukládání…"</string>
+    <string name="default_action">"Výchozí akce"</string>
+    <string name="full_name">"Jméno"</string>
+    <string name="postal_country">"Země"</string>
     <string name="toast_text_copied">"Text zkopírován"</string>
     <string name="copy_text">"Zkopírovat do schránky"</string>
     <string name="stop">"Zastavit"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"Automatické vyplňování"</string>
     <string name="discard">"Zahodit"</string>
     <string name="dialog_dismiss">"Zavřít"</string>
+    <string name="response_yes">"Ano"</string>
+    <string name="response_no">"Ne"</string>
 </resources>
 

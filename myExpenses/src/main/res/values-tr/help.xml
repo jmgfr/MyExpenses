@@ -36,6 +36,7 @@
   <string name="help_ManageParties_select_mapping_info">Muameleye müdahil bir taraf seçmek için üzerine dokunun.</string>
   <string name="help_ManageParties_select_filter_info">Muamele listesine filtre uygulamak için muameleye müdahil bir tarafa dokunun. Birden fazla taraf seçmek için uzun dokunun.</string>
   <string name="help_ManageParties_floating_action_button">Yeni bir unsur eklemek için kayan eylem düğmesini kullanın.</string>
+  <string name="cab_merge_help_text">Şayet aynı taraf listede imla değişiklikleriyle birden fazla defa mevcutsa, bunları birleştirebilirsiniz. Hangisinin muhafaza edileceğini seçmeniz istenecektir.</string>
   <!--ManageTemplates title is in keys-->
   <string name="help_ManageTemplates_plans_title">Planlama takvim görünümü</string>
   <string name="help_ManageTemplates_planner_title">Gelecek tekrarlamalar</string>
@@ -125,6 +126,7 @@
   <string name="form_color_help_text">Bir hesabın muamele listesindeki renk, birincil kullanıcı arayüzü rengi olarak kullanılacaktır.</string>
   <string name="form_synchronization_help_text_select">Bulut eşleştirmesi için bir arka uç seç.</string>
   <string name="form_synchronization_help_text_add">Arka uçlar Ayarlar ekranından eklenebilir.</string>
+  <string name="form_AccountEdit_active_tags_help_text">Her hesapla bir veya daha fazla faal etiket ilişkilendirebilirsiniz. Yeni bir muamele oluşturduğunuzda bu, seçili hesap temel alınarak otomatik olarak bu etiketlerle etiketlenecektir.</string>
   <string name="menu_exclude_from_totals_help_text">Bu şıkkı seçerseniz, bu hesap para birimine dayalı gruplara dahil edilmeyecektir.</string>
   <!--MethodEdit-->
   <string name="help_MethodEdit_title">Ödeme metotları için form</string>

@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">סיסמה חדשה</string>
     <string name="dialog_password_new_password_confirmation">סיסמה חדשה (אישור)</string>
     <string name="dialog_remind_later">מאוחר יותר</string>
-    <string name="dialog_remind_no">לא תודה</string>
     <string name="dialog_remind_rate_how_many_stars">כמה כוכבים תעניק לאפליקציה {app_name}?</string>
     <string name="dialog_remind_rate_1">הקדש בבקשה רגע כדי לדרג ולבדוק את האפליקציה {app_name}.</string>
     <string name="dialog_remind_rate_2">ההערות שלך מאפשרות לנו להוסיף שיפורים ותוספות.</string>
@@ -362,7 +361,6 @@
     <string name="progress_dialog_deleting">מחיקת אובייקטים</string>
     <string name="progress_dialog_loading">טוען אובייקט ממסד הנתונים</string>
     <string name="progress_dialog_printing">מיצר קובץ PDF</string>
-    <string name="progress_dialog_saving">שומר אובייקט למסד הנתונים</string>
     <string name="qif_parse_result">מנותח:%1$sחשבונות; %2$s קטגוריות %3$sוחלקים</string>
     <string name="qif_parse_failure_found_multiple_accounts">נמצאו מספר חשבונות בקובץ QIF.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">לא ניתן למזג אותם בחשבון קיים.</string>
@@ -509,8 +507,6 @@
     <string name="comparison_operator_date_after">אחרי</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">הרכישה נכשלה או בוטלה.</string>
     <string name="hint_auto_fill">האם הנתונים צריכים להיות מלאים באופן אוטומטי מהעסקה האחרונה עבור אותו מקבל / המשלם? תוכל תמיד לשנות התנהגות זו מההגדרות.</string>
-    <string name="yes">כן</string>
-    <string name="no">לא</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%1$d חשבון עם מטבע %2$sעודכן.</string>
     <string name="learn_more">למד עוד</string>
     <string name="import_source_file">קובץ</string>
@@ -530,6 +526,7 @@
     <string name="pref_manage_stale_images_summary">ניהול תמונות שנותרו מעסקאות שנמחקו</string>
     <string name="image_deleted">תמונה נמחקה</string>
     <string name="transaction_deleted">עסקה נמחקה</string>
+    <string name="account_deleted">החשבון נמחק</string>
     <string name="dialog_export_applied_to_filter">רק עסקאות התואמות את המסנן הנוכחי ייחשבו.</string>
     <string name="export_handle_deleted_create_helper">צור עסקה לעזרה</string>
     <string name="export_handle_deleted_update_balance">עדכון יתרת פתיחה</string>
@@ -977,7 +974,6 @@
     <!-- When user opens a template from the transaction form, existing data is discarded. This message appears in a dialgoue to confirm the action -->
     <string name="confirmation_load_template_discard_data">נתוני הטופס הקיימים יימחקו.</string>
     <string name="pref_clone_with_current_date_title">תאריך העסקאות המשובטות</string>
-    <string name="default_action">פעולת ברירת מחדל</string>
     <string name="template_default_action_without_amount_hint">יש לשמור תבנית ללא סכום עם פעולת ברירת המחדל \'ערוך\'</string>
     <string name="plan_automatic_without_amount_hint">אין לשמור תוכנית ללא סכום עם ביצוע תוכנית אוטומטית</string>
     <string name="content_description_edit_plan">Edit plan in calendar app</string>
@@ -1004,4 +1000,14 @@
     <string name="single_feature_info">לחלופין תוכלו לקנות גישה בלתי מוגבלת רק לתכונה זו.</string>
     <!-- This refers to a plan that recurs every last day of the month. It is shown next to a checkbox allowing user to select this type of recurrence. -->
     <string name="recurrence_last_day_of_month">יום אחרון</string>
-</resources>
+    <string name="warning_link_transfer">שתי העסקאות שנבחרו יקושרו כהעברה. מידע על מקבל / משלם וקטגוריה יימחק.</string>
+    <!-- This is the title of an entry on the configuration screen for the account widget. It allows to decide which number should be displayed for each account: the current balance or the total (which included future transactions) -->
+    <string name="account_widget_configuration_sum">סוג הסכום המוצג</string>
+    <string name="account_widget_configuration_sum_total">כולל עסקאות עתידיות</string>
+    <!-- Title of dialogue that allows to configure account widget -->
+    <string name="account_widget_configuration">תצורת יישומון חשבון</string>
+    <!-- Title of a menu entry allowing to merge duplicate entries in the parties table (payee/payer) -->
+    <string name="menu_merge">מזג</string>
+    <!-- When user selects duplicate parties to be merged, he sees this prompt asking him to select which name should be selected for the merged party -->
+    <string name="merge_parties_select">בחר שם של הצד הממוזג:</string>
+    </resources>

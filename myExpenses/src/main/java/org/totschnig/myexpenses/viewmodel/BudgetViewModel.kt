@@ -7,12 +7,10 @@ import android.database.Cursor
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import org.totschnig.myexpenses.MyApplication
 import org.totschnig.myexpenses.model.AggregateAccount
 import org.totschnig.myexpenses.model.CurrencyContext
 import org.totschnig.myexpenses.model.Grouping
 import org.totschnig.myexpenses.model.Money
-import org.totschnig.myexpenses.preference.PrefHandler
 import org.totschnig.myexpenses.preference.PrefKey
 import org.totschnig.myexpenses.provider.DatabaseConstants.*
 import org.totschnig.myexpenses.provider.TransactionProvider
@@ -34,8 +32,6 @@ open class BudgetViewModel(application: Application) : ContentResolvingAndroidVi
     private var spentDisposables = CompositeDisposable()
     @Inject
     lateinit var currencyContext: CurrencyContext
-    @Inject
-    lateinit var prefHandler: PrefHandler
     @Inject
     lateinit var licenceHandler: LicenceHandler
     private val databaseHandler: DatabaseHandler = DatabaseHandler(application.contentResolver)
@@ -62,10 +58,6 @@ open class BudgetViewModel(application: Application) : ContentResolvingAndroidVi
         )
     }
 
-    init {
-        (application as MyApplication).appComponent.inject(this)
-    }
-
     fun loadAllBudgets() {
         disposable = createQuery(null, null)
                 .mapToList(budgetCreatorFunction)
@@ -89,7 +81,7 @@ open class BudgetViewModel(application: Application) : ContentResolvingAndroidVi
         this.budget.postValue(budget)
     }
 
-    fun loadBudgetSpend(position: Int, budget: Budget, prefHandler: PrefHandler) {
+    fun loadBudgetSpend(position: Int, budget: Budget) {
         val builder = TransactionProvider.TRANSACTIONS_SUM_URI.buildUpon()
         if (prefHandler.getBoolean(PrefKey.BUDGET_AGGREGATE_TYPES, true)) {
             builder.appendQueryParameter(TransactionProvider.QUERY_PARAMETER_AGGREGATE_TYPES, "1")

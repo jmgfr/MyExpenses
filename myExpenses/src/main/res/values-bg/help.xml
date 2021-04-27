@@ -28,6 +28,7 @@
   <string name="cab_clone_transaction_help_text">Избраните транзакции ще бъдат клонирани за текущата дата и час. Може да направите промени преди да запишете копието.</string>
   <string name="cab_split_help_text">Може да редактирате транзакцията по-късно, за да създадете допълнителни части.</string>
   <string name="menu_scan_mode_help_text">Активирайте режима на сканиране, за да сканирате бързо касови бележки.</string>
+  <string name="cab_link_help_text">Разход в една сметка може да бъде свързан с приход в друга сметка. Ако сметките имат една и съща валута, двете транзакции трябва да имат еднакви суми.</string>
   <!--ManageMethods title is in keys-->
   <string name="help_ManageMethods_info">Този екран показва предварително дефинираните начини на плащане (чек, кредитна карта, депозит, директен дебит) и може да дефинирате други. Използвайте плаващия бутон за да отворите бланка за създаване на нов начин на плащане.</string>
   <!--ManageParties title is in keys-->
@@ -35,6 +36,7 @@
   <string name="help_ManageParties_select_mapping_info">Изберете старна (платец/получател), като я докоснете.</string>
   <string name="help_ManageParties_select_filter_info">Докоснете страна за филтриране на списъка с транзакции. Дълго докосване за избор на няколко страни (платци/получатели).</string>
   <string name="help_ManageParties_floating_action_button">Използвайте плаващия бутон за да добавите нов платец/получател.</string>
+  <string name="cab_merge_help_text">Ако една и съща страна се появява няколко пъти в списъка с различни варианти на правопис, може да ги обедините в едно. Ще бъдете подканени да изберете кой вариант да запазите.</string>
   <!--ManageTemplates title is in keys-->
   <string name="help_ManageTemplates_plans_title">Изглед на план-календар</string>
   <string name="help_ManageTemplates_planner_title">Предстоящи повтаряеми</string>
@@ -124,6 +126,7 @@
   <string name="form_color_help_text">Цвета на сметката ще бъде използван като основен на плаващия бутон в списъка с транзакции.</string>
   <string name="form_synchronization_help_text_select">Изберете отдалечено място за съхранение за синхронизация чрез облак.</string>
   <string name="form_synchronization_help_text_add">Отдалечени места за съхранение могат да бъдат добавяни от менюто Настройки</string>
+  <string name="form_AccountEdit_active_tags_help_text">Може да направите активен един или повече маркери за всяка сметка. Когато създавате нова транзакция, тя автоматично се отбелязва с тези маркери, според избранната сметка.</string>
   <string name="menu_exclude_from_totals_help_text">Ако активирате тази опция, сметката няма да се включва в обобщаването на валутата.</string>
   <!--MethodEdit-->
   <string name="help_MethodEdit_title">Бланка за начини на плащане</string>

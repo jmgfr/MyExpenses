@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"Άνοιγμα συρταριού πλοήγησης"</string>
     <string name="drawer_close">"Κλείσιμο συρταριού πλοήγησης"</string>
+    <string name="saving">"Αποθήκευση…"</string>
+    <string name="default_action">"Προεπιλεγμένη ενέργεια"</string>
+    <string name="full_name">"Όνομα"</string>
+    <string name="postal_country">"Χώρα"</string>
     <string name="toast_text_copied">"Το κείμενο αντιγράφηκε"</string>
     <string name="copy_text">"Αντιγραφή στο πρόχειρο"</string>
     <string name="stop">"Διακοπή"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"Αυτόματη συμπλήρωση"</string>
     <string name="discard">"Απόρριψη"</string>
     <string name="dialog_dismiss">"Παράβλεψη"</string>
+    <string name="response_yes">"Ναι"</string>
+    <string name="response_no">"Όχι"</string>
 </resources>
 

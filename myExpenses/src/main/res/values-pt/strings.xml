@@ -97,7 +97,6 @@
     <string name="dialog_password_new_password">Nova senha</string>
     <string name="dialog_password_new_password_confirmation">Nova senha (confirmação)</string>
     <string name="dialog_remind_later">Depois</string>
-    <string name="dialog_remind_no">Não, obrigado</string>
     <string name="dialog_remind_rate_how_many_stars">Quantas estrelas você daria ao {app_name}?</string>
     <string name="dialog_remind_rate_1">Por favor, dedique um momento para avaliar e revisar o {app_name}.</string>
     <string name="dialog_remind_rate_2">Seus comentários nos permitam adicionar melhorias e aperfeiçoamentos continuamente.</string>
@@ -356,7 +355,6 @@
     <string name="progress_dialog_deleting">Excluindo objetos</string>
     <string name="progress_dialog_loading">Carregando objeto do banco de dados</string>
     <string name="progress_dialog_printing">Gerando PDF</string>
-    <string name="progress_dialog_saving">Salvando objeto no banco de dados</string>
     <string name="qif_parse_result">Analisada: %1$s contas, %2$s categorias e %3$s parceiros</string>
     <string name="qif_parse_failure_found_multiple_accounts">Foram encontradas várias contas no arquivo QIF.</string>
     <string name="qif_parse_failure_found_multiple_accounts_cannot_merge">Não é possível mesclá-las na conta atual.</string>
@@ -483,13 +481,14 @@
     <string name="comparison_operator_equal">igual a</string>
     <string name="comparison_operator_greater_than">maior que</string>
     <string name="comparison_operator_lesser_than">menor que</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions between two specified dates. -->
     <string name="comparison_operator_between">entre</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions before a specified date.  -->
     <string name="comparison_operator_date_before">antes de</string>
+    <!-- Used in dialogue where user can filter transactions based on their date. This is one of three possible values populating a dropdown. Allows to select transactions after a specified date. -->
     <string name="comparison_operator_date_after">após</string>
     <string name="premium_failed_or_canceled" tools:ignore="UnusedResources">A compra falhou ou foi cancelada.</string>
     <string name="hint_auto_fill">Os dados devem ser automaticamente preenchidos baseados na última transação para o mesmo beneficiário/pagador? Esse comportamento pode ser alterado nas configurações.</string>
-    <string name="yes">Sim</string>
-    <string name="no">Não</string>
     <string name="change_fraction_digits_result" tools:ignore="PluralsCandidate">%1$d contas com a moeda %2$s foram atualizadas.</string>
     <string name="learn_more">Saiba Mais</string>
     <string name="import_source_file">Arquivo</string>
@@ -509,6 +508,7 @@
     <string name="pref_manage_stale_images_summary">Gerenciar imagens que sobraram de transações excluídas</string>
     <string name="image_deleted">A Imagem foi excluída</string>
     <string name="transaction_deleted">A transação foi excluída</string>
+    <string name="account_deleted">A conta foi excluída</string>
     <string name="dialog_export_applied_to_filter">Serão consideradas somente as transações correspondentes ao filtro atual.</string>
     <string name="export_handle_deleted_create_helper">Criar transação auxiliar</string>
     <string name="export_handle_deleted_update_balance">Atualizar o saldo de abertura</string>
@@ -948,7 +948,6 @@
     <!-- When user opens a template from the transaction form, existing data is discarded. This message appears in a dialgoue to confirm the action -->
     <string name="confirmation_load_template_discard_data">Os dados presentes no formulário serão descartados.</string>
     <string name="pref_clone_with_current_date_title">Data das transações clonadas</string>
-    <string name="default_action">Ação padrão</string>
     <string name="template_default_action_without_amount_hint">O modelo sem quantia deve ser salvo com a ação padrão \'Editar\'</string>
     <string name="plan_automatic_without_amount_hint">Um plano sem quantia não deve ser salvo com a execução automática ativada</string>
     <string name="content_description_edit_plan">Editar o plano no aplicativo de agenda</string>
@@ -975,4 +974,14 @@
     <string name="single_feature_info">Como alternativa, você pode comprar acesso ilimitado apenas a este recurso.</string>
     <!-- This refers to a plan that recurs every last day of the month. It is shown next to a checkbox allowing user to select this type of recurrence. -->
     <string name="recurrence_last_day_of_month">Último dia</string>
-</resources>
+    <string name="warning_link_transfer">As duas transações selecionadas serão vinculadas como uma transferência. As informações de beneficiário/pagador e da categoria serão descartadas.</string>
+    <!-- This is the title of an entry on the configuration screen for the account widget. It allows to decide which number should be displayed for each account: the current balance or the total (which included future transactions) -->
+    <string name="account_widget_configuration_sum">Tipo de soma exibida</string>
+    <string name="account_widget_configuration_sum_total">Incluir transações futuras</string>
+    <!-- Title of dialogue that allows to configure account widget -->
+    <string name="account_widget_configuration">Configuração do widget de conta</string>
+    <!-- Title of a menu entry allowing to merge duplicate entries in the parties table (payee/payer) -->
+    <string name="menu_merge">Unificar</string>
+    <!-- When user selects duplicate parties to be merged, he sees this prompt asking him to select which name should be selected for the merged party -->
+    <string name="merge_parties_select">Selecione o nome do parceiro unificado:</string>
+    </resources>

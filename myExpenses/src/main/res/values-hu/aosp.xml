@@ -6,6 +6,10 @@
 <resources>
     <string name="drawer_open">"Navigációs fiók kinyitása"</string>
     <string name="drawer_close">"Navigációs fiók bezárása"</string>
+    <string name="saving">"Mentés…"</string>
+    <string name="default_action">"Alapértelmezett művelet"</string>
+    <string name="full_name">"Név"</string>
+    <string name="postal_country">"Ország"</string>
     <string name="toast_text_copied">"Másolt szöveg"</string>
     <string name="copy_text">"Másolás vágólapra"</string>
     <string name="stop">"Leállítás"</string>
@@ -14,5 +18,7 @@
     <string name="autofill">"Automatikus kitöltés"</string>
     <string name="discard">"Elvetés"</string>
     <string name="dialog_dismiss">"Elvetés"</string>
+    <string name="response_yes">"Igen"</string>
+    <string name="response_no">"Nem"</string>
 </resources>
 

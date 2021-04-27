@@ -16,6 +16,7 @@ import org.totschnig.myexpenses.activity.OnboardingActivity;
 import org.totschnig.myexpenses.activity.SyncBackendSetupActivity;
 import org.totschnig.myexpenses.adapter.CurrencyAdapter;
 import org.totschnig.myexpenses.databinding.OnboardingWizzardDataBinding;
+import org.totschnig.myexpenses.di.AppComponent;
 import org.totschnig.myexpenses.dialog.DialogUtils;
 import org.totschnig.myexpenses.model.Account;
 import org.totschnig.myexpenses.model.AccountType;
@@ -71,8 +72,10 @@ public class OnboardingDataFragment extends OnboardingFragment implements Adapte
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     Icepick.restoreInstanceState(this, savedInstanceState);
-    ((MyApplication) requireActivity().getApplication()).getAppComponent().inject(this);
+    final AppComponent appComponent = ((MyApplication) requireActivity().getApplication()).getAppComponent();
+    appComponent.inject(this);
     currencyViewModel = new ViewModelProvider(this).get(CurrencyViewModel.class);
+    appComponent.inject(currencyViewModel);
   }
 
   @Override
@@ -109,9 +112,10 @@ public class OnboardingDataFragment extends OnboardingFragment implements Adapte
     Menu menu = toolbar.getMenu();
     SubMenu subMenu = menu.findItem(R.id.SetupFromRemote).getSubMenu();
     subMenu.clear();
-    ((SyncBackendSetupActivity) getActivity()).addSyncProviderMenuEntries(subMenu);
-    GenericAccountService.getAccountsAsStream(getActivity()).forEach(
-        account -> subMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, account.name));
+    ((SyncBackendSetupActivity) requireActivity()).addSyncProviderMenuEntries(subMenu);
+    for (String account: GenericAccountService.getAccountNames(requireActivity())) {
+      subMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, account);
+    }
     toolbar.setOnMenuItemClickListener(this::onRestoreMenuItemSelected);
   }
 

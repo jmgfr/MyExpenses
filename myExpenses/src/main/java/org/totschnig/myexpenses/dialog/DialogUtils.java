@@ -48,14 +48,13 @@ import org.totschnig.myexpenses.activity.ProtectedFragmentActivity;
 import org.totschnig.myexpenses.adapter.AccountTypeAdapter;
 import org.totschnig.myexpenses.adapter.CurrencyAdapter;
 import org.totschnig.myexpenses.export.qif.QifDateFormat;
-import org.totschnig.myexpenses.model.Account;
 import org.totschnig.myexpenses.model.AccountType;
 import org.totschnig.myexpenses.preference.PrefHandler;
 import org.totschnig.myexpenses.preference.PrefKey;
 import org.totschnig.myexpenses.provider.DatabaseConstants;
-import org.totschnig.myexpenses.util.DistributionHelper;
 import org.totschnig.myexpenses.util.PermissionHelper.PermissionGroup;
 import org.totschnig.myexpenses.util.Utils;
+import org.totschnig.myexpenses.util.distrib.DistributionHelper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -78,17 +77,13 @@ public class DialogUtils {
   public static Dialog sendWithFTPDialog(final ProtectedFragmentActivity ctx) {
     return new MaterialAlertDialogBuilder(ctx)
         .setMessage(R.string.no_app_handling_ftp_available)
-        .setPositiveButton(android.R.string.yes, (dialog, id) -> {
+        .setPositiveButton(R.string.response_yes, (dialog, id) -> {
           ctx.dismissDialog(R.id.FTP_DIALOG);
           Intent intent = new Intent(Intent.ACTION_VIEW);
           intent.setData(Uri.parse(DistributionHelper.getMarketPrefix() + "org.totschnig.sendwithftp"));
-          if (Utils.isIntentAvailable(ctx, intent)) {
-            ctx.startActivity(intent);
-          } else {
-            ctx.showSnackbar(R.string.error_accessing_market);
-          }
+          ctx.startActivity(intent, R.string.error_accessing_market, null);
         })
-        .setNegativeButton(android.R.string.no, (dialog, id) -> ctx.dismissDialog(R.id.FTP_DIALOG)).create();
+        .setNegativeButton(R.string.response_no, (dialog, id) -> ctx.dismissDialog(R.id.FTP_DIALOG)).create();
   }
 
   public static void showPasswordDialog(final ProtectedFragmentActivity ctx, AlertDialog dialog,
@@ -339,11 +334,11 @@ public class DialogUtils {
     }
   }
 
-  public static void showSyncUnlinkConfirmationDialog(FragmentActivity context, Account account) {
+  public static void showSyncUnlinkConfirmationDialog(FragmentActivity context, String syncAccountName, String uuid) {
     Bundle b = new Bundle();
     b.putString(ConfirmationDialogFragment.KEY_MESSAGE,
-        context.getString(R.string.dialog_confirm_sync_unlink, account.getSyncAccountName()));
-    b.putString(DatabaseConstants.KEY_UUID, account.getUuid());
+        context.getString(R.string.dialog_confirm_sync_unlink, syncAccountName));
+    b.putString(DatabaseConstants.KEY_UUID, uuid);
     b.putInt(ConfirmationDialogFragment.KEY_COMMAND_POSITIVE, R.id.SYNC_UNLINK_COMMAND);
     b.putInt(ConfirmationDialogFragment.KEY_POSITIVE_BUTTON_LABEL, R.string.menu_sync_unlink);
     b.putInt(ConfirmationDialogFragment.KEY_NEGATIVE_BUTTON_LABEL, android.R.string.cancel);
