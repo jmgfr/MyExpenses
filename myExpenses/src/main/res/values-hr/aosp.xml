@@ -104,4 +104,10 @@
     <string name="start_date">"Datum početka"</string>
     <string name="end_date">"Datum završetka"</string>
     <string name="cloud_storage">"Pohrana u oblaku"</string>
+    <string name="privacy_header">"Privatnost"</string>
+    <string name="orientation">"Usmjeravanje"</string>
+    <string name="portrait">"Uspravno"</string>
+    <string name="landscape">"Položeno"</string>
+    <string name="title_font_size">"Veličina fonta"</string>
+    <string name="system_default">"Zadane postavke sustava"</string>
 </resources>

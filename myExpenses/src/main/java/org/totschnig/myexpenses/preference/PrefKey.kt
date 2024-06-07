@@ -32,7 +32,7 @@ enum class PrefKey(internal val resId: Int, internal val _key: String?) {
     PROTECTION_DELAY_SECONDS(R.string.pref_protection_delay_seconds_key),
     PROTECTION_ENABLE_ACCOUNT_WIDGET(R.string.pref_protection_enable_account_widget_key),
     PROTECTION_ENABLE_TEMPLATE_WIDGET(R.string.pref_protection_enable_template_widget_key),
-    PROTECTION_ENABLE_BUDGET_WIDGET(R.string.pref_protection_enable_template_widget_key),
+    PROTECTION_ENABLE_BUDGET_WIDGET(R.string.pref_protection_enable_budget_widget_key),
     PROTECTION_ENABLE_DATA_ENTRY_FROM_WIDGET(R.string.pref_protection_enable_data_entry_from_widget_key),
     EXPORT_FORMAT(R.string.pref_export_format_key),
     SEND_FEEDBACK(R.string.pref_send_feedback_key),
@@ -81,6 +81,7 @@ enum class PrefKey(internal val resId: Int, internal val _key: String?) {
     AUTO_BACKUP_TIME(R.string.pref_auto_backup_time_key),
     AUTO_BACKUP_DIRTY("auto_backup_dirty"),
     AUTO_BACKUP_CLOUD(R.string.pref_auto_backup_cloud_key),
+    AUTO_BACKUP_CLOUD_SETUP(R.string.pref_auto_backup_cloud_setup_key),
     GROUP_WEEK_STARTS(R.string.pref_group_week_starts_key),
     GROUP_MONTH_STARTS(R.string.pref_group_month_starts_key),
     NEW_PLAN_ENABLED("new_plan_enabled"),
@@ -199,7 +200,9 @@ enum class PrefKey(internal val resId: Int, internal val _key: String?) {
     PRINT_FOOTER_LEFT(R.string.pref_print_footer_left_key),
     PRINT_FOOTER_CENTER(R.string.pref_print_footer_center_key),
     PRINT_FOOTER_RIGHT(R.string.pref_print_footer_right_key),
-    PRINT_PAPER_FORMAT(R.string.pref_print_paper_format_key)
+    PRINT_PAPER_FORMAT(R.string.pref_print_paper_format_key),
+    PRINT_FONT_SIZE(R.string.pref_print_font_size_key),
+    PRINT_PAPER_ORIENTATION(R.string.pref_print_paper_orientation_key)
     ;
 
     @Deprecated("")

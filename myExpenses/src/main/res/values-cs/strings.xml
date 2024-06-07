@@ -301,7 +301,6 @@
     <string name="pref_shortcut_summary">Přidání zástupce do výchozí obrazovky.</string>
     <string name="pref_ui_fontsize_title">Zvětšit velikost písma</string>
     <string name="pref_ui_home_screen_shortcuts">Zástupci na domovské obrazovce</string>
-    <string name="pref_ui_language_default">Výchozí systémové nastavení</string>
     <!-- Title of the preference for selecting the UI language -->
     <string name="pref_ui_language_title">Jazyk</string>
     <string name="pref_ui_theme_dark">Tmavý</string>
@@ -452,7 +451,6 @@
     <!-- Stale refers to pictures left over from deleted transactions  -->
     <string name="pref_manage_stale_images_title">Staré obrázky</string>
     <string name="pref_manage_stale_images_summary">Spravujte obrázky, které zbyly po odstraněných transakcích</string>
-    <string name="image_deleted">Obrázek byl smazán</string>
     <string name="transaction_deleted">Transakce byla smazána</string>
     <string name="account_deleted">Účet byl smazán</string>
     <string name="dialog_export_applied_to_filter">V potaz budou brány pouze transakce shodující se s aktuálním filtrem.</string>
@@ -484,8 +482,6 @@
     <string name="pref_auto_backup_time_title">Čas automatické zálohy</string>
     <string name="calendar_permission_required">Aplikace <i>{app_name}</i> potřebuje oprávnění k přístupu do vašeho kalendáře, aby mohla vytvářet plány pro budoucí a opakující se transakce.</string>
     <string name="button_request_calendar_access" tools:ignore="UnusedResources">Udělit přístup</string>
-    <string name="switch_on_text">Zapnuto</string>
-    <string name="switch_off_text">Vypnuto</string>
     <string name="menu_move">Přesun</string>
     <string name="dialog_title_select_target">Zvolte cíl</string>
     <string name="transform_subcategory_to_main">Změnit na hlavní kategorii</string>
@@ -608,7 +604,6 @@
     <string name="extend_validity">Prodloužit platnost</string>
     <string name="progress_dialog_fetching_data_from_sync_backend">Probíhá načítání dat ze vzdáleného rozhraní backend. Může to nějakou dobu trvat.</string>
     <string name="donate_button_invoice">Faktura</string>
-    <string name="menu_sort_direction">Směr řazení</string>
     <string name="never">nikdy</string>
     <string name="always">vždy</string>
     <string name="auto_fill_account_from_aggregate_only">Pouze při začínání ze souhrnného účtu.</string>
@@ -657,7 +652,6 @@
     <string name="licence_expires_today">Váš profesionální klíč dnes vyprší.</string>
     <string name="licence_expired_yesterday">Váš profesionální klíč včera vypršel.</string>
     <string name="licence_has_expired_n_days">Platnost vašeho profesionálního klíče vypršela před %d dny.</string>
-    <string name="pref_category_title_privacy">Soukromí</string>
     <string name="gdpr_consent_button_no">Zaplaťte si verzi bez reklam</string>
     <string name="sort_order">Pořadí řazení</string>
     <string name="navigation_drawer_accounts_title">Spravovat účty</string>

@@ -97,4 +97,10 @@
     <string name="start_date">"ආරම්භක දිනය"</string>
     <string name="end_date">"අවසන් වන දිනය"</string>
     <string name="cloud_storage">"ක්ලවුඩ් ආචයනය"</string>
+    <string name="privacy_header">"පෞද්ගලිකත්වය"</string>
+    <string name="orientation">"දිශානතිය"</string>
+    <string name="portrait">Portrait"</string>
+    <string name="landscape">"තිරස්"</string>
+    <string name="title_font_size">"අකුරු ප්‍රමාණය"</string>
+    <string name="system_default">"පද්ධති පෙරනිමිය"</string>
 </resources>

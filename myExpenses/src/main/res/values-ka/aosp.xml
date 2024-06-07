@@ -37,4 +37,10 @@
     <string name="start_date">"დაწყების თარიღი"</string>
     <string name="end_date">"თარიღის დამატება"</string>
     <string name="cloud_storage">"ღრუბლოვანი საცავი"</string>
+    <string name="privacy_header">"კონფიდენციალურობა"</string>
+    <string name="orientation">"ორიენტაცია"</string>
+    <string name="portrait">Portrait"</string>
+    <string name="landscape">Landscape"</string>
+    <string name="title_font_size">"შრიფტის ზომა"</string>
+    <string name="system_default">"სისტემის ნაგულისხმევი"</string>
 </resources>

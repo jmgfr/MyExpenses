@@ -111,4 +111,10 @@
     <string name="start_date">"Startdatum"</string>
     <string name="end_date">"Enddatum"</string>
     <string name="cloud_storage">"Cloud Storage"</string>
+    <string name="privacy_header">"Datenschutz"</string>
+    <string name="orientation">"Ausrichtung"</string>
+    <string name="portrait">"Hochformat"</string>
+    <string name="landscape">"Querformat"</string>
+    <string name="title_font_size">"Schriftgröße"</string>
+    <string name="system_default">"Standardeinstellung des Systems"</string>
 </resources>

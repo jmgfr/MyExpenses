@@ -33,4 +33,10 @@
     <string name="start_date">"စတင်မှု ရက်စွဲ"</string>
     <string name="end_date">"ပြီးဆုံးမှု ရက်စွဲ"</string>
     <string name="cloud_storage">"Cloud သိုလှောင်ခန်း"</string>
+    <string name="privacy_header">"ကိုယ်ရေးဒေတာ"</string>
+    <string name="orientation">Orientation"</string>
+    <string name="portrait">"စာမျက်နှာ ဒေါင်လိုက်အရှည်"</string>
+    <string name="landscape">Landscape"</string>
+    <string name="title_font_size">"စာလုံးအရွယ်အစား"</string>
+    <string name="system_default">"စနစ်မူရင်း"</string>
 </resources>

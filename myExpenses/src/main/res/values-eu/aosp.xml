@@ -109,4 +109,10 @@
     <string name="start_date">"Hasiera-data"</string>
     <string name="end_date">"Amaiera-data"</string>
     <string name="cloud_storage">"Hodeiko biltegiratzea"</string>
+    <string name="privacy_header">"Pribatutasuna"</string>
+    <string name="orientation">"Orientazioa"</string>
+    <string name="portrait">"Bertikala"</string>
+    <string name="landscape">"Horizontala"</string>
+    <string name="title_font_size">"Letra-tamaina"</string>
+    <string name="system_default">"Sistemaren balio lehenetsia"</string>
 </resources>

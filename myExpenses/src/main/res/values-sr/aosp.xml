@@ -25,4 +25,10 @@
     <string name="start_date">"Датум почетка"</string>
     <string name="end_date">"Датум завршетка"</string>
     <string name="cloud_storage">"Простор у клауду"</string>
+    <string name="privacy_header">"Приватност"</string>
+    <string name="orientation">Orientation"</string>
+    <string name="portrait">Portrait"</string>
+    <string name="landscape">Landscape"</string>
+    <string name="title_font_size">"Величина фонта"</string>
+    <string name="system_default">"Подразумевани системски"</string>
 </resources>

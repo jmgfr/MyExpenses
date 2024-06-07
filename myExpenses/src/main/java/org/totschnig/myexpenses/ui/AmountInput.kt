@@ -1,6 +1,5 @@
 package org.totschnig.myexpenses.ui
 
-import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Parcel
@@ -25,6 +24,7 @@ import org.totschnig.myexpenses.databinding.AmountInputBinding
 import org.totschnig.myexpenses.model.CurrencyContext
 import org.totschnig.myexpenses.model.CurrencyUnit
 import org.totschnig.myexpenses.model.Money
+import org.totschnig.myexpenses.util.ui.getActivity
 import org.totschnig.myexpenses.viewmodel.data.Currency
 import org.totschnig.myexpenses.viewmodel.data.Currency.Companion.create
 import timber.log.Timber
@@ -154,24 +154,19 @@ class AmountInput(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        upStreamDependency = (context as Activity).findViewById(upStreamDependencyRef)
-        downStreamDependency = (context as Activity).findViewById(downStreamDependencyRef)
-        downStreamDependency?.let {
-            it.addTextChangedListener(object : MyTextWatcher() {
-                override fun afterTextChanged(s: Editable) {
-                    if (blockWatcher) return
-                    val amount1 = getAmount(false)
-                    val amount2 = it.getAmount(false)
-                    Timber.i("self: %s, downStream: %s", amount1, amount2)
-                    exchangeRateEdit().calculateAndSetRate(amount1, amount2)
-                }
-            })
-        }
+        upStreamDependency = context.getActivity()?.findViewById(upStreamDependencyRef)
+        downStreamDependency = context.getActivity()?.findViewById(downStreamDependencyRef)
+        downStreamDependency?.addTextChangedListener(object : MyTextWatcher() {
+            override fun afterTextChanged(s: Editable) {
+                if (!blockWatcher) updateFromDownStream()
+            }
+        })
         upStreamDependency?.addTextChangedListener(object : MyTextWatcher() {
             override fun afterTextChanged(s: Editable) {
                 updateFromUpStream()
             }
         })
+        updateFromDownStream()
     }
 
     override fun setContentDescription(contentDescription: CharSequence) {
@@ -242,6 +237,15 @@ class AmountInput(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
             if (rate != null) {
                 setAmount(it.multiply(rate), updateType = false, blockWatcher = true)
             }
+        }
+    }
+
+    private fun updateFromDownStream() {
+        downStreamDependency?.let {
+            val amount1 = getAmount(false)
+            val amount2 = it.getAmount(false)
+            Timber.i("self: %s, downStream: %s", amount1, amount2)
+            exchangeRateEdit().calculateAndSetRate(amount1, amount2)
         }
     }
 
@@ -396,14 +400,6 @@ class AmountInput(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
 
     fun setError(error: CharSequence?) {
         amountEditText().error = error
-    }
-
-    /**
-     * this amount input is supposed to output the application of the exchange rate to its amount
-     * used for the original amount in [org.totschnig.myexpenses.activity.ExpenseEdit]
-     */
-    fun interface CompoundResultOutListener {
-        fun onResultChanged(result: BigDecimal)
     }
 
     fun interface TypeChangedListener {

@@ -72,4 +72,10 @@
     <string name="start_date">"Data de início"</string>
     <string name="end_date">"Data de conclusão"</string>
     <string name="cloud_storage">"Armazenamento na nuvem"</string>
+    <string name="privacy_header">"Privacidade"</string>
+    <string name="orientation">"Orientação"</string>
+    <string name="portrait">"Vertical"</string>
+    <string name="landscape">"Horizontal"</string>
+    <string name="title_font_size">"Tamanho da letra"</string>
+    <string name="system_default">"Predefinição do sistema"</string>
 </resources>

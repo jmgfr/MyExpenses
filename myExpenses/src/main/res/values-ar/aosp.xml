@@ -114,4 +114,10 @@
     <string name="start_date">"تاريخ البدء"</string>
     <string name="end_date">"تاريخ الانتهاء"</string>
     <string name="cloud_storage">"تخزين في السحابة الإلكترونية"</string>
+    <string name="privacy_header">"الخصوصية"</string>
+    <string name="orientation">"الاتجاه"</string>
+    <string name="portrait">"بالطول"</string>
+    <string name="landscape">"بالعرض"</string>
+    <string name="title_font_size">"حجم الخط"</string>
+    <string name="system_default">"الإعداد التلقائي للنظام"</string>
 </resources>

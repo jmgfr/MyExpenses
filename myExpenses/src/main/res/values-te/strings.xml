@@ -52,7 +52,6 @@
     <string name="navigation_drawer_accounts_title">ఖాతాలను నిర్వహించండి</string>
     <string name="sort_order">క్రమాన్ని క్రమబద్ధీకరించు</string>
     <string name="gdpr_consent_button_no">ప్రకటన రహిత సంస్కరణ కోసం చెల్లించండి</string>
-    <string name="pref_category_title_privacy">గోప్యత</string>
     <string name="licence_has_expired_n_days">మీ ప్రొఫెషనల్ కీ %d రోజుల క్రితం గడువు ముగిసింది.</string>
     <string name="licence_expired_yesterday">మీ ప్రొఫెషనల్ కీ నిన్న గడువు ముగిసింది.</string>
     <string name="licence_expires_today">మీ ప్రొఫెషనల్ కీ ఈ రోజు ముగుస్తుంది.</string>
@@ -94,7 +93,6 @@
     <string name="auto_fill_account_from_aggregate_only">మొత్తం ఖాతా నుండి ప్రారంభించినప్పుడు మాత్రమే.</string>
     <string name="always">ఎల్లప్పుడూ</string>
     <string name="never">ఎప్పుడు కాదు</string>
-    <string name="menu_sort_direction">క్రమబద్ధీకరణ దిశ</string>
     <string name="donate_button_invoice">ఇన్వాయిస్</string>
     <string name="progress_dialog_fetching_data_from_sync_backend">రిమోట్ బ్యాకెండ్ నుండి డేటాను పొందడం. దీనికి కొంత సమయం పడుతుంది.</string>
     <string name="extend_validity">చెల్లుబాటును విస్తరించండి</string>
@@ -211,8 +209,6 @@
     <string name="transform_subcategory_to_main">ప్రధాన వర్గానికి రూపాంతరం చెందండి</string>
     <string name="dialog_title_select_target">లక్ష్యాన్ని ఎంచుకోండి</string>
     <string name="menu_move">కదలిక</string>
-    <string name="switch_off_text">ఆఫ్</string>
-    <string name="switch_on_text">పై</string>
     <string name="button_request_calendar_access" tools:ignore="UnusedResources">ప్రవేశాన్ని ఆమోదించండి</string>
     <string name="calendar_permission_required"><i> {app_name} </i> భవిష్యత్ మరియు పునరావృత లావాదేవీల కోసం ప్రణాళికలను రూపొందించడానికి మీ క్యాలెండర్‌ను యాక్సెస్ చేయడానికి అనుమతి అవసరం.</string>
     <string name="pref_auto_backup_time_title">ఆటో-బ్యాకప్ సమయం</string>
@@ -377,7 +373,6 @@
     <string name="pref_ui_theme_light">కాంతి</string>
     <string name="pref_ui_theme_dark">చీకటి</string>
     <string name="pref_ui_language_title">భాష</string>
-    <string name="pref_ui_language_default">సిస్టమ్ డిఫాల్ట్</string>
     <string name="pref_ui_home_screen_shortcuts">హోమ్ స్క్రీన్ సత్వరమార్గాలు</string>
     <string name="pref_ui_fontsize_title">ఫాంట్ పరిమాణం</string>
     <string name="pref_shortcut_summary">హోమ్ స్క్రీన్‌కు సత్వరమార్గాన్ని జోడించండి.</string>
@@ -545,7 +540,6 @@
     <string name="dialog_export_applied_to_filter">ప్రస్తుత ఫిల్టర్‌తో సరిపోలిన లావాదేవీలు మాత్రమే పరిగణించబడతాయి.</string>
     <string name="account_deleted">ఖాతా తొలగించబడింది</string>
     <string name="transaction_deleted">లావాదేవీ తొలగించబడింది</string>
-    <string name="image_deleted">చిత్రం తొలగించబడింది</string>
     <string name="pref_manage_stale_images_summary">తొలగించిన లావాదేవీల నుండి మిగిలి ఉన్న చిత్రాలను నిర్వహించండి</string>
     <string name="pref_manage_stale_images_title">పాత చిత్రాలు</string>
     <string name="restore_not_possible_local_calendar_missing">ప్రస్తుత ప్రణాళిక క్యాలెండర్ అందుబాటులో లేదు.</string>

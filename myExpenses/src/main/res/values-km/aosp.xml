@@ -99,4 +99,10 @@
     <string name="start_date">"កាលបរិច្ឆេទ​ចាប់ផ្ដើម"</string>
     <string name="end_date">"កាលបរិច្ឆេទ​បញ្ចប់"</string>
     <string name="cloud_storage">"ទំហំ​ផ្ទុក​លើ​ពពក"</string>
+    <string name="privacy_header">"ឯកជនភាព"</string>
+    <string name="orientation">Orientation"</string>
+    <string name="portrait">Portrait"</string>
+    <string name="landscape">"ផ្ដេក"</string>
+    <string name="title_font_size">"ទំហំពុម្ពអក្សរ"</string>
+    <string name="system_default">"លំនាំ​ដើម​ប្រព័ន្ធ"</string>
 </resources>

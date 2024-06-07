@@ -44,4 +44,10 @@
     <string name="start_date">"Aloituspäivä"</string>
     <string name="end_date">"Päättymispäivä"</string>
     <string name="cloud_storage">"Pilvitallennus"</string>
+    <string name="privacy_header">"Yksityisyys"</string>
+    <string name="orientation">"Suunta"</string>
+    <string name="portrait">"Pysty"</string>
+    <string name="landscape">"Vaaka"</string>
+    <string name="title_font_size">"Fontin koko"</string>
+    <string name="system_default">"Järjestelmän oletusarvo"</string>
 </resources>
