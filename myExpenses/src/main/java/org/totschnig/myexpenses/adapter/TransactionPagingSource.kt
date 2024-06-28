@@ -27,10 +27,10 @@ import org.totschnig.myexpenses.provider.filter.WhereFilter
 import org.totschnig.myexpenses.provider.withLimit
 import org.totschnig.myexpenses.viewmodel.data.PageAccount
 import org.totschnig.myexpenses.viewmodel.data.Transaction2
+import org.totschnig.myexpenses.viewmodel.data.mergeTransfers
 import timber.log.Timber
 import java.time.Duration
 import java.time.Instant
-import kotlin.math.max
 
 open class TransactionPagingSource(
     val context: Context,
@@ -114,7 +114,7 @@ open class TransactionPagingSource(
                 KEY_AMOUNT -> "abs($KEY_AMOUNT)"
                 else -> account.sortBy
             }
-            val data = withContext(Dispatchers.IO) {
+            val origList = withContext(Dispatchers.IO) {
                 contentResolver.query(
                     uri.withLimit(loadSize, position.coerceAtLeast(0)),
                     projection,
@@ -131,29 +131,29 @@ open class TransactionPagingSource(
                         Transaction2.fromCursor(
                             currencyContext,
                             it,
-                            tags.value
+                            tags.value,
+                            accountCurrency = account.currencyUnit
                         )
-                    }.toList().let { list ->
-                        if (account.isAggregate) {
-                            list.groupBy { max(it.id, it.transferPeer ?: 0) }
-                                .map { (_, list) ->
-                                    if (list.size == 1) list.first() else
-                                        (if (!account.isHomeAggregate) list.first() else
-                                        list.firstOrNull { it.currency.code == currencyContext.homeCurrencyString }
-                                            ?: list.first()).copy(type = FLAG_NEUTRAL)
-                                }
-                        } else list
-                    }
-                } ?: emptyList()
-            }
+                    }.toList()
+                }
+            } ?: emptyList()
+            val (dropHalfTransfer, mergedList) = if (account.isAggregate) {
+                val mergeResult = origList.mergeTransfers(account, currencyContext.homeCurrencyString)
+                //if the two halves of a transfer are split between two pages, we
+                //drop the half at the end of the list, and reduce the offset for the next load by 1
+                val dropHalfTransfer = mergeResult.lastOrNull()?.let {
+                    it.transferPeer != null && it.type != FLAG_NEUTRAL } ?: false
+                dropHalfTransfer to if (dropHalfTransfer) mergeResult.dropLast(1) else mergeResult
+            } else false to origList
+
             val prevKey = if (position > 0) (position - params.loadSize) else null
-            val nextKey = if (data.size < params.loadSize) null else position + params.loadSize
+            val nextKey = if (origList.size < params.loadSize) null else
+                position + params.loadSize - if (dropHalfTransfer) 1 else 0
             Timber.i("Setting prevKey %d, nextKey %d", prevKey, nextKey)
             return LoadResult.Page(
-                data = data,
+                data = mergedList,
                 prevKey = prevKey,
-                nextKey = nextKey,
-                itemsBefore = position.coerceAtLeast(0)
+                nextKey = nextKey
             )
         } finally {
             onLoadFinished()

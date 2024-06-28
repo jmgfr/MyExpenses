@@ -572,12 +572,16 @@ fun computeWhere(vararg parts: CharSequence?) = parts
     .takeIf { it.isNotEmpty() }
     ?.joinToString(" AND ")
 
-fun backup(backupDir: File, context: Context, prefHandler: PrefHandler): Result<Unit> {
-    cacheEventData(context, prefHandler)
-    cacheSyncState(context)
+fun backup(backupDir: File, context: Context, prefHandler: PrefHandler, lenientMode: Boolean): Result<Unit> {
+    try {
+        cacheEventData(context, prefHandler)
+        cacheSyncState(context)
+    } catch (e: Exception) {
+        if (!lenientMode) throw e
+    }
     return with(context.contentResolver.acquireContentProviderClient(TransactionProvider.AUTHORITY)!!) {
         try {
-            (localContentProvider as BaseTransactionProvider).backup(context, backupDir)
+            (localContentProvider as BaseTransactionProvider).backup(context, backupDir, lenientMode)
         } finally {
             release()
         }
@@ -588,7 +592,7 @@ fun Context.maybeRepairRequerySchema(prefHandler: PrefHandler) {
     if (!prefHandler.encryptDatabase && Build.VERSION.SDK_INT == 30 && prefHandler.getInt(
             PrefKey.CURRENT_VERSION,
             -1
-        ) in 557..588
+        ) <= 588
     ) {
         maybeRepairRequerySchema(getDatabasePath("data").path)
         prefHandler.putBoolean(PrefKey.DB_SAFE_MODE, false)

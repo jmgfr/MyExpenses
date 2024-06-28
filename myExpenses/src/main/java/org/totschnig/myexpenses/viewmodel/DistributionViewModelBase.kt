@@ -158,12 +158,13 @@ abstract class DistributionViewModelBase<T : DistributionAccountInfo>(
 
     fun categoryTreeWithSum(
         accountInfo: T,
-        incomeType: Boolean,
+        isIncome: Boolean,
         aggregateNeutral: Boolean,
         groupingInfo: GroupingInfo,
         whereFilter: WhereFilter = WhereFilter.empty(),
         keepCriteria: ((Category) -> Boolean)? = null,
         queryParameter: Map<String, String> = emptyMap(),
+        idMapper: (Long) -> Long = { it }
     ): Flow<Category> =
         categoryTree(
             selection = buildFilterClause(groupingInfo, whereFilter, VIEW_WITH_ACCOUNT),
@@ -179,7 +180,7 @@ abstract class DistributionViewModelBase<T : DistributionAccountInfo>(
             }.toTypedArray(),
             additionalSelectionArgs = whereFilter.getSelectionArgs(true),
             queryParameter = queryParameter + buildMap {
-                put(KEY_TYPE, incomeType.toString())
+                put(KEY_TYPE, isIncome.toString())
                 put(
                     TransactionProvider.QUERY_PARAMETER_AGGREGATE_NEUTRAL,
                     aggregateNeutral.toString()
@@ -197,7 +198,8 @@ abstract class DistributionViewModelBase<T : DistributionAccountInfo>(
                     }
                 }
             },
-            keepCriteria = keepCriteria
+            keepCriteria = keepCriteria,
+            idMapper = idMapper
         ).mapNotNull {
             when (it) {
                 is LoadingState.Empty -> Category.EMPTY

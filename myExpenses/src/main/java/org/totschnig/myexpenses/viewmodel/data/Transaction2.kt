@@ -84,6 +84,7 @@ import org.totschnig.myexpenses.util.enumValueOrDefault
 import org.totschnig.myexpenses.util.enumValueOrNull
 import org.totschnig.myexpenses.util.epoch2ZonedDateTime
 import java.time.ZonedDateTime
+import kotlin.math.max
 
 @Parcelize
 @Immutable
@@ -91,6 +92,7 @@ data class Transaction2(
     val id: Long,
     val _date: Long,
     val _valueDate: Long = _date,
+    val currency: String? = null,
     val amount: Money,
     val originalAmount: Money? = null,
     val parentId: Long? = null,
@@ -122,9 +124,6 @@ data class Transaction2(
     val type: Byte = FLAG_NEUTRAL,
     val isSameCurrency: Boolean = true
 ) : Parcelable {
-
-    val currency: CurrencyUnit
-        get() = amount.currencyUnit
 
     val isSplit: Boolean
         get() = catId == SPLIT_CATID
@@ -235,12 +234,14 @@ data class Transaction2(
             tags: Map<String, Pair<String, Int?>>,
             accountCurrency: CurrencyUnit? = null
         ): Transaction2 {
+            val currency = cursor.getStringIfExists(KEY_CURRENCY)
             val amountRaw = cursor.getLong(KEY_DISPLAY_AMOUNT)
-            val money = Money(accountCurrency ?: currencyContext[cursor.getString(KEY_CURRENCY)], amountRaw)
+            val money = Money(accountCurrency ?: currencyContext[currency!!], amountRaw)
             val transferPeer = cursor.getLongOrNull(KEY_TRANSFER_PEER)
 
             return Transaction2(
                 id = cursor.getLongOrNull(KEY_ROWID) ?: 0,
+                currency = currency,
                 amount = money,
                 parentId = cursor.getLongOrNull(KEY_PARENTID),
                 _date = cursor.getLong(KEY_DATE),
@@ -287,3 +288,15 @@ data class Transaction2(
         }
     }
 }
+
+fun Iterable<Transaction2>.mergeTransfers(account: DataBaseAccount, homeCurrency: String): List<Transaction2> {
+    require(account.isAggregate)
+    return groupBy { max(it.id, it.transferPeer ?: 0) }
+        .map { (_, list) ->
+            if (list.size == 1) list.first() else
+                (if (!account.isHomeAggregate) list.first() else
+                    list.firstOrNull { it.currency == homeCurrency }
+                        ?: list.first()).copy(type = FLAG_NEUTRAL)
+        }
+}
+

@@ -223,7 +223,8 @@ open class CategoryViewModel(
         additionalSelectionArgs: Array<String>? = null,
         queryParameter: Map<String, String> = emptyMap(),
         keepCriteria: ((Category) -> Boolean)? = null,
-        withColors: Boolean = true
+        withColors: Boolean = true,
+        idMapper: (Long) -> Long = { it }
     ): Flow<LoadingState.Result> {
         return contentResolver.observeQuery(
             categoryUri(queryParameter),
@@ -232,7 +233,7 @@ open class CategoryViewModel(
             selectionArgs + (additionalSelectionArgs ?: emptyArray()),
             sortOrder ?: KEY_LABEL,
             true
-        ).mapToResult(keepCriteria, withColors)
+        ).mapToResult(keepCriteria, withColors, idMapper)
     }
 
     private fun categoryUri(queryParameter: Map<String, String>): Uri =
@@ -246,7 +247,8 @@ open class CategoryViewModel(
 
     private fun Flow<Query>.mapToResult(
         keepCriteria: ((Category) -> Boolean)?,
-        withColors: Boolean
+        withColors: Boolean,
+        idMapper: (Long) -> Long
     ): Flow<LoadingState.Result> = mapNotNull { query ->
         withContext(Dispatchers.IO) {
             query.run()?.use { cursor ->
@@ -260,7 +262,8 @@ open class CategoryViewModel(
                             withColors,
                             cursor,
                             null,
-                            1
+                            1,
+                            idMapper
                         )
                     ).pruneNonMatching(keepCriteria)?.let {
                         LoadingState.Data(data = it)
@@ -277,7 +280,7 @@ open class CategoryViewModel(
                     id = edit.category?.id?.takeIf { it != 0L },
                     label = label,
                     icon = icon,
-                    parentId = edit.parent?.id,
+                    parentId = edit.parent?.id ?: edit.category?.parentId,
                     type = typeFlags
                 )
                 dialogState = edit.copy(saving = true)
@@ -610,13 +613,14 @@ open class CategoryViewModel(
             withColors: Boolean,
             cursor: Cursor,
             parentId: Long?,
-            level: Int
+            level: Int,
+            idMapper: (Long) -> Long = { it }
         ): List<Category> =
             buildList {
                 if (!cursor.isBeforeFirst) {
                     while (!cursor.isAfterLast) {
-                        val nextParent = cursor.getLongOrNull(KEY_PARENTID)
-                        val nextId = cursor.getLong(KEY_ROWID)
+                        val nextParent = cursor.getLongOrNull(KEY_PARENTID)?.let(idMapper)
+                        val nextId = idMapper(cursor.getLong(KEY_ROWID))
                         val nextLabel = cursor.getString(KEY_LABEL)
                         val nextPath = cursor.getString(KEY_PATH)
                         val nextColor = if (withColors) cursor.getIntOrNull(KEY_COLOR) else null
@@ -642,10 +646,11 @@ open class CategoryViewModel(
                                     nextLabel,
                                     nextPath,
                                     ingest(
-                                        withColors,
+                                        false,
                                         cursor,
                                         nextId,
-                                        level + 1
+                                        level + 1,
+                                        idMapper
                                     ),
                                     nextIsMatching,
                                     nextColor,

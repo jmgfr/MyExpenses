@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -63,23 +62,25 @@ fun Category(
     modifier: Modifier = Modifier,
     category: Category,
     expansionMode: ExpansionMode,
-    menuGenerator: (Category) -> Menu? = { null },
+    menuGenerator: (Category, Int?) -> Menu? = { _,_ -> null },
     selectedAncestor: Category? = null,
     choiceMode: ChoiceMode,
     excludedSubTree: Long? = null,
     withRoot: Boolean = false,
     startPadding: Dp = 0.dp,
     sumCurrency: CurrencyUnit? = null,
-    withTypeColors: Boolean = true
+    withTypeColors: Boolean = true,
+    section: Int? = null
 ) {
     val activatedBackgroundColor = colorResource(id = R.color.activatedBackground)
 
     Column(
-        modifier = modifier.conditional(choiceMode.isTreeSelected(category.id)) {
-            padding(2.dp)
-                .clip(RoundedCornerShape(15.dp))
-                .background(activatedBackgroundColor)
-        }
+        modifier = modifier
+            .conditional(choiceMode.isTreeSelected(category.id)) {
+                padding(2.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .background(activatedBackgroundColor)
+            }
     ) {
         val filteredChildren =
             if (excludedSubTree == null) category.children else category.children.filter { it.id != excludedSubTree }
@@ -89,7 +90,7 @@ fun Category(
                 category = category,
                 expansionMode = expansionMode,
                 choiceMode = choiceMode,
-                menuGenerator = menuGenerator,
+                menuGenerator = { menuGenerator(it, section) },
                 startPadding = startPadding,
                 onToggleSelection = {
                     choiceMode.toggleSelection(selectedAncestor, category)
@@ -109,12 +110,13 @@ fun Category(
                             expansionMode = expansionMode,
                             menuGenerator = menuGenerator,
                             selectedAncestor = selectedAncestor
-                                ?: if (choiceMode.isSelected(category.id)) category else null,
+                                ?: if (choiceMode.mainOnly || choiceMode.isSelected(category.id)) category else null,
                             choiceMode = choiceMode,
                             excludedSubTree = excludedSubTree,
                             startPadding = subTreePadding,
                             sumCurrency = sumCurrency,
-                            withTypeColors = withTypeColors
+                            withTypeColors = withTypeColors,
+                            section = section
                         )
                     }
                 }
@@ -128,22 +130,43 @@ fun Category(
                     },
                 verticalArrangement = Arrangement.Center
             ) {
-                itemsIndexed(
-                    items = filteredChildren,
-                    key = { _, item -> item.id }
-                ) { index, item ->
-                    Category(
-                        category = item,
-                        expansionMode = expansionMode,
-                        menuGenerator = menuGenerator,
-                        choiceMode = choiceMode,
-                        excludedSubTree = excludedSubTree,
-                        startPadding = subTreePadding,
-                        sumCurrency = sumCurrency,
-                        withTypeColors = withTypeColors
-                    )
-                    if (index < filteredChildren.lastIndex) {
-                        HorizontalDivider()
+                // if we are passed in a collection of trees (i.e. the categories on the first level have level == 0)
+                // we flatten this first level away. The trees are separated by a thicker divider
+                // This is used in DistributionActivity to pass in income and expense categories together
+                // in order to render them in one scrollable list
+                filteredChildren.forEachIndexed { index1, category1 ->
+                    if (category1.level == 0) {
+                        category1.children.forEachIndexed { index2, category2 ->
+                            item(category2.id) {
+                                Category(
+                                    category = category2,
+                                    expansionMode = expansionMode,
+                                    menuGenerator = menuGenerator,
+                                    choiceMode = choiceMode,
+                                    excludedSubTree = excludedSubTree,
+                                    startPadding = subTreePadding,
+                                    sumCurrency = sumCurrency,
+                                    withTypeColors = withTypeColors,
+                                    section = index1
+                                )
+                                HorizontalDivider(thickness = if (index2 == category1.children.lastIndex && index1 != filteredChildren.lastIndex) 2.dp else 1.dp)
+                            }
+                        }
+                    } else {
+                        item(category1.id) {
+                            Category(
+                                category = category1,
+                                expansionMode = expansionMode,
+                                menuGenerator = menuGenerator,
+                                choiceMode = choiceMode,
+                                excludedSubTree = excludedSubTree,
+                                startPadding = subTreePadding,
+                                sumCurrency = sumCurrency,
+                                withTypeColors = withTypeColors,
+                                section = section
+                            )
+                            HorizontalDivider()
+                        }
                     }
                 }
             }
@@ -171,15 +194,12 @@ fun CategoryRenderer(
         modifier = Modifier
             .height(48.dp)
             .fillMaxWidth()
-            .then(if (menu == null) {
-                Modifier.conditional(choiceMode.isSelectable(category.id)) {
+            .conditional(choiceMode.isSelectable(category.id)) {
+                if (menu == null) {
                     clickable(onClick = onToggleSelection)
-                }
-            } else {
-
-                when (choiceMode) {
-                    is ChoiceMode.MultiChoiceMode -> Modifier
-                        .combinedClickable(
+                } else when (choiceMode) {
+                    is ChoiceMode.MultiChoiceMode ->
+                        combinedClickable(
                             onLongClick = onToggleSelection,
                             onClick = {
                                 if (choiceMode.selectionState.size == 0) {
@@ -190,22 +210,19 @@ fun CategoryRenderer(
                             }
                         )
 
-                    is ChoiceMode.SingleChoiceMode -> Modifier
-                        .combinedClickable(
+                    is ChoiceMode.SingleChoiceMode ->
+                        combinedClickable(
                             onLongClick = { showMenu.value = true },
                             onClick = {
                                 if (choiceMode.selectParentOnClick || category.children.isEmpty()) {
-                                    onToggleSelection.invoke()
+                                    onToggleSelection()
                                 } else {
                                     expansionMode.toggle(category)
                                 }
                             }
                         )
-
-                    else -> Modifier
                 }
             }
-            )
             .conditional(choiceMode.isNodeSelected(category.id)) {
                 background(activatedBackgroundColor)
             }
@@ -365,7 +382,13 @@ sealed class ChoiceMode(
      * if true, selecting a category highlights the tree (including children), if false children are
      * not highlighted
      */
-    private val selectTree: Boolean, val isSelectable: (Long) -> Boolean = { true }
+    private val selectTree: Boolean,
+    /**
+     * if true, only main categories can be selected
+     */
+    val mainOnly: Boolean = false,
+
+    val isSelectable: (Long) -> Boolean = { true }
 ) {
     fun isTreeSelected(id: Long) = selectTree && isSelected(id)
     fun isNodeSelected(id: Long) = !selectTree && isSelected(id)
@@ -391,19 +414,22 @@ sealed class ChoiceMode(
     class SingleChoiceMode(
         val selectionState: MutableState<Category?>,
         val selectParentOnClick: Boolean = true,
+        selectTree: Boolean = false,
+        mainOnly: Boolean = false,
         isSelectable: (Long) -> Boolean = { true }
-    ) :
-        ChoiceMode(false, isSelectable) {
+    ) : ChoiceMode(selectTree, mainOnly, isSelectable) {
         override fun isSelected(id: Long) = selectionState.value?.id == id
         override fun toggleSelection(selectedAncestor: Category?, category: Category) {
-            selectionState.value = if (selectionState.value == category) null else category
+            (selectedAncestor?.takeIf { mainOnly } ?: category).let {
+                selectionState.value = if (selectionState.value == it) null else it
+            }
         }
     }
 
-    object NoChoice : ChoiceMode(false) {
-        override fun isSelected(id: Long) = false
+    /*    object NoChoice : ChoiceMode(false) {
+            override fun isSelected(id: Long) = false
 
-        override fun toggleSelection(selectedAncestor: Category?, category: Category) {}
-    }
+            override fun toggleSelection(selectedAncestor: Category?, category: Category) {}
+        }*/
 }
 
